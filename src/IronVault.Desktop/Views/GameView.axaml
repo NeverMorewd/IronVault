@@ -1,0 +1,90 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:renderer="clr-namespace:IronVault.Renderer.Controls;assembly=IronVault.Renderer"
+             xmlns:pipboy="clr-namespace:Pipboy.Avalonia;assembly=Pipboy.Avalonia"
+             x:Class="IronVault.Desktop.Views.GameView">
+
+  <!-- Root: horizontal split — game on left, HUD panel on right -->
+  <Grid ColumnDefinitions="Auto,*">
+
+    <!-- ── Game Canvas Area ── -->
+    <Border Grid.Column="0"
+            BorderBrush="{DynamicResource PipboyBorderBrush}"
+            BorderThickness="2"
+            Margin="8">
+      <renderer:GameCanvas x:Name="GameCanvas" />
+    </Border>
+
+    <!-- ── HUD Panel (Pipboy style) ── -->
+    <ScrollViewer Grid.Column="1"
+                  VerticalScrollBarVisibility="Disabled"
+                  HorizontalScrollBarVisibility="Disabled">
+      <StackPanel Margin="8,8,12,8" Spacing="10">
+
+        <!-- Title -->
+        <TextBlock Text="IRON VAULT"
+                   Classes="h1"
+                   HorizontalAlignment="Center" />
+
+        <Separator />
+
+        <!-- Status Panel -->
+        <Border Classes="pipboy-panel">
+          <StackPanel Spacing="6">
+            <TextBlock Text="STATUS" Classes="h2" />
+
+            <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto,Auto">
+              <TextBlock Grid.Row="0" Grid.Column="0" Text="WAVE"  Classes="dim" />
+              <TextBlock Grid.Row="0" Grid.Column="1" x:Name="WaveText"  Text="01" />
+
+              <TextBlock Grid.Row="1" Grid.Column="0" Text="SCORE" Classes="dim" />
+              <TextBlock Grid.Row="1" Grid.Column="1" x:Name="ScoreText" Text="00000" />
+
+              <TextBlock Grid.Row="2" Grid.Column="0" Text="LIVES" Classes="dim" />
+              <TextBlock Grid.Row="2" Grid.Column="1" x:Name="LivesText" Text="III" />
+
+              <TextBlock Grid.Row="3" Grid.Column="0" Text="ENEMIES" Classes="dim" />
+              <TextBlock Grid.Row="3" Grid.Column="1" x:Name="EnemiesText" Text="20" />
+            </Grid>
+          </StackPanel>
+        </Border>
+
+        <!-- Player HP -->
+        <Border Classes="pipboy-panel">
+          <StackPanel Spacing="4">
+            <TextBlock Text="ARMOR" Classes="h2" />
+            <pipboy:SegmentedBar x:Name="HpBar"
+                                 Maximum="3"
+                                 Value="3"
+                                 SegmentCount="3" />
+          </StackPanel>
+        </Border>
+
+        <!-- Controls reference -->
+        <Border Classes="pipboy-panel">
+          <StackPanel Spacing="3">
+            <TextBlock Text="CONTROLS" Classes="h2" />
+            <TextBlock Text="[W/A/S/D]  MOVE"  Classes="dim" FontSize="11" />
+            <TextBlock Text="[SPACE]    FIRE"   Classes="dim" FontSize="11" />
+            <TextBlock Text="[P]        PAUSE"  Classes="dim" FontSize="11" />
+            <TextBlock Text="[ENTER]    START"  Classes="dim" FontSize="11" />
+          </StackPanel>
+        </Border>
+
+        <!-- Action buttons -->
+        <Button x:Name="StartButton"
+                Content="[DEPLOY]"
+                HorizontalAlignment="Stretch"
+                HorizontalContentAlignment="Center" />
+
+        <Button x:Name="PauseButton"
+                Content="[HOLD]"
+                HorizontalAlignment="Stretch"
+                HorizontalContentAlignment="Center"
+                IsEnabled="False" />
+
+      </StackPanel>
+    </ScrollViewer>
+
+  </Grid>
+</UserControl>
