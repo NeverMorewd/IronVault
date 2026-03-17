@@ -1,0 +1,74 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Only one deployment at a time; a new push cancels any in-progress run.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  # ── Build ──────────────────────────────────────────────────────────────────
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # IronVault must be checked out at a sibling path alongside Pipboy.Avalonia
+      # so the relative ProjectReference  ../../../Pipboy.Avalonia/...  resolves correctly.
+      - name: Checkout IronVault
+        uses: actions/checkout@v4
+        with:
+          path: IronVault
+
+      - name: Checkout Pipboy.Avalonia
+        uses: actions/checkout@v4
+        with:
+          repository: NeverMorewd/Pipboy.Avalonia
+          path: Pipboy.Avalonia
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Install wasm-tools workload
+        run: dotnet workload install wasm-tools
+
+      - name: Restore dependencies
+        working-directory: IronVault
+        run: dotnet restore src/IronVault.Browser/IronVault.Browser.csproj
+
+      - name: Publish WASM
+        working-directory: IronVault
+        run: |
+          dotnet publish src/IronVault.Browser/IronVault.Browser.csproj \
+            -c Release \
+            -o publish
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          # Avalonia Browser places the static web files under publish/wwwroot/
+          path: IronVault/publish/wwwroot
+
+  # ── Deploy ─────────────────────────────────────────────────────────────────
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

@@ -1,0 +1,50 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net10.0-browser</TargetFrameworks>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+    <IsAotCompatible>true</IsAotCompatible>
+    <IsTrimmable>true</IsTrimmable>
+    <!-- Use the same root namespace as Desktop so all linked .cs files compile unchanged -->
+    <RootNamespace>IronVault.Desktop</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="11.3.12" />
+    <PackageReference Include="Avalonia.Browser" Version="11.3.12" />
+    <PackageReference Include="Avalonia.Fonts.Inter" Version="11.3.12" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\IronVault.Core\IronVault.Core.csproj" />
+    <ProjectReference Include="..\IronVault.Renderer\IronVault.Renderer.csproj" />
+    <ProjectReference Include="..\..\..\Pipboy.Avalonia\src\Pipboy.Avalonia\Pipboy.Avalonia.csproj" />
+  </ItemGroup>
+
+  <!--
+    Views and ViewModels shared with the Desktop project.
+    AvaloniaXaml items are re-compiled here (each project gets its own generated code-behind).
+    Compile items are linked directly so they share identical logic without duplication.
+    MenuView.axaml.cs is intentionally NOT linked — the Browser provides its own version
+    that omits the Environment.Exit(0) call which is unsupported in WebAssembly.
+  -->
+  <ItemGroup>
+    <AvaloniaXaml Include="..\IronVault.Desktop\Views\GameView.axaml"
+                  Link="Views\GameView.axaml" />
+    <AvaloniaXaml Include="..\IronVault.Desktop\Views\MenuView.axaml"
+                  Link="Views\MenuView.axaml" />
+    <AvaloniaXaml Include="..\IronVault.Desktop\Views\UpgradeView.axaml"
+                  Link="Views\UpgradeView.axaml" />
+
+    <Compile Include="..\IronVault.Desktop\Views\GameView.axaml.cs"
+             Link="Views\GameView.axaml.cs" />
+    <Compile Include="..\IronVault.Desktop\Views\UpgradeView.axaml.cs"
+             Link="Views\UpgradeView.axaml.cs" />
+    <Compile Include="..\IronVault.Desktop\ViewModels\GameViewModel.cs"
+             Link="ViewModels\GameViewModel.cs" />
+  </ItemGroup>
+
+</Project>
