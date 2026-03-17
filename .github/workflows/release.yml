@@ -4,9 +4,19 @@ on:
   push:
     tags: [ 'v*' ]
   workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag (e.g. v1.0.0)'
+        required: true
+
+# Resolve the effective tag once, available to all jobs as env.RELEASE_TAG.
+# On tag-push:  github.ref_name is the tag (e.g. "v1.0.0").
+# On manual run: inputs.tag is used.
+env:
+  RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
 
 concurrency:
-  group: release-${{ github.ref_name }}
+  group: release-${{ inputs.tag || github.ref_name }}
   cancel-in-progress: false
 
 jobs:
@@ -90,10 +100,8 @@ jobs:
       - name: Create zip
         shell: pwsh
         run: |
-          $tag = '${{ github.ref_name }}'
-          if (-not $tag) { $tag = 'dev' }
           $rid = '${{ matrix.rid }}'
-          Compress-Archive -Path "publish/$rid/*" -DestinationPath "IronVault-${tag}-${rid}.zip"
+          Compress-Archive -Path "publish/$rid/*" -DestinationPath "IronVault-${env:RELEASE_TAG}-${rid}.zip"
 
       - name: Upload desktop artifact
         uses: actions/upload-artifact@v4
@@ -144,9 +152,10 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          name: ${{ github.ref_name }}
+          tag_name: ${{ env.RELEASE_TAG }}
+          name: ${{ env.RELEASE_TAG }}
           draft: false
-          prerelease: ${{ contains(github.ref_name, '-') }}
+          prerelease: ${{ contains(env.RELEASE_TAG, '-') }}
           generate_release_notes: true
           files: |
             IronVault-*-win-x64.zip
