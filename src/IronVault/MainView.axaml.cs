@@ -1,11 +1,11 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
-using IronVault.App.ViewModels;
+using IronVault.ViewModels;
 using IronVault.Core.Engine;
 using IronVault.Core.Engine.Systems;
 
-namespace IronVault.App;
+namespace IronVault;
 
 public partial class MainView : UserControl
 {

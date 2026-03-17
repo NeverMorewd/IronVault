@@ -4,7 +4,7 @@ using Avalonia.Markup.Xaml;
 using Avalonia.Media;
 using Pipboy.Avalonia;
 
-namespace IronVault.App;
+namespace IronVault;
 
 public partial class App : Application
 {

@@ -1,12 +1,12 @@
 using Avalonia.Controls;
 using Avalonia.Input;
-using IronVault.App.Audio;
-using IronVault.App.ViewModels;
+using IronVault.Audio;
+using IronVault.ViewModels;
 using IronVault.Core.Engine;
 using IronVault.Core.Engine.Entities;
 using IronVault.Core.Localization;
 
-namespace IronVault.App.Views;
+namespace IronVault.Views;
 
 public partial class GameView : UserControl
 {

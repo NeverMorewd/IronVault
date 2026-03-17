@@ -15,7 +15,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IronVault.Browser", "src\Ir
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Pipboy.Avalonia", "..\Pipboy.Avalonia\src\Pipboy.Avalonia\Pipboy.Avalonia.csproj", "{F88F3411-D0C9-4AF7-B584-0D9E28367C5C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IronVault.App", "src\IronVault.App\IronVault.App.csproj", "{F2B07359-A323-4DC2-90E3-B4EAEB94439F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IronVault", "src\IronVault\IronVault.csproj", "{F2B07359-A323-4DC2-90E3-B4EAEB94439F}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IronVault.Android", "src\IronVault.Android\IronVault.Android.csproj", "{80276477-75E8-4E34-83A6-3FC81A8A708B}"
 EndProject

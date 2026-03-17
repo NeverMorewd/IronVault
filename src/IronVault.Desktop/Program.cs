@@ -1,5 +1,4 @@
 using Avalonia;
-using IronVaultApp = IronVault.App.App;
 
 namespace IronVault.Desktop;
 
@@ -10,7 +9,7 @@ class Program
         .StartWithClassicDesktopLifetime(args);
 
     public static AppBuilder BuildAvaloniaApp()
-        => AppBuilder.Configure<IronVaultApp>()
+        => AppBuilder.Configure<global::IronVault.App>()
             .UsePlatformDetect()
             .WithInterFont()
             .LogToTrace();

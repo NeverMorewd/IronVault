@@ -1,7 +1,7 @@
 using System.Runtime.Versioning;
+using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Browser;
-using IronVault.App;
 
 [assembly: SupportedOSPlatform("browser")]
 
@@ -13,7 +13,7 @@ internal sealed partial class Program
         => await BuildAvaloniaApp().StartBrowserAppAsync("out");
 
     public static AppBuilder BuildAvaloniaApp()
-        => AppBuilder.Configure<App>()
+        => AppBuilder.Configure<global::IronVault.App>()
             .WithInterFont()
             .LogToTrace();
 }

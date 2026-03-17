@@ -2,7 +2,6 @@ using Android.App;
 using Android.Content.PM;
 using Avalonia;
 using Avalonia.Android;
-using IronVault.App;
 
 namespace IronVault.Android;
 
@@ -11,7 +10,7 @@ namespace IronVault.Android;
     Theme = "@style/MyTheme.NoActionBar",
     MainLauncher = true,
     ConfigurationChanges = ConfigChanges.Orientation | ConfigChanges.ScreenSize | ConfigChanges.UiMode)]
-public class MainActivity : AvaloniaMainActivity<App>
+public class MainActivity : AvaloniaMainActivity<global::IronVault.App>
 {
     protected override AppBuilder CustomizeAppBuilder(AppBuilder builder)
         => base.CustomizeAppBuilder(builder)

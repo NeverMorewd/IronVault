@@ -1,11 +1,11 @@
 using Avalonia.Controls;
 using Avalonia.Input;
-using IronVault.App.Audio;
+using IronVault.Audio;
 using IronVault.Core.Engine;
 using IronVault.Core.Engine.Systems;
 using IronVault.Core.Localization;
 
-namespace IronVault.App.Views;
+namespace IronVault.Views;
 
 public partial class MenuView : UserControl
 {

@@ -16,7 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\IronVault.App\IronVault.App.csproj" />
+    <ProjectReference Include="..\IronVault\IronVault.csproj" />
   </ItemGroup>
 
 </Project>

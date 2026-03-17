@@ -3,7 +3,7 @@ using Avalonia.Layout;
 using Pipboy.Avalonia;
 using IronVault.Core.Engine;
 
-namespace IronVault.App;
+namespace IronVault;
 
 public partial class MainWindow : PipboyWindow
 {

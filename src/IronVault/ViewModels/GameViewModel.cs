@@ -2,7 +2,7 @@ using Avalonia.Threading;
 using IronVault.Core.Engine;
 using IronVault.Core.Engine.Systems;
 
-namespace IronVault.App.ViewModels;
+namespace IronVault.ViewModels;
 
 public sealed class GameViewModel
 {

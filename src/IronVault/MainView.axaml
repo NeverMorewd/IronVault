@@ -1,7 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:views="clr-namespace:IronVault.App.Views"
-             x:Class="IronVault.App.MainView">
+             xmlns:views="clr-namespace:IronVault.Views"
+             x:Class="IronVault.MainView">
 
   <!-- All three screens live in the same cell; IsVisible controls which is active -->
   <Grid>

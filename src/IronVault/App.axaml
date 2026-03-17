@@ -1,7 +1,7 @@
 <Application xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:pipboy="clr-namespace:Pipboy.Avalonia;assembly=Pipboy.Avalonia"
-             x:Class="IronVault.App.App"
+             x:Class="IronVault.App"
              RequestedThemeVariant="Dark">
 
     <Application.Styles>
