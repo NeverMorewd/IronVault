@@ -19,6 +19,7 @@ public partial class MainWindow : Window
         // Wire navigation events from the sub-views
         MenuView.StartRequested       += OnMenuStart;
         UpgradeView.ContinueRequested += OnUpgradeContinue;
+        GameView.MenuRequested        += OnGameMenuRequested;
 
         // When the engine reports a wave clear → jump to upgrade screen
         _vm.Engine.WaveCleared += (_, wave) =>
@@ -46,6 +47,12 @@ public partial class MainWindow : Window
             case AppScreen.Game:    GameView.Focus();    break;
             case AppScreen.Upgrade: UpgradeView.Focus(); break;
         }
+    }
+
+    private void OnGameMenuRequested(object? sender, EventArgs _)
+    {
+        _vm.Stop();
+        ShowScreen(AppScreen.Menu);
     }
 
     private void OnMenuStart(object? sender, (AIDifficulty Difficulty, GameMode Mode) args)

@@ -13,12 +13,17 @@ public partial class GameView : UserControl
     private GameViewModel? _vm;
     private readonly HashSet<Key> _heldKeys = [];
 
+    /// <summary>Raised when the player clicks [RETREAT] or presses Escape.
+    /// MainWindow handles this to stop the game and return to the menu.</summary>
+    public event EventHandler? MenuRequested;
+
     public GameView()
     {
         InitializeComponent();
 
         StartButton.Click += (_, _) => StartOrRestart();
         PauseButton.Click += (_, _) => _vm?.TogglePause();
+        MenuButton.Click  += (_, _) => RequestMenu();
 
         Focusable = true;
         KeyDown += OnKeyDown;
@@ -36,9 +41,9 @@ public partial class GameView : UserControl
     public void SetViewModel(GameViewModel vm)
     {
         _vm = vm;
-        vm.FrameTick           += OnFrameTick;
-        vm.Engine.StateChanged += OnStateChanged;
-        vm.Engine.ScoreChanged += OnScoreChanged;
+        vm.FrameTick               += OnFrameTick;
+        vm.Engine.StateChanged     += OnStateChanged;
+        vm.Engine.ScoreChanged     += OnScoreChanged;
         // Shot fired by any tank → shoot blip (debounced inside RetroSound)
         vm.Engine.ShotFired        += (_, _) => RetroSound.PlayShoot();
         // Any bullet → explosion → hit sound
@@ -47,6 +52,8 @@ public partial class GameView : UserControl
         vm.Engine.EnemyDestroyed   += (_, _) => RetroSound.PlayEnemyDestroyed();
         // Player took damage
         vm.Engine.PlayerHurt       += (_, _) => RetroSound.PlayPlayerHurt();
+        // Power-up collected
+        vm.Engine.PowerUpCollected += (_, _) => RetroSound.PlayPowerUp();
         GameCanvas.Attach(vm.Engine);
     }
 
@@ -61,13 +68,15 @@ public partial class GameView : UserControl
         LivesLabel.Text     = I18n.T("hud.lives");
         EnemiesLabel.Text   = I18n.T("hud.enemies");
         ArmorLabel.Text     = I18n.T("hud.armor");
+        EffectsLabel.Text   = I18n.T("hud.effects");
         ControlsLabel.Text  = I18n.T("hud.controls");
         CtrlMove.Text       = I18n.T("hud.ctrl.move");
         CtrlFire.Text       = I18n.T("hud.ctrl.fire");
         CtrlPause.Text      = I18n.T("hud.ctrl.pause");
         CtrlStart.Text      = I18n.T("hud.ctrl.start");
+        MenuButton.Content  = I18n.T("btn.retreat");
 
-        // Buttons — preserve started/not-started state
+        // Preserve started/not-started state
         bool isStarted = _vm?.Engine.State != GameState.NotStarted;
         StartButton.Content = isStarted ? I18n.T("btn.redeploy") : I18n.T("btn.deploy");
         PauseButton.Content = I18n.T("btn.hold");
@@ -84,6 +93,14 @@ public partial class GameView : UserControl
         PauseButton.IsEnabled = true;
         StartButton.Content   = I18n.T("btn.redeploy");
         Focus();
+    }
+
+    private void RequestMenu()
+    {
+        RetroSound.StopMovement();
+        RetroSound.PlayClick();
+        _vm?.Stop();
+        MenuRequested?.Invoke(this, EventArgs.Empty);
     }
 
     private void OnFrameTick(object? sender, float dt)
@@ -103,7 +120,6 @@ public partial class GameView : UserControl
         GameCanvas.Tick(dt);   // engine tick — updates Velocity.IsMoving
 
         // ── Movement sound: sync with player tank state ───────────────────────
-        // Check AFTER Tick() so Velocity.IsMoving reflects this frame's result.
         bool engineRunning = _vm?.Engine is { State: GameState.Playing } eng
                           && eng.Player  is { IsAlive: true, Velocity.IsMoving: true };
 
@@ -111,7 +127,6 @@ public partial class GameView : UserControl
             RetroSound.StartMovement();
         else
             RetroSound.StopMovement();
-        // ─────────────────────────────────────────────────────────────────────
 
         UpdateHud();
     }
@@ -128,11 +143,28 @@ public partial class GameView : UserControl
 
         if (eng.Player is { } p && p.Health is { } hp)
         {
-            // Keep Maximum + SegmentCount in sync so ArmorPlating upgrades show correctly
             HpBar.Maximum      = hp.Max;
             HpBar.SegmentCount = hp.Max;
             HpBar.Value        = hp.Current;
         }
+
+        // ── Active power-up effects panel ─────────────────────────────────────
+        bool starOn    = eng.StarTimer        > 0;
+        bool clockOn   = eng.ClockTimer       > 0;
+        bool shovelOn  = eng.ShovelTimer      > 0;
+        bool boostOn   = eng.BulletBoostTimer > 0;
+        bool anyEffect = starOn || clockOn || shovelOn || boostOn;
+
+        EffectsPanel.IsVisible     = anyEffect;
+        StarEffectText.IsVisible   = starOn;
+        ClockEffectText.IsVisible  = clockOn;
+        ShovelEffectText.IsVisible = shovelOn;
+        BoostEffectText.IsVisible  = boostOn;
+
+        if (starOn)   StarEffectText.Text   = $"{I18n.T("pu.star")}  {eng.StarTimer:F1}s";
+        if (clockOn)  ClockEffectText.Text  = $"{I18n.T("pu.clock")} {eng.ClockTimer:F1}s";
+        if (shovelOn) ShovelEffectText.Text = $"{I18n.T("pu.shovel")}{eng.ShovelTimer:F1}s";
+        if (boostOn)  BoostEffectText.Text  = $"{I18n.T("pu.boost")} {eng.BulletBoostTimer:F1}s";
     }
 
     private void OnStateChanged(object? sender, GameState state)
@@ -167,6 +199,8 @@ public partial class GameView : UserControl
             _vm?.TogglePause();
         else if (e.Key == Key.Enter && _vm?.Engine.State == GameState.NotStarted)
             StartOrRestart();
+        else if (e.Key == Key.Escape)
+            RequestMenu();
     }
 
     private void OnKeyUp(object? sender, KeyEventArgs e)

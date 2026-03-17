@@ -26,10 +26,16 @@ public sealed class TankEntity : EntityBase
     public TankInput Input { get; set; }
 
     // ── Spawn invincibility ────────────────────────────────────────────────
-    public float SpawnInvincibleTimer { get; set; } = 2.0f;
-    public bool  IsInvincible  => SpawnInvincibleTimer > 0;
+    public float SpawnInvincibleTimer  { get; set; } = 2.0f;
+    /// <summary>Granted by the Star power-up; independent of spawn invincibility.</summary>
+    public float PowerUpInvincibleTimer { get; set; }
+    public bool  IsInvincible  => SpawnInvincibleTimer > 0 || PowerUpInvincibleTimer > 0;
     public bool  BlinkVisible  { get; set; } = true;
     public float BlinkTimer    { get; set; }
+
+    // ── Clock power-up: enemy freeze ──────────────────────────────────────
+    /// <summary>Set by GameEngine when the Clock power-up is active.  MoveSystem and AISystem skip frozen enemies.</summary>
+    public bool IsFrozen { get; set; }
 
     // ── Ice-slide momentum (player only) ──────────────────────────────────
     /// <summary>

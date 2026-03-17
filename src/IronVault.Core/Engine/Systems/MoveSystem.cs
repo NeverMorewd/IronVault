@@ -11,6 +11,7 @@ public static class MoveSystem
         foreach (var tank in tanks)
         {
             if (!tank.IsAlive) continue;
+            if (tank.IsFrozen) continue;   // Clock power-up: enemy freeze
 
             // Invincibility blink
             if (tank.IsInvincible)

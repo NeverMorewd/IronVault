@@ -27,6 +27,7 @@ internal static class RetroSound
     private static readonly byte[] _playerHurt      = WrapWav(SynthPlayerHurt());
     private static readonly byte[] _gameOver        = WrapWav(SynthGameOver());
     private static readonly byte[] _victory         = WrapWav(SynthVictory());
+    private static readonly byte[] _powerUp         = WrapWav(SynthPowerUp());
     // Movement is raw PCM fed directly to waveOut (no WAV header needed).
     private static readonly byte[] _movement        = SynthMovement();
 
@@ -38,6 +39,7 @@ internal static class RetroSound
 
     public static void PlayClick()          => TryPlayWav(_click);
     public static void PlayExplosion()      => TryPlayWav(_explosion);
+    public static void PlayPowerUp()        => TryPlayWav(_powerUp);
     public static void PlayEnemyDestroyed() => TryPlayWav(_enemyDestroyed);
     public static void PlayPlayerHurt()     => TryPlayWav(_playerHurt);
     public static void PlayGameOver()       => TryPlayWav(_gameOver);
@@ -236,6 +238,20 @@ internal static class RetroSound
         int offset = 0;
         foreach (var p in parts) { Buffer.BlockCopy(p, 0, result, offset, p.Length); offset += p.Length; }
         return result;
+    }
+
+    /// <summary>
+    /// Power-up collected: bright ascending two-tone chime, 180 ms.
+    /// Two quick square notes (C5 → E5) with sharp attack and fast decay.
+    /// </summary>
+    private static byte[] SynthPowerUp()
+    {
+        var pcm = Concat(
+            SynthNote(523.3, 75, 0.75),   // C5
+            Silence(15),
+            SynthNote(659.3, 90, 0.80)    // E5
+        );
+        return pcm;
     }
 
     /// <summary>

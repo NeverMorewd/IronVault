@@ -17,7 +17,7 @@
 
     <!-- ── HUD Panel (Pipboy style) ── -->
     <ScrollViewer Grid.Column="1"
-                  VerticalScrollBarVisibility="Disabled"
+                  VerticalScrollBarVisibility="Auto"
                   HorizontalScrollBarVisibility="Disabled">
       <StackPanel Margin="8,8,12,8" Spacing="10">
 
@@ -61,6 +61,17 @@
           </StackPanel>
         </Border>
 
+        <!-- Active power-up effects -->
+        <Border x:Name="EffectsPanel" Classes="pipboy-panel" IsVisible="False">
+          <StackPanel Spacing="4">
+            <TextBlock x:Name="EffectsLabel" Text="EFFECTS" Classes="h2" />
+            <TextBlock x:Name="StarEffectText"   Text="★ SHIELD"   Classes="dim" FontSize="11" IsVisible="False" />
+            <TextBlock x:Name="ClockEffectText"  Text="⏸ FREEZE"   Classes="dim" FontSize="11" IsVisible="False" />
+            <TextBlock x:Name="ShovelEffectText" Text="⬛ FORTRESS" Classes="dim" FontSize="11" IsVisible="False" />
+            <TextBlock x:Name="BoostEffectText"  Text="▲ OVERLOAD" Classes="dim" FontSize="11" IsVisible="False" />
+          </StackPanel>
+        </Border>
+
         <!-- Controls reference -->
         <Border Classes="pipboy-panel">
           <StackPanel Spacing="3">
@@ -83,6 +94,12 @@
                 HorizontalAlignment="Stretch"
                 HorizontalContentAlignment="Center"
                 IsEnabled="False" />
+
+        <Button x:Name="MenuButton"
+                Content="[RETREAT]"
+                HorizontalAlignment="Stretch"
+                HorizontalContentAlignment="Center"
+                Classes="danger" />
 
       </StackPanel>
     </ScrollViewer>

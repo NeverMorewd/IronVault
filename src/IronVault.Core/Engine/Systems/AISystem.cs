@@ -54,7 +54,7 @@ public static class AISystem
 
         foreach (var tank in tanks)
         {
-            if (!tank.IsAlive || tank.IsPlayerControlled) continue;
+            if (!tank.IsAlive || tank.IsPlayerControlled || tank.IsFrozen) continue;
 
             if (!_states.TryGetValue(tank.Id, out var state))
                 _states[tank.Id] = state = new AiState();

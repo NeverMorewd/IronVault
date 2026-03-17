@@ -28,6 +28,13 @@ public sealed class GameEngine
     public int EnemiesLeft  { get; private set; }
     public int TotalEnemies { get; private set; }
 
+    // ── Active power-up effect timers (for HUD display) ──────────────────────
+    public float StarTimer         { get; private set; }   // > 0 while player is invincible
+    public float ClockTimer        { get; private set; }   // > 0 while enemies are frozen
+    public float ShovelTimer       { get; private set; }   // > 0 while base is steeled
+    public float BulletBoostTimer  { get; private set; }   // > 0 while bullet speed boosted
+    public bool  EnemiesFrozen     => ClockTimer   > 0;
+
     // ── Wave management ──────────────────────────────────────────────────────
     private float       _spawnTimer;
     private const float SpawnInterval = 4f;
@@ -36,21 +43,35 @@ public sealed class GameEngine
     private WaveScript  _currentScript = WaveScript.ForWave(1);
     private bool        _waveClearFired;   // prevents double-firing WaveCleared event
 
+    // ── Power-up implementation state ────────────────────────────────────────
+    private const float StarDuration         = 8f;
+    private const float ClockDuration        = 5f;
+    private const float ShovelDuration       = 12f;
+    private const float BulletBoostDuration  = 10f;
+    private const float BulletBoostMult      = 1.5f;
+    private const float PowerUpDropChance    = 0.35f;  // 35 % per enemy kill
+
+    private bool  _shovelActive;
+    private float _savedBulletSpeed;
+    private readonly List<(int col, int row, TileType original)> _shovelSaved = [];
+
     private readonly Random _rng = new();
 
     // ── Events ───────────────────────────────────────────────────────────────
-    public event EventHandler<GameState>? StateChanged;
-    public event EventHandler<int>?       ScoreChanged;
+    public event EventHandler<GameState>?   StateChanged;
+    public event EventHandler<int>?         ScoreChanged;
     /// <summary>Fired when all enemies in the current wave are destroyed. Parameter = wave number.</summary>
-    public event EventHandler<int>?       WaveCleared;
+    public event EventHandler<int>?         WaveCleared;
     /// <summary>Fired when one or more new bullets are spawned this tick.</summary>
-    public event EventHandler? ShotFired;
+    public event EventHandler?              ShotFired;
     /// <summary>Fired when one or more new explosions are created this tick.</summary>
-    public event EventHandler? HitOccurred;
+    public event EventHandler?              HitOccurred;
     /// <summary>Fired when an enemy tank is destroyed (health reaches zero).</summary>
-    public event EventHandler? EnemyDestroyed;
+    public event EventHandler?              EnemyDestroyed;
     /// <summary>Fired when the player tank takes damage this tick.</summary>
-    public event EventHandler? PlayerHurt;
+    public event EventHandler?              PlayerHurt;
+    /// <summary>Fired when the player picks up a power-up. Parameter = the type collected.</summary>
+    public event EventHandler<PowerUpType>? PowerUpCollected;
 
     // ── Player ───────────────────────────────────────────────────────────────
     public TankEntity? Player { get; private set; }
@@ -142,7 +163,10 @@ public sealed class GameEngine
         int prevExplosions = Explosions.Count;
         int prevPlayerHp   = Player?.Health.Current ?? 0;
 
-        // Systems update
+        // ── Power-up timer countdown ─────────────────────────────────────────
+        TickPowerUpTimers(dt);
+
+        // ── Systems update ───────────────────────────────────────────────────
         MoveSystem.Update(Tanks, Map, dt);
         WeaponSystem.Update(Tanks, Bullets, dt);
         BulletSystem.Update(Bullets, Tanks, Explosions, Map, dt);
@@ -151,19 +175,22 @@ public sealed class GameEngine
         ExplosionSystem.Update(Explosions, dt);
 
         // Player hurt check (before cleanup removes dead player)
-        if (Player is { IsAlive: true } p && p.Health.Current < prevPlayerHp)
+        if (Player is { IsAlive: true } pp && pp.Health.Current < prevPlayerHp)
             PlayerHurt?.Invoke(this, EventArgs.Empty);
 
-        // Wave spawn
+        // ── Power-up pickup ──────────────────────────────────────────────────
+        PowerUpSystem.Update(PowerUps, Tanks, dt, ApplyPowerUp);
+
+        // ── Wave spawn ───────────────────────────────────────────────────────
         UpdateWaveSpawn(dt);
 
-        // Dead entity cleanup + score
+        // ── Dead entity cleanup + score ──────────────────────────────────────
         CleanupDeadTanks();
 
-        // Win / lose / wave-clear checks
+        // ── Win / lose / wave-clear checks ───────────────────────────────────
         CheckEndConditions();
 
-        // Sound signals
+        // ── Sound signals ────────────────────────────────────────────────────
         if (Bullets.Count    > prevBullets)    ShotFired?.Invoke(this, EventArgs.Empty);
         if (Explosions.Count > prevExplosions) HitOccurred?.Invoke(this, EventArgs.Empty);
     }
@@ -187,17 +214,23 @@ public sealed class GameEngine
         _enemiesSpawned         = 0;
         _spawnTimer             = 0;
         _waveClearFired         = false;
+        // Clear power-up timers
+        StarTimer        = 0;
+        ClockTimer       = 0;
+        ShovelTimer      = 0;
+        BulletBoostTimer = 0;
+        _shovelActive    = false;
+        _shovelSaved.Clear();
         AISystem.Reset();
         AllyAISystem.Reset();
     }
 
     private void SpawnPlayer()
     {
-        // Spawn in the clear channel between the two central brick clusters:
-        // cols 12-13, row 19 (pixel 288, 456).
-        int   midCol = Map.Cols / 2; // 13
-        float px     = (midCol - 1) * TileMap.TileSize; // col 12 → x = 288
-        float py     = 19 * TileMap.TileSize;            // row 19 → y = 456
+        // 28-col map: mid = 14; spawn at col 13, row 21 — the clear centre channel.
+        int   midCol = Map.Cols / 2;          // 14
+        float px     = (midCol - 1) * TileMap.TileSize;  // col 13 → 312 px
+        float py     = 21 * TileMap.TileSize;             // row 21 → 504 px
         Player = TankEntity.CreatePlayer(px, py);
         Player.Position.Facing = Components.Direction.Up;
         Tanks.Add(Player);
@@ -205,10 +238,10 @@ public sealed class GameEngine
 
     private void SpawnAllyReward()
     {
-        // Place the ally a little left of the player spawn so they don't overlap
+        // Ally at col 10, row 21 — left of the inner channel walls (col 12 wall starts at row 21)
         int   midCol = Map.Cols / 2;
-        float ax     = (midCol - 3) * TileMap.TileSize; // col 10
-        float ay     = 19 * TileMap.TileSize;
+        float ax     = (midCol - 4) * TileMap.TileSize;  // col 10 → 240 px
+        float ay     = 21 * TileMap.TileSize;
         var   ally   = TankEntity.CreateAlly(ax, ay);
         ally.Position.Facing = Components.Direction.Up;
         Tanks.Add(ally);
@@ -310,6 +343,10 @@ public sealed class GameEngine
                     EnemiesLeft--;
                     AddScore(100 * (int)tank.Tier);
                     EnemyDestroyed?.Invoke(this, EventArgs.Empty);
+
+                    // 35 % chance to drop a power-up at the enemy's position
+                    if (_rng.NextDouble() < PowerUpDropChance)
+                        SpawnPowerUp(tank.Position.X, tank.Position.Y);
                 }
                 Tanks.RemoveAt(i);
             }
@@ -319,6 +356,157 @@ public sealed class GameEngine
         AISystem.Cleanup(Tanks.Select(t => t.Id));
         AllyAISystem.Cleanup(Tanks.Select(t => t.Id));
     }
+
+    // ── Power-up spawning ─────────────────────────────────────────────────────
+
+    private void SpawnPowerUp(float x, float y)
+    {
+        var types = Enum.GetValues<PowerUpType>();
+        var type  = types[_rng.Next(types.Length)];
+        PowerUps.Add(new PowerUpEntity { X = x, Y = y, Type = type });
+    }
+
+    // ── Power-up effect application ───────────────────────────────────────────
+
+    private void ApplyPowerUp(PowerUpType type)
+    {
+        PowerUpCollected?.Invoke(this, type);
+
+        switch (type)
+        {
+            case PowerUpType.Star:
+                // 8-second invincibility for the player
+                if (Player is { IsAlive: true })
+                    Player.PowerUpInvincibleTimer = StarDuration;
+                StarTimer = StarDuration;
+                break;
+
+            case PowerUpType.BulletSpeed:
+                // +50 % bullet speed for 10 seconds; stack by refreshing timer
+                if (Player is { IsAlive: true })
+                {
+                    if (BulletBoostTimer <= 0)
+                    {
+                        _savedBulletSpeed         = Player.Weapon.BulletSpeed;
+                        Player.Weapon.BulletSpeed *= BulletBoostMult;
+                    }
+                    BulletBoostTimer = BulletBoostDuration;
+                }
+                break;
+
+            case PowerUpType.ExtraBullet:
+                // Permanently add one simultaneous shell (capped at 5)
+                if (Player is { IsAlive: true })
+                    Player.Weapon.MaxBullets = Math.Min(5, Player.Weapon.MaxBullets + 1);
+                break;
+
+            case PowerUpType.Shield:
+                // Fully restore player HP
+                if (Player is { IsAlive: true })
+                    Player.Health.Heal(Player.Health.Max);
+                break;
+
+            case PowerUpType.Clock:
+                // Freeze all enemies for 5 seconds
+                ClockTimer = ClockDuration;
+                ApplyFreezeToEnemies(true);
+                break;
+
+            case PowerUpType.Shovel:
+                // Steel-ify base perimeter for 12 seconds
+                if (!_shovelActive) ActivateShovel();
+                ShovelTimer = ShovelDuration;
+                break;
+
+            case PowerUpType.Life:
+                // Extra life (capped at 5)
+                Lives = Math.Min(5, Lives + 1);
+                break;
+        }
+    }
+
+    // ── Power-up timer management ─────────────────────────────────────────────
+
+    private void TickPowerUpTimers(float dt)
+    {
+        // Star (player invincibility)
+        if (StarTimer > 0)
+        {
+            StarTimer -= dt;
+            if (Player is { IsAlive: true } && Player.PowerUpInvincibleTimer > 0)
+                Player.PowerUpInvincibleTimer -= dt;
+            if (StarTimer <= 0) StarTimer = 0;
+        }
+
+        // Clock (enemy freeze)
+        if (ClockTimer > 0)
+        {
+            ClockTimer -= dt;
+            if (ClockTimer <= 0)
+            {
+                ClockTimer = 0;
+                ApplyFreezeToEnemies(false);
+            }
+        }
+
+        // Shovel (steel base walls)
+        if (ShovelTimer > 0)
+        {
+            ShovelTimer -= dt;
+            if (ShovelTimer <= 0)
+            {
+                ShovelTimer = 0;
+                DeactivateShovel();
+            }
+        }
+
+        // Bullet-speed boost
+        if (BulletBoostTimer > 0)
+        {
+            BulletBoostTimer -= dt;
+            if (BulletBoostTimer <= 0)
+            {
+                BulletBoostTimer = 0;
+                if (Player is { IsAlive: true })
+                    Player.Weapon.BulletSpeed = _savedBulletSpeed;
+            }
+        }
+    }
+
+    private void ApplyFreezeToEnemies(bool frozen)
+    {
+        foreach (var t in Tanks)
+            if (t.Team == TankTeam.Enemy && t.IsAlive)
+                t.IsFrozen = frozen;
+    }
+
+    // ── Shovel: save/restore base perimeter tiles ─────────────────────────────
+
+    private void ActivateShovel()
+    {
+        _shovelSaved.Clear();
+        int mid = Map.Cols / 2;
+        // Scan a 5-wide × 3-tall region around the Eagle tile
+        for (int r = Map.Rows - 4; r <= Map.Rows - 2; r++)
+        for (int c = mid - 2; c <= mid + 2; c++)
+        {
+            if (!Map.InBounds(c, r) || Map[c, r] == TileType.Base) continue;
+            _shovelSaved.Add((c, r, Map[c, r]));
+            Map[c, r] = TileType.Steel;
+        }
+        _shovelActive = true;
+    }
+
+    private void DeactivateShovel()
+    {
+        foreach (var (c, r, orig) in _shovelSaved)
+            if (Map.InBounds(c, r) && Map[c, r] == TileType.Steel)
+                Map[c, r] = orig;
+        _shovelSaved.Clear();
+        _shovelActive = false;
+    }
+
+    // ── Score / script helpers ────────────────────────────────────────────────
 
     /// <summary>Returns the correct wave script for the current game mode.</summary>
     private WaveScript GetScript(int wave)

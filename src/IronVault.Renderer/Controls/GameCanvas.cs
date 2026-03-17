@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Media;
 using IronVault.Core.Engine;
 using IronVault.Core.Engine.Entities;
+using IronVault.Core.Localization;
 using IronVault.Core.Map;
 using IronVault.Renderer.Drawables;
 
@@ -104,13 +105,13 @@ public sealed class GameCanvas : Control
 
         // 8. Game state overlay
         if (_engine.State == GameState.GameOver)
-            DrawOverlay(ctx, mapW, mapH, "GAME OVER",  Color.FromRgb(200, 0, 0));
+            DrawOverlay(ctx, mapW, mapH, I18n.T("game.over"),    Color.FromRgb(200, 0, 0));
         else if (_engine.State == GameState.Victory)
-            DrawOverlay(ctx, mapW, mapH, "VICTORY!",   Color.FromRgb(255, 215, 0));
+            DrawOverlay(ctx, mapW, mapH, I18n.T("game.victory"), Color.FromRgb(255, 215, 0));
         else if (_engine.State == GameState.Paused)
-            DrawOverlay(ctx, mapW, mapH, "PAUSED",     Color.FromRgb(255, 165, 0));
+            DrawOverlay(ctx, mapW, mapH, I18n.T("game.paused"),  Color.FromRgb(255, 165, 0));
         else if (_engine.State == GameState.NotStarted)
-            DrawOverlay(ctx, mapW, mapH, "IRON VAULT", Color.FromRgb(255, 165, 0));
+            DrawOverlay(ctx, mapW, mapH, I18n.T("game.title"),   Color.FromRgb(255, 165, 0));
     }
 
     private static void RenderPlaceholder(DrawingContext ctx)

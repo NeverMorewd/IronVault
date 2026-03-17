@@ -18,8 +18,10 @@ public sealed class PowerUpEntity : EntityBase
     public PowerUpType Type { get; set; }
 
     /// <summary>Blinking timer for visual effect.</summary>
-    public float BlinkTimer { get; set; }
-    public bool BlinkVisible { get; set; } = true;
+    public float BlinkTimer  { get; set; }
+    public bool  BlinkVisible { get; set; } = true;
+    /// <summary>Seconds elapsed since this power-up spawned (used for lifespan and fast-blink warning).</summary>
+    public float LifeTimer   { get; set; }
 
     public const int Size = 24;
 }
