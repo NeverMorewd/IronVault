@@ -2,17 +2,16 @@ using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Avalonia.Media;
-using IronVault.Desktop.Views;
 using Pipboy.Avalonia;
 
-namespace IronVault.Desktop;
+namespace IronVault.App;
 
 public partial class App : Application
 {
     public override void Initialize()
     {
         AvaloniaXamlLoader.Load(this);
-        // Set amber CRT color for Iron Vault's military aesthetic
+        // Amber CRT color for Iron Vault's military aesthetic
         PipboyThemeManager.Instance.SetPrimaryColor(Color.Parse("#FFA500"));
     }
 
@@ -21,6 +20,10 @@ public partial class App : Application
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             desktop.MainWindow = new MainWindow();
+        }
+        else if (ApplicationLifetime is ISingleViewApplicationLifetime singleView)
+        {
+            singleView.MainView = new MainView();
         }
 
         base.OnFrameworkInitializationCompleted();

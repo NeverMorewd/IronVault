@@ -1,12 +1,12 @@
 using Avalonia.Controls;
 using Avalonia.Input;
+using IronVault.App.Audio;
+using IronVault.App.ViewModels;
 using IronVault.Core.Engine;
 using IronVault.Core.Engine.Entities;
 using IronVault.Core.Localization;
-using IronVault.Desktop.Audio;
-using IronVault.Desktop.ViewModels;
 
-namespace IronVault.Desktop.Views;
+namespace IronVault.App.Views;
 
 public partial class GameView : UserControl
 {
@@ -14,7 +14,7 @@ public partial class GameView : UserControl
     private readonly HashSet<Key> _heldKeys = [];
 
     /// <summary>Raised when the player clicks [RETREAT] or presses Escape.
-    /// MainWindow handles this to stop the game and return to the menu.</summary>
+    /// MainView handles this to stop the game and return to the menu.</summary>
     public event EventHandler? MenuRequested;
 
     public GameView()
@@ -29,13 +29,12 @@ public partial class GameView : UserControl
         KeyDown += OnKeyDown;
         KeyUp   += OnKeyUp;
 
-        // Subscribe to language changes
         I18n.LanguageChanged += RefreshText;
         RefreshText();
     }
 
     /// <summary>
-    /// Called by MainWindow after construction to wire up the shared ViewModel.
+    /// Called by MainView after construction to wire up the shared ViewModel.
     /// Must be called before the first frame tick.
     /// </summary>
     public void SetViewModel(GameViewModel vm)
@@ -44,15 +43,10 @@ public partial class GameView : UserControl
         vm.FrameTick               += OnFrameTick;
         vm.Engine.StateChanged     += OnStateChanged;
         vm.Engine.ScoreChanged     += OnScoreChanged;
-        // Shot fired by any tank → shoot blip (debounced inside RetroSound)
         vm.Engine.ShotFired        += (_, _) => RetroSound.PlayShoot();
-        // Any bullet → explosion → hit sound
         vm.Engine.HitOccurred      += (_, _) => RetroSound.PlayExplosion();
-        // Enemy tank fully destroyed
         vm.Engine.EnemyDestroyed   += (_, _) => RetroSound.PlayEnemyDestroyed();
-        // Player took damage
         vm.Engine.PlayerHurt       += (_, _) => RetroSound.PlayPlayerHurt();
-        // Power-up collected
         vm.Engine.PowerUpCollected += (_, _) => RetroSound.PlayPowerUp();
         GameCanvas.Attach(vm.Engine);
     }
@@ -77,7 +71,6 @@ public partial class GameView : UserControl
         CtrlStart.Text      = I18n.T("hud.ctrl.start");
         MenuButton.Content  = I18n.T("btn.retreat");
 
-        // Preserve started/not-started state
         bool isStarted = _vm?.Engine.State != GameState.NotStarted;
         StartButton.Content = isStarted ? I18n.T("btn.redeploy") : I18n.T("btn.deploy");
         PauseButton.Content = I18n.T("btn.hold");
@@ -88,7 +81,7 @@ public partial class GameView : UserControl
     private void StartOrRestart()
     {
         if (_vm is null) return;
-        RetroSound.StopMovement();   // kill any leftover engine sound from previous run
+        RetroSound.StopMovement();
         _vm.Stop();
         _vm.StartGame();
         PauseButton.IsEnabled = true;
@@ -106,7 +99,6 @@ public partial class GameView : UserControl
 
     private void OnFrameTick(object? sender, float dt)
     {
-        // Build input state from currently held keys
         if (_vm?.Engine.Player is { } player)
         {
             player.Input = new TankInput(
@@ -118,9 +110,8 @@ public partial class GameView : UserControl
             );
         }
 
-        GameCanvas.Tick(dt);   // engine tick — updates Velocity.IsMoving
+        GameCanvas.Tick(dt);
 
-        // ── Movement sound: sync with player tank state ───────────────────────
         bool engineRunning = _vm?.Engine is { State: GameState.Playing } eng
                           && eng.Player  is { IsAlive: true, Velocity.IsMoving: true };
 
@@ -137,12 +128,10 @@ public partial class GameView : UserControl
         if (_vm is null) return;
         var eng = _vm.Engine;
 
-        // ── Mode label ────────────────────────────────────────────────────────
         ModeText.Text = eng.Mode == GameMode.Defense
             ? I18n.T("menu.defense")
             : I18n.T("menu.classic");
 
-        // ── Wave: show "03/10" in Defense mode, "03" in Classic ──────────────
         WaveText.Text = eng.TotalWaves > 0
             ? $"{eng.Wave:D2}/{eng.TotalWaves}"
             : eng.Wave.ToString("D2");
@@ -158,7 +147,6 @@ public partial class GameView : UserControl
             HpBar.Value        = hp.Current;
         }
 
-        // ── Active power-up effects panel ─────────────────────────────────────
         bool starOn    = eng.StarTimer        > 0;
         bool clockOn   = eng.ClockTimer       > 0;
         bool shovelOn  = eng.ShovelTimer      > 0;
@@ -189,11 +177,9 @@ public partial class GameView : UserControl
             PauseButton.IsEnabled = true;
         }
 
-        // Stop engine rumble whenever the game is not actively running
         if (state != GameState.Playing)
             RetroSound.StopMovement();
 
-        // Terminal state sounds
         if (state == GameState.GameOver) RetroSound.PlayGameOver();
         if (state == GameState.Victory)  RetroSound.PlayVictory();
     }

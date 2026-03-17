@@ -1,12 +1,9 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:views="clr-namespace:IronVault.Desktop.Views"
-             x:Class="IronVault.Desktop.Views.MainView">
+             xmlns:views="clr-namespace:IronVault.App.Views"
+             x:Class="IronVault.App.MainView">
 
-  <!--
-    Browser shell: identical three-screen layout to MainWindow but as a UserControl.
-    IsVisible toggles control which screen is active — no page navigation overhead.
-  -->
+  <!-- All three screens live in the same cell; IsVisible controls which is active -->
   <Grid>
     <views:MenuView    x:Name="MenuView"    />
     <views:GameView    x:Name="GameView"    IsVisible="False" />

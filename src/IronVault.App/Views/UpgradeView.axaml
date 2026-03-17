@@ -1,7 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:pipboy="clr-namespace:Pipboy.Avalonia;assembly=Pipboy.Avalonia"
-             x:Class="IronVault.Desktop.Views.UpgradeView">
+             x:Class="IronVault.App.Views.UpgradeView">
 
   <Grid Background="{DynamicResource PipboyBackgroundBrush}">
     <StackPanel VerticalAlignment="Center"
@@ -52,21 +52,12 @@
               Padding="16,12"
               Margin="0,0,0,7">
         <Grid ColumnDefinitions="44,*,Auto">
-          <TextBlock x:Name="UpIcon0"
-                     Grid.Column="0"
-                     FontSize="22"
-                     VerticalAlignment="Center"
-                     HorizontalAlignment="Center" />
+          <TextBlock x:Name="UpIcon0" Grid.Column="0" FontSize="22" VerticalAlignment="Center" HorizontalAlignment="Center" />
           <StackPanel Grid.Column="1" Spacing="3" Margin="10,0,0,0" VerticalAlignment="Center">
             <TextBlock x:Name="UpName0" FontWeight="Bold" />
             <TextBlock x:Name="UpDesc0" Classes="dim" FontSize="11" />
           </StackPanel>
-          <TextBlock x:Name="SelectHint0"
-                     Grid.Column="2"
-                     Text="[ SELECT ]"
-                     Classes="dim"
-                     FontSize="11"
-                     VerticalAlignment="Center" />
+          <TextBlock x:Name="SelectHint0" Grid.Column="2" Text="[ SELECT ]" Classes="dim" FontSize="11" VerticalAlignment="Center" />
         </Grid>
       </Button>
 
@@ -77,21 +68,12 @@
               Padding="16,12"
               Margin="0,0,0,7">
         <Grid ColumnDefinitions="44,*,Auto">
-          <TextBlock x:Name="UpIcon1"
-                     Grid.Column="0"
-                     FontSize="22"
-                     VerticalAlignment="Center"
-                     HorizontalAlignment="Center" />
+          <TextBlock x:Name="UpIcon1" Grid.Column="0" FontSize="22" VerticalAlignment="Center" HorizontalAlignment="Center" />
           <StackPanel Grid.Column="1" Spacing="3" Margin="10,0,0,0" VerticalAlignment="Center">
             <TextBlock x:Name="UpName1" FontWeight="Bold" />
             <TextBlock x:Name="UpDesc1" Classes="dim" FontSize="11" />
           </StackPanel>
-          <TextBlock x:Name="SelectHint1"
-                     Grid.Column="2"
-                     Text="[ SELECT ]"
-                     Classes="dim"
-                     FontSize="11"
-                     VerticalAlignment="Center" />
+          <TextBlock x:Name="SelectHint1" Grid.Column="2" Text="[ SELECT ]" Classes="dim" FontSize="11" VerticalAlignment="Center" />
         </Grid>
       </Button>
 
@@ -102,29 +84,17 @@
               Padding="16,12"
               Margin="0,0,0,7">
         <Grid ColumnDefinitions="44,*,Auto">
-          <TextBlock x:Name="UpIcon2"
-                     Grid.Column="0"
-                     FontSize="22"
-                     VerticalAlignment="Center"
-                     HorizontalAlignment="Center" />
+          <TextBlock x:Name="UpIcon2" Grid.Column="0" FontSize="22" VerticalAlignment="Center" HorizontalAlignment="Center" />
           <StackPanel Grid.Column="1" Spacing="3" Margin="10,0,0,0" VerticalAlignment="Center">
             <TextBlock x:Name="UpName2" FontWeight="Bold" />
             <TextBlock x:Name="UpDesc2" Classes="dim" FontSize="11" />
           </StackPanel>
-          <TextBlock x:Name="SelectHint2"
-                     Grid.Column="2"
-                     Text="[ SELECT ]"
-                     Classes="dim"
-                     FontSize="11"
-                     VerticalAlignment="Center" />
+          <TextBlock x:Name="SelectHint2" Grid.Column="2" Text="[ SELECT ]" Classes="dim" FontSize="11" VerticalAlignment="Center" />
         </Grid>
       </Button>
 
-      <!-- ── Ally reward notice (visible only when wave grants an ally) ── -->
-      <Border x:Name="AllyRewardBanner"
-              Classes="pipboy-panel"
-              IsVisible="False"
-              Margin="0,8,0,0">
+      <!-- ── Ally reward notice ── -->
+      <Border x:Name="AllyRewardBanner" Classes="pipboy-panel" IsVisible="False" Margin="0,8,0,0">
         <TextBlock x:Name="AllyRewardText"
                    Text="◈  ALLY TANK DEPLOYED TO YOUR POSITION"
                    Classes="accent"

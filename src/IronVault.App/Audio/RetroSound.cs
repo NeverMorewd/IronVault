@@ -1,6 +1,6 @@
 using System.Runtime.InteropServices;
 
-namespace IronVault.Desktop.Audio;
+namespace IronVault.App.Audio;
 
 /// <summary>
 /// Synthesized game audio — zero asset files, zero NuGet dependencies.

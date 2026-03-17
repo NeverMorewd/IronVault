@@ -2,7 +2,7 @@ using Avalonia.Threading;
 using IronVault.Core.Engine;
 using IronVault.Core.Engine.Systems;
 
-namespace IronVault.Desktop.ViewModels;
+namespace IronVault.App.ViewModels;
 
 public sealed class GameViewModel
 {
@@ -42,7 +42,6 @@ public sealed class GameViewModel
         float dt = (float)(now - _lastTick).TotalSeconds;
         _lastTick = now;
 
-        // Cap to avoid spiral-of-death on lag spikes
         if (dt > 0.1f) dt = 0.1f;
 
         FrameTick?.Invoke(this, dt);

@@ -1,10 +1,10 @@
 using Avalonia.Controls;
 using Avalonia.Input;
+using IronVault.App.Audio;
 using IronVault.Core.Engine;
 using IronVault.Core.Localization;
-using IronVault.Desktop.Audio;
 
-namespace IronVault.Desktop.Views;
+namespace IronVault.App.Views;
 
 public partial class UpgradeView : UserControl
 {
@@ -13,7 +13,7 @@ public partial class UpgradeView : UserControl
     private GameEngine? _lastEngine;
     private int         _lastWave;
 
-    /// <summary>Raised when the player picks an upgrade or skips.  Parameter = null for skip.</summary>
+    /// <summary>Raised when the player picks an upgrade or skips. Parameter = null for skip.</summary>
     public event EventHandler<UpgradeType?>? ContinueRequested;
 
     public UpgradeView()
@@ -25,7 +25,6 @@ public partial class UpgradeView : UserControl
         UpBtn2.Click  += (_, _) => { RetroSound.PlayClick(); ContinueRequested?.Invoke(this, _choices[2]); };
         SkipBtn.Click += (_, _) => { RetroSound.PlayClick(); ContinueRequested?.Invoke(this, null); };
 
-        // Keyboard navigation
         Focusable = true;
         KeyDown  += OnKeyDown;
 
@@ -33,40 +32,20 @@ public partial class UpgradeView : UserControl
         RefreshStaticText();
     }
 
-    // ── Keyboard navigation ───────────────────────────────────────────────────
-
     private void OnKeyDown(object? sender, KeyEventArgs e)
     {
         switch (e.Key)
         {
-            case Key.D1:
-            case Key.NumPad1:
-                ContinueRequested?.Invoke(this, _choices[0]);
-                e.Handled = true;
-                break;
-            case Key.D2:
-            case Key.NumPad2:
-                ContinueRequested?.Invoke(this, _choices[1]);
-                e.Handled = true;
-                break;
-            case Key.D3:
-            case Key.NumPad3:
-                ContinueRequested?.Invoke(this, _choices[2]);
-                e.Handled = true;
-                break;
-            case Key.Space:
-            case Key.Enter:
-            case Key.Escape:
-            case Key.S:
+            case Key.D1: case Key.NumPad1: ContinueRequested?.Invoke(this, _choices[0]); e.Handled = true; break;
+            case Key.D2: case Key.NumPad2: ContinueRequested?.Invoke(this, _choices[1]); e.Handled = true; break;
+            case Key.D3: case Key.NumPad3: ContinueRequested?.Invoke(this, _choices[2]); e.Handled = true; break;
+            case Key.Space: case Key.Enter: case Key.Escape: case Key.S:
                 ContinueRequested?.Invoke(this, null);
                 e.Handled = true;
                 break;
         }
     }
 
-    /// <summary>
-    /// Called by MainWindow just before this view is made visible.
-    /// </summary>
     public void Prepare(int clearedWave, GameEngine engine)
     {
         _lastEngine = engine;
@@ -83,8 +62,6 @@ public partial class UpgradeView : UserControl
         PopulateCards();
         RefreshStaticText();
     }
-
-    // ── Localisation ─────────────────────────────────────────────────────────
 
     private void OnLanguageChanged()
     {
@@ -128,8 +105,6 @@ public partial class UpgradeView : UserControl
 
     private static string FormatWaveCleared(int wave)
         => $"{I18n.T("hud.wave")}  {wave:D2}  {(I18n.Current == Language.Chinese ? "通过" : "CLEARED")}";
-
-    // ── Helpers ──────────────────────────────────────────────────────────────
 
     private static UpgradeType[] GenerateChoices(GameEngine engine)
     {

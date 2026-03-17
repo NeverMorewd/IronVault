@@ -1,24 +1,23 @@
 using Avalonia.Controls;
 using Avalonia.Input;
+using IronVault.App.Audio;
 using IronVault.Core.Engine;
 using IronVault.Core.Engine.Systems;
 using IronVault.Core.Localization;
-using IronVault.Desktop.Audio;
 
-namespace IronVault.Desktop.Views;
+namespace IronVault.App.Views;
 
-/// <summary>
-/// Browser-specific MenuView code-behind.
-/// Identical to the Desktop version except the Exit button is hidden:
-/// <c>Environment.Exit()</c> is not supported in WebAssembly.
-/// </summary>
 public partial class MenuView : UserControl
 {
     private AIDifficulty _difficulty = AIDifficulty.Normal;
     private GameMode     _mode       = GameMode.Classic;
 
-    /// <summary>Raised when the player clicks DEPLOY.  Parameter = (difficulty, mode).</summary>
+    /// <summary>Raised when the player clicks DEPLOY.</summary>
     public event EventHandler<(AIDifficulty Difficulty, GameMode Mode)>? StartRequested;
+
+    /// <summary>Raised when the player clicks ABORT / presses Escape.
+    /// The host (MainView) decides how to handle exit based on platform.</summary>
+    public event EventHandler? ExitRequested;
 
     public MenuView()
     {
@@ -37,20 +36,21 @@ public partial class MenuView : UserControl
         LangEnBtn.Click += (_, _) => { RetroSound.PlayClick(); I18n.Current = Language.English; RefreshText(); };
         LangZhBtn.Click += (_, _) => { RetroSound.PlayClick(); I18n.Current = Language.Chinese; RefreshText(); };
 
-        // Start button
+        // Action buttons
         StartBtn.Click += (_, _) => { RetroSound.PlayClick(); StartRequested?.Invoke(this, (_difficulty, _mode)); };
+        ExitBtn.Click  += (_, _) => { RetroSound.PlayClick(); ExitRequested?.Invoke(this, EventArgs.Empty); };
 
-        // No process to exit in the browser — hide the Exit button entirely.
-        ExitBtn.IsVisible = false;
+        // Hide the exit button on platforms that don't support programmatic exit
+        ExitBtn.IsVisible = !OperatingSystem.IsBrowser()
+                         && !OperatingSystem.IsAndroid()
+                         && !OperatingSystem.IsIOS();
 
         // Keyboard navigation
         Focusable = true;
         KeyDown  += OnKeyDown;
 
-        // Subscribe to language changes
         I18n.LanguageChanged += RefreshText;
 
-        // Initial state
         RefreshText();
         SetDifficulty(AIDifficulty.Normal);
         SetMode(GameMode.Classic);
@@ -92,6 +92,10 @@ public partial class MenuView : UserControl
                 RefreshText();
                 e.Handled = true;
                 break;
+            case Key.Escape:
+                ExitRequested?.Invoke(this, EventArgs.Empty);
+                e.Handled = true;
+                break;
         }
     }
 
@@ -131,7 +135,7 @@ public partial class MenuView : UserControl
         _mode = m;
         ClassicBtn.Content = m == GameMode.Classic ? $"▶ {I18n.T("menu.classic")} ◀" : $"  {I18n.T("menu.classic")}  ";
         DefenseBtn.Content = m == GameMode.Defense ? $"▶ {I18n.T("menu.defense")} ◀" : $"  {I18n.T("menu.defense")}  ";
-        ModeDesc.Text      = m == GameMode.Classic ? I18n.T("menu.classic.desc") : I18n.T("menu.defense.desc");
+        ModeDesc.Text = m == GameMode.Classic ? I18n.T("menu.classic.desc") : I18n.T("menu.defense.desc");
     }
 
     // ── Difficulty selection ──────────────────────────────────────────────────
