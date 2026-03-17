@@ -66,6 +66,7 @@ public static class I18n
         // ── HUD ──────────────────────────────────────────────────────────────
         ["hud.title"]         = ("IRON VAULT",                              "铁窖计划"),
         ["hud.status"]        = ("STATUS",                                  "状  态"),
+        ["hud.mode"]          = ("MODE",                                    "模式"),
         ["hud.wave"]          = ("WAVE",                                    "波次"),
         ["hud.score"]         = ("SCORE",                                   "得分"),
         ["hud.lives"]         = ("LIVES",                                   "生命"),

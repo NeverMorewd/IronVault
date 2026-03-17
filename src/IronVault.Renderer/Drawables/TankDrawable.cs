@@ -10,6 +10,12 @@ namespace IronVault.Renderer.Drawables;
 /// Pixel layout: 48×48 bounding box.
 /// Each team has its own visual design; all are drawn "barrel up" then
 /// rotated into the actual facing direction.
+///
+/// Enemy tiers have distinct visual profiles:
+///   Tier1 — red-orange  · basic hull  · single cannon  · 2 red warning lights
+///   Tier2 — amber-gold  · extra ribs  · reinforced barrel · 2 amber lights
+///   Tier3 — dark crimson · side skirts · thicker barrel   · 2 white strobes
+///   Tier4 — gunmetal/black · dual barrel · hazard stripe  · 4 red lights (boss)
 /// </summary>
 public sealed class TankDrawable : IDrawable
 {
@@ -38,7 +44,7 @@ public sealed class TankDrawable : IDrawable
             switch (_tank.Team)
             {
                 case TankTeam.Player: DrawPlayerTank(ctx, x, y, s, frameTick); break;
-                case TankTeam.Enemy:  DrawEnemyTank (ctx, x, y, s, frameTick); break;
+                case TankTeam.Enemy:  DrawEnemyTank (ctx, x, y, s, frameTick, _tank.Tier); break;
                 default:              DrawAllyTank  (ctx, x, y, s, frameTick); break;
             }
         }
@@ -135,84 +141,250 @@ public sealed class TankDrawable : IDrawable
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // ENEMY TANK  —  heavy boxy hull · fat single barrel · blinking red warning lights
-    // Colour: red-orange   Silhouette: blocky, uniform width, wider tracks
+    // ENEMY TANK  —  tier-differentiated visuals
+    //
+    //  Tier1  red-orange  · basic boxy hull   · single fat barrel  · 2 red blink lights
+    //  Tier2  amber-gold  · reinforced hull   · barrel ribs ×3     · 2 amber lights + roof stripe
+    //  Tier3  dark crimson· side skirt armour · extra-thick barrel · 2 white strobes + shoulder bolts
+    //  Tier4  gunmetal    · black/red scheme  · dual cannon ports  · 4-corner red lights + hazard band
     // ═══════════════════════════════════════════════════════════════════════════
-    private static void DrawEnemyTank(DrawingContext ctx, double x, double y, int s, uint tick)
+    private static void DrawEnemyTank(DrawingContext ctx, double x, double y, int s, uint tick, TankTier tier)
     {
-        // ── Brushes ──────────────────────────────────────────────────────────
-        var trackBody  = new SolidColorBrush(Color.FromRgb(0x72, 0x32, 0x10)); // lifted: visible against black bg
-        var trackDark  = new SolidColorBrush(Color.FromRgb(0x48, 0x1A, 0x06)); // tread stripe: darker but still readable
-        var hull       = DrawColors.EnemyBrush;                                // red-orange
-        var hullBrow   = new SolidColorBrush(Color.FromRgb(0xFF, 0x66, 0x00)); // brighter orange
-        var hullShade  = new SolidColorBrush(Color.FromRgb(0xAA, 0x22, 0x00)); // dark red
+        int treadOff = (int)(tick / 4 % 8);
+
+        switch (tier)
+        {
+            case TankTier.Tier2: DrawEnemyTier2(ctx, x, y, s, tick, treadOff); break;
+            case TankTier.Tier3: DrawEnemyTier3(ctx, x, y, s, tick, treadOff); break;
+            case TankTier.Tier4: DrawEnemyTier4(ctx, x, y, s, tick, treadOff); break;
+            default:             DrawEnemyTier1(ctx, x, y, s, tick, treadOff); break;
+        }
+    }
+
+    // ── Tier 1: basic red-orange ─────────────────────────────────────────────
+    private static void DrawEnemyTier1(DrawingContext ctx, double x, double y, int s, uint tick, int treadOff)
+    {
+        var trackBody  = new SolidColorBrush(Color.FromRgb(0x72, 0x32, 0x10));
+        var trackDark  = new SolidColorBrush(Color.FromRgb(0x48, 0x1A, 0x06));
+        var hull       = DrawColors.EnemyBrush;                                 // red-orange
+        var hullBrow   = new SolidColorBrush(Color.FromRgb(0xFF, 0x66, 0x00));
+        var hullShade  = new SolidColorBrush(Color.FromRgb(0xAA, 0x22, 0x00));
         var turret     = new SolidColorBrush(Color.FromRgb(0xBB, 0x28, 0x00));
         var turretDark = new SolidColorBrush(Color.FromRgb(0x88, 0x14, 0x00));
         var barrel     = new SolidColorBrush(Color.FromRgb(0x30, 0x10, 0x00));
         var rivet      = new SolidColorBrush(Color.FromRgb(0x55, 0x20, 0x00));
         var glint      = new SolidColorBrush(Color.FromArgb(70, 255, 255, 255));
 
-        int treadOff = (int)(tick / 4 % 8);
+        DrawEnemyTracks(ctx, x, y, s, trackBody, trackDark, treadOff, 12);
+        DrawEnemyHull(ctx, x, y, hull, hullBrow, hullShade, rivet, turret, turretDark, barrel, rivet, glint);
 
-        // ── Wide tracks (12 px — brutish) ────────────────────────────────────
-        ctx.FillRectangle(trackBody, new Rect(x,      y + 2, 12, s - 4));
-        ctx.FillRectangle(trackBody, new Rect(x + 36, y + 2, 12, s - 4));
+        // Warning lights — 2 blinking red
+        bool  on     = (tick / 5 % 2 == 0);
+        byte  core   = on ? (byte)255 : (byte)50;
+        byte  halo   = on ? (byte)100 : (byte)20;
+        DrawLight(ctx, x + 10, y + 5, Color.FromArgb(halo, 255, 0, 0), Color.FromArgb(core, 255, 0, 0));
+        DrawLight(ctx, x + 33, y + 5, Color.FromArgb(halo, 255, 0, 0), Color.FromArgb(core, 255, 0, 0));
+    }
 
-        for (int i = 0; i < 6; i++)
-        {
-            double ty = y + 2 + (i * 8 + treadOff) % (s - 4);
-            ctx.FillRectangle(trackDark, new Rect(x,      ty, 12, 2));
-            ctx.FillRectangle(trackDark, new Rect(x + 36, ty, 12, 2));
-        }
+    // ── Tier 2: amber-gold, reinforced ───────────────────────────────────────
+    private static void DrawEnemyTier2(DrawingContext ctx, double x, double y, int s, uint tick, int treadOff)
+    {
+        var trackBody  = new SolidColorBrush(Color.FromRgb(0x60, 0x38, 0x00));
+        var trackDark  = new SolidColorBrush(Color.FromRgb(0x38, 0x20, 0x00));
+        var hull       = new SolidColorBrush(Color.FromRgb(0xCC, 0x70, 0x00));  // amber
+        var hullBrow   = new SolidColorBrush(Color.FromRgb(0xFF, 0xA0, 0x00));  // bright amber
+        var hullShade  = new SolidColorBrush(Color.FromRgb(0x88, 0x44, 0x00));
+        var turret     = new SolidColorBrush(Color.FromRgb(0xAA, 0x60, 0x00));
+        var turretDark = new SolidColorBrush(Color.FromRgb(0x77, 0x40, 0x00));
+        var barrel     = new SolidColorBrush(Color.FromRgb(0x28, 0x18, 0x00));
+        var rivet      = new SolidColorBrush(Color.FromRgb(0x66, 0x44, 0x00));
+        var glint      = new SolidColorBrush(Color.FromArgb(80, 255, 255, 255));
 
-        // ── Blocky hull (uniform width, heavy silhouette) ────────────────────
-        // Armoured brow (angled front)
+        DrawEnemyTracks(ctx, x, y, s, trackBody, trackDark, treadOff, 12);
+        DrawEnemyHull(ctx, x, y, hull, hullBrow, hullShade, rivet, turret, turretDark, barrel, rivet, glint);
+
+        // Extra: reinforcement rib across mid-hull
+        ctx.FillRectangle(hullShade, new Rect(x + 12, y + 22, 24, 2));
+        // Barrel ribs ×3 (more than Tier1)
+        ctx.FillRectangle(rivet, new Rect(x + 20, y + 4,  8, 2));
+        ctx.FillRectangle(rivet, new Rect(x + 20, y + 8,  8, 2));
+        ctx.FillRectangle(rivet, new Rect(x + 20, y + 12, 8, 2));
+        // Roof stripe
+        ctx.FillRectangle(hullBrow, new Rect(x + 16, y + 14, 16, 2));
+
+        // Lights — 2 amber
+        bool  on   = (tick / 5 % 2 == 0);
+        byte  core = on ? (byte)255 : (byte)60;
+        byte  halo = on ? (byte)110 : (byte)25;
+        DrawLight(ctx, x + 10, y + 5, Color.FromArgb(halo, 255, 140, 0), Color.FromArgb(core, 255, 160, 0));
+        DrawLight(ctx, x + 33, y + 5, Color.FromArgb(halo, 255, 140, 0), Color.FromArgb(core, 255, 160, 0));
+    }
+
+    // ── Tier 3: dark crimson, heavy ───────────────────────────────────────────
+    private static void DrawEnemyTier3(DrawingContext ctx, double x, double y, int s, uint tick, int treadOff)
+    {
+        var trackBody  = new SolidColorBrush(Color.FromRgb(0x30, 0x10, 0x10));
+        var trackDark  = new SolidColorBrush(Color.FromRgb(0x1A, 0x08, 0x08));
+        var hull       = new SolidColorBrush(Color.FromRgb(0x99, 0x00, 0x11));  // dark crimson
+        var hullBrow   = new SolidColorBrush(Color.FromRgb(0xCC, 0x00, 0x22));  // brighter crimson
+        var hullShade  = new SolidColorBrush(Color.FromRgb(0x55, 0x00, 0x0A));
+        var turret     = new SolidColorBrush(Color.FromRgb(0x88, 0x00, 0x11));
+        var turretDark = new SolidColorBrush(Color.FromRgb(0x55, 0x00, 0x08));
+        var barrel     = new SolidColorBrush(Color.FromRgb(0x20, 0x08, 0x08));
+        var rivet      = new SolidColorBrush(Color.FromRgb(0x44, 0x10, 0x10));
+        var skirt      = new SolidColorBrush(Color.FromRgb(0x66, 0x00, 0x0A));
+        var glint      = new SolidColorBrush(Color.FromArgb(60, 255, 255, 255));
+
+        DrawEnemyTracks(ctx, x, y, s, trackBody, trackDark, treadOff, 12);
+        DrawEnemyHull(ctx, x, y, hull, hullBrow, hullShade, rivet, turret, turretDark, barrel, rivet, glint);
+
+        // Side skirt armour plates (over the tracks)
+        ctx.FillRectangle(skirt, new Rect(x,      y + 14, 12, 22));
+        ctx.FillRectangle(skirt, new Rect(x + 36, y + 14, 12, 22));
+        // Skirt bolts
+        ctx.FillRectangle(rivet, new Rect(x + 1,  y + 18, 3, 3));
+        ctx.FillRectangle(rivet, new Rect(x + 1,  y + 27, 3, 3));
+        ctx.FillRectangle(rivet, new Rect(x + 44, y + 18, 3, 3));
+        ctx.FillRectangle(rivet, new Rect(x + 44, y + 27, 3, 3));
+
+        // Thick barrel (7 wide instead of 6)
+        ctx.FillRectangle(barrel, new Rect(x + 20, y,     8, 18));  // thicker tube
+        ctx.FillRectangle(turret, new Rect(x + 19, y + 14, 10, 4)); // wider mantlet
+
+        // Shoulder bolts on turret ring
+        ctx.FillRectangle(rivet, new Rect(x + 14, y + 20, 3, 3));
+        ctx.FillRectangle(rivet, new Rect(x + 31, y + 20, 3, 3));
+
+        // Lights — 2 white strobe (brighter)
+        bool  on   = (tick / 4 % 2 == 0);
+        byte  core = on ? (byte)255 : (byte)80;
+        byte  halo = on ? (byte)120 : (byte)30;
+        DrawLight(ctx, x + 10, y + 5, Color.FromArgb(halo, 240, 240, 255), Color.FromArgb(core, 255, 255, 255));
+        DrawLight(ctx, x + 33, y + 5, Color.FromArgb(halo, 240, 240, 255), Color.FromArgb(core, 255, 255, 255));
+    }
+
+    // ── Tier 4: gunmetal boss, dual cannon ───────────────────────────────────
+    private static void DrawEnemyTier4(DrawingContext ctx, double x, double y, int s, uint tick, int treadOff)
+    {
+        var trackBody  = new SolidColorBrush(Color.FromRgb(0x22, 0x22, 0x22));
+        var trackDark  = new SolidColorBrush(Color.FromRgb(0x10, 0x10, 0x10));
+        var hull       = new SolidColorBrush(Color.FromRgb(0x28, 0x28, 0x28));  // near-black
+        var hullBrow   = new SolidColorBrush(Color.FromRgb(0x40, 0x40, 0x40));  // dark grey
+        var hullShade  = new SolidColorBrush(Color.FromRgb(0x14, 0x14, 0x14));
+        var hullAccent = new SolidColorBrush(Color.FromRgb(0xCC, 0x00, 0x00));  // deep red accent
+        var turret     = new SolidColorBrush(Color.FromRgb(0x30, 0x30, 0x30));
+        var turretDark = new SolidColorBrush(Color.FromRgb(0x18, 0x18, 0x18));
+        var barrel     = new SolidColorBrush(Color.FromRgb(0x18, 0x18, 0x18));
+        var rivet      = new SolidColorBrush(Color.FromRgb(0x50, 0x50, 0x50));
+        var glint      = new SolidColorBrush(Color.FromArgb(50, 255, 255, 255));
+
+        DrawEnemyTracks(ctx, x, y, s, trackBody, trackDark, treadOff, 12);
+
+        // ── Hull (same shape, gunmetal colours) ──────────────────────────────
         ctx.FillRectangle(hullBrow,  new Rect(x + 12, y + 4,  24, 6));
-        // Main hull body
         ctx.FillRectangle(hull,      new Rect(x + 12, y + 10, 24, 28));
-        // Rear plate
         ctx.FillRectangle(hullShade, new Rect(x + 12, y + 38, 24,  6));
-        // Brow edge stripe
         ctx.FillRectangle(hullShade, new Rect(x + 12, y + 10, 24,  2));
 
-        // ── Rivets / bolt details ─────────────────────────────────────────────
-        // 4 corner bolts on hull
+        // Red accent stripe across mid-hull (boss identifier)
+        ctx.FillRectangle(hullAccent, new Rect(x + 12, y + 20, 24, 3));
+
+        // Rivets
         ctx.FillRectangle(rivet, new Rect(x + 12, y + 11, 3, 3));
         ctx.FillRectangle(rivet, new Rect(x + 33, y + 11, 3, 3));
         ctx.FillRectangle(rivet, new Rect(x + 12, y + 35, 3, 3));
         ctx.FillRectangle(rivet, new Rect(x + 33, y + 35, 3, 3));
 
-        // ── Turret (wide square box) ──────────────────────────────────────────
+        // ── Heavy turret ─────────────────────────────────────────────────────
+        ctx.FillRectangle(turret,     new Rect(x + 13, y + 13, 22, 22));
+        ctx.FillRectangle(turretDark, new Rect(x + 16, y + 16, 16, 16));
+        ctx.FillRectangle(turret,     new Rect(x + 18, y + 18, 12, 12));
+        ctx.FillRectangle(turretDark, new Rect(x + 19, y + 19, 10, 2));
+        ctx.FillRectangle(turretDark, new Rect(x + 19, y + 19, 2,  10));
+
+        // ── Dual cannon (two side-by-side barrels) ───────────────────────────
+        ctx.FillRectangle(barrel,     new Rect(x + 18, y,      5, 18));  // left barrel
+        ctx.FillRectangle(barrel,     new Rect(x + 25, y,      5, 18));  // right barrel
+        ctx.FillRectangle(hullAccent, new Rect(x + 18, y + 5,  5, 2));   // left band
+        ctx.FillRectangle(hullAccent, new Rect(x + 25, y + 5,  5, 2));   // right band
+        ctx.FillRectangle(hullAccent, new Rect(x + 18, y + 10, 5, 2));   // left band 2
+        ctx.FillRectangle(hullAccent, new Rect(x + 25, y + 10, 5, 2));   // right band 2
+        ctx.FillRectangle(turret,     new Rect(x + 17, y + 13, 14, 4));  // mantlet
+
+        // Hazard chevron on rear plate (diagonal warning stripe)
+        for (int i = 0; i < 4; i++)
+            ctx.FillRectangle(hullAccent,
+                new Rect(x + 13 + i * 6, y + 38, 3, 6));
+
+        // ── Dome glint ───────────────────────────────────────────────────────
+        ctx.FillRectangle(glint, new Rect(x + 18, y + 17, 5, 5));
+
+        // ── Four corner red lights (aggressive identifier) ────────────────────
+        bool on   = (tick / 3 % 2 == 0);    // faster blink rate for boss
+        byte core = on ? (byte)255 : (byte)40;
+        byte halo = on ? (byte)120 : (byte)15;
+        DrawLight(ctx, x + 10, y + 5,  Color.FromArgb(halo, 255, 0, 0), Color.FromArgb(core, 255, 0, 0));
+        DrawLight(ctx, x + 33, y + 5,  Color.FromArgb(halo, 255, 0, 0), Color.FromArgb(core, 255, 0, 0));
+        DrawLight(ctx, x + 10, y + 36, Color.FromArgb(halo, 255, 0, 0), Color.FromArgb(core, 255, 0, 0));
+        DrawLight(ctx, x + 33, y + 36, Color.FromArgb(halo, 255, 0, 0), Color.FromArgb(core, 255, 0, 0));
+    }
+
+    // ── Shared helpers for enemy tank geometry ────────────────────────────────
+
+    private static void DrawEnemyTracks(DrawingContext ctx, double x, double y, int s,
+        SolidColorBrush body, SolidColorBrush dark, int treadOff, int trackW)
+    {
+        ctx.FillRectangle(body, new Rect(x,           y + 2, trackW,     s - 4));
+        ctx.FillRectangle(body, new Rect(x + s - trackW, y + 2, trackW, s - 4));
+
+        for (int i = 0; i < 6; i++)
+        {
+            double ty = y + 2 + (i * 8 + treadOff) % (s - 4);
+            ctx.FillRectangle(dark, new Rect(x,           ty, trackW, 2));
+            ctx.FillRectangle(dark, new Rect(x + s - trackW, ty, trackW, 2));
+        }
+    }
+
+    private static void DrawEnemyHull(DrawingContext ctx, double x, double y,
+        SolidColorBrush hull, SolidColorBrush hullBrow, SolidColorBrush hullShade,
+        SolidColorBrush rivet, SolidColorBrush turret, SolidColorBrush turretDark,
+        SolidColorBrush barrel, SolidColorBrush ribColor, SolidColorBrush glint)
+    {
+        // Hull
+        ctx.FillRectangle(hullBrow,  new Rect(x + 12, y + 4,  24, 6));
+        ctx.FillRectangle(hull,      new Rect(x + 12, y + 10, 24, 28));
+        ctx.FillRectangle(hullShade, new Rect(x + 12, y + 38, 24,  6));
+        ctx.FillRectangle(hullShade, new Rect(x + 12, y + 10, 24,  2));
+
+        // Corner rivets
+        ctx.FillRectangle(rivet, new Rect(x + 12, y + 11, 3, 3));
+        ctx.FillRectangle(rivet, new Rect(x + 33, y + 11, 3, 3));
+        ctx.FillRectangle(rivet, new Rect(x + 12, y + 35, 3, 3));
+        ctx.FillRectangle(rivet, new Rect(x + 33, y + 35, 3, 3));
+
+        // Turret
         ctx.FillRectangle(turret,     new Rect(x + 14, y + 14, 20, 20));
         ctx.FillRectangle(turretDark, new Rect(x + 17, y + 17, 14, 14));
         ctx.FillRectangle(turret,     new Rect(x + 18, y + 18, 12, 12));
-        // Hatch outline
         ctx.FillRectangle(turretDark, new Rect(x + 19, y + 19, 10,  2));
         ctx.FillRectangle(turretDark, new Rect(x + 19, y + 19,  2, 10));
 
-        // ── Fat single barrel ─────────────────────────────────────────────────
-        ctx.FillRectangle(barrel,  new Rect(x + 21, y,      6, 18)); // main tube
-        ctx.FillRectangle(turret,  new Rect(x + 20, y + 14, 8,  4)); // mantlet sleeve
-        // Barrel ribs (2 bands for a "reinforced" look)
-        ctx.FillRectangle(rivet,   new Rect(x + 20, y + 6,  8, 2));
-        ctx.FillRectangle(rivet,   new Rect(x + 20, y + 11, 8, 2));
+        // Single fat barrel
+        ctx.FillRectangle(barrel,  new Rect(x + 21, y,      6, 18));
+        ctx.FillRectangle(turret,  new Rect(x + 20, y + 14, 8,  4));
+        // Barrel ribs ×2
+        ctx.FillRectangle(ribColor, new Rect(x + 20, y + 6,  8, 2));
+        ctx.FillRectangle(ribColor, new Rect(x + 20, y + 11, 8, 2));
 
-        // ── Dome glint ───────────────────────────────────────────────────────
+        // Dome glint
         ctx.FillRectangle(glint, new Rect(x + 17, y + 17, 5, 5));
+    }
 
-        // ── Warning lights (blinking red — enemy identifier) ─────────────────
-        bool  lightOn    = (tick / 5 % 2 == 0);
-        byte  coreAlpha  = lightOn ? (byte)255 : (byte)50;
-        byte  haloAlpha  = lightOn ? (byte)100 : (byte)20;
-        var   lightCore  = new SolidColorBrush(Color.FromArgb(coreAlpha, 255, 0, 0));
-        var   lightHalo  = new SolidColorBrush(Color.FromArgb(haloAlpha, 255, 0, 0));
-
-        // Left light
-        ctx.FillRectangle(lightHalo, new Rect(x + 10, y + 5, 7, 7));
-        ctx.FillRectangle(lightCore, new Rect(x + 12, y + 6, 4, 4));
-        // Right light
-        ctx.FillRectangle(lightHalo, new Rect(x + 33, y + 5, 7, 7));
-        ctx.FillRectangle(lightCore, new Rect(x + 35, y + 6, 4, 4));
+    private static void DrawLight(DrawingContext ctx, double lx, double ly,
+        Color haloColor, Color coreColor)
+    {
+        ctx.FillRectangle(new SolidColorBrush(haloColor), new Rect(lx,     ly,     7, 7));
+        ctx.FillRectangle(new SolidColorBrush(coreColor), new Rect(lx + 2, ly + 1, 4, 4));
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
@@ -366,7 +538,6 @@ public sealed class TankDrawable : IDrawable
 
     // ═══════════════════════════════════════════════════════════════════════════
     // ICE SLIDE EFFECT  —  cyan glow border + corner crystal sparks
-    // Drawn in world-space (outside rotation transform) while IceMomentum > 0.
     // ═══════════════════════════════════════════════════════════════════════════
     private static void DrawIceSlide(DrawingContext ctx,
         double x, double y, int s, float momentum, uint tick)
@@ -401,7 +572,6 @@ public sealed class TankDrawable : IDrawable
         }
 
         // 4. Momentum bar — tiny horizontal strip at the bottom of the tank
-        //    shows how much slide is left (full width = 100 % momentum)
         double barW = (s - 8) * momentum;
         ctx.FillRectangle(
             new SolidColorBrush(Color.FromArgb(160, 0, 200, 255)),

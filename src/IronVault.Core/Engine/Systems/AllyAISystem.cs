@@ -101,13 +101,14 @@ public static class AllyAISystem
                 }
             }
 
-            // Apply facing direction (MoveSystem will handle actual movement)
-            ally.Position.Facing = desired;
-            ally.Velocity.IsMoving = true;
-
-            // Track stuck frames (MoveSystem sets IsMoving=false when blocked)
+            // Track stuck frames FIRST — IsMoving here reflects whether MoveSystem
+            // managed to move the ally last frame (before we overwrite it below).
             if (!ally.Velocity.IsMoving) state.StuckFrames++;
-            else state.StuckFrames = 0;
+            else                         state.StuckFrames = 0;
+
+            // Apply the chosen direction; MoveSystem will execute movement next frame.
+            ally.Position.Facing   = desired;
+            ally.Velocity.IsMoving = true;
 
             // ── 3. Fire if an enemy is axially aligned ────────────────────────
             if (target != null)

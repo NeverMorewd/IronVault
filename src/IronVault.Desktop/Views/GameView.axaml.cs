@@ -63,6 +63,7 @@ public partial class GameView : UserControl
     {
         TitleText.Text      = I18n.T("hud.title");
         StatusLabel.Text    = I18n.T("hud.status");
+        ModeLabel.Text      = I18n.T("hud.mode");
         WaveLabel.Text      = I18n.T("hud.wave");
         ScoreLabel.Text     = I18n.T("hud.score");
         LivesLabel.Text     = I18n.T("hud.lives");
@@ -136,7 +137,16 @@ public partial class GameView : UserControl
         if (_vm is null) return;
         var eng = _vm.Engine;
 
-        WaveText.Text    = eng.Wave.ToString("D2");
+        // ── Mode label ────────────────────────────────────────────────────────
+        ModeText.Text = eng.Mode == GameMode.Defense
+            ? I18n.T("menu.defense")
+            : I18n.T("menu.classic");
+
+        // ── Wave: show "03/10" in Defense mode, "03" in Classic ──────────────
+        WaveText.Text = eng.TotalWaves > 0
+            ? $"{eng.Wave:D2}/{eng.TotalWaves}"
+            : eng.Wave.ToString("D2");
+
         ScoreText.Text   = eng.Score.ToString("D5");
         LivesText.Text   = new string('I', Math.Max(0, eng.Lives));
         EnemiesText.Text = eng.EnemiesLeft.ToString("D2");

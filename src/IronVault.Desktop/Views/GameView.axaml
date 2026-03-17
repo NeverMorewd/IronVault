@@ -7,12 +7,31 @@
   <!-- Root: horizontal split — game on left, HUD panel on right -->
   <Grid ColumnDefinitions="Auto,*">
 
-    <!-- ── Game Canvas Area ── -->
+    <!-- ── Game Canvas Area (CrtDisplay applies scanlines + beam + vignette) ── -->
     <Border Grid.Column="0"
             BorderBrush="{DynamicResource PipboyBorderBrush}"
             BorderThickness="2"
             Margin="8">
-      <renderer:GameCanvas x:Name="GameCanvas" />
+      <pipboy:CrtDisplay EnableScanlines="True"
+                         ScanlineSpacing="3"
+                         ScanlineHeight="1"
+                         ScanlineOpacity="0.18"
+                         EnableScanlineAnimation="True"
+                         ScanlineAnimSpeed="28"
+                         EnableScanBeam="True"
+                         ScanBeamHeight="55"
+                         ScanBeamSpeed="75"
+                         EnableScanBeamGradient="True"
+                         EnableNoise="True"
+                         NoiseDensity="0.006"
+                         NoiseOpacity="0.045"
+                         NoisePixelSize="1"
+                         NoiseRefreshIntervalMs="60"
+                         EnableVignette="True"
+                         VignetteIntensity="0.28"
+                         EnableFlicker="False">
+        <renderer:GameCanvas x:Name="GameCanvas" />
+      </pipboy:CrtDisplay>
     </Border>
 
     <!-- ── HUD Panel (Pipboy style) ── -->
@@ -34,18 +53,21 @@
           <StackPanel Spacing="6">
             <TextBlock x:Name="StatusLabel" Text="STATUS" Classes="h2" />
 
-            <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto,Auto">
-              <TextBlock Grid.Row="0" Grid.Column="0" x:Name="WaveLabel"    Text="WAVE"    Classes="dim" />
-              <TextBlock Grid.Row="0" Grid.Column="1" x:Name="WaveText"     Text="01" />
+            <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto,Auto,Auto">
+              <TextBlock Grid.Row="0" Grid.Column="0" x:Name="ModeLabel"    Text="MODE"    Classes="dim" />
+              <TextBlock Grid.Row="0" Grid.Column="1" x:Name="ModeText"     Text="CLASSIC" FontSize="10" />
 
-              <TextBlock Grid.Row="1" Grid.Column="0" x:Name="ScoreLabel"   Text="SCORE"   Classes="dim" />
-              <TextBlock Grid.Row="1" Grid.Column="1" x:Name="ScoreText"    Text="00000" />
+              <TextBlock Grid.Row="1" Grid.Column="0" x:Name="WaveLabel"    Text="WAVE"    Classes="dim" />
+              <TextBlock Grid.Row="1" Grid.Column="1" x:Name="WaveText"     Text="01" />
 
-              <TextBlock Grid.Row="2" Grid.Column="0" x:Name="LivesLabel"   Text="LIVES"   Classes="dim" />
-              <TextBlock Grid.Row="2" Grid.Column="1" x:Name="LivesText"    Text="III" />
+              <TextBlock Grid.Row="2" Grid.Column="0" x:Name="ScoreLabel"   Text="SCORE"   Classes="dim" />
+              <TextBlock Grid.Row="2" Grid.Column="1" x:Name="ScoreText"    Text="00000" />
 
-              <TextBlock Grid.Row="3" Grid.Column="0" x:Name="EnemiesLabel" Text="ENEMIES" Classes="dim" />
-              <TextBlock Grid.Row="3" Grid.Column="1" x:Name="EnemiesText"  Text="20" />
+              <TextBlock Grid.Row="3" Grid.Column="0" x:Name="LivesLabel"   Text="LIVES"   Classes="dim" />
+              <TextBlock Grid.Row="3" Grid.Column="1" x:Name="LivesText"    Text="III" />
+
+              <TextBlock Grid.Row="4" Grid.Column="0" x:Name="EnemiesLabel" Text="ENEMIES" Classes="dim" />
+              <TextBlock Grid.Row="4" Grid.Column="1" x:Name="EnemiesText"  Text="20" />
             </Grid>
           </StackPanel>
         </Border>

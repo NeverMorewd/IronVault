@@ -34,6 +34,10 @@ public sealed class GameEngine
     public float ShovelTimer       { get; private set; }   // > 0 while base is steeled
     public float BulletBoostTimer  { get; private set; }   // > 0 while bullet speed boosted
     public bool  EnemiesFrozen     => ClockTimer   > 0;
+    /// <summary>
+    /// Total waves for the current mode (10 in Defense, 0 = unlimited in Classic).
+    /// </summary>
+    public int   TotalWaves        => Mode == GameMode.Defense ? DefenseWaveScript.TotalWaves : 0;
 
     // ── Wave management ──────────────────────────────────────────────────────
     private float       _spawnTimer;
