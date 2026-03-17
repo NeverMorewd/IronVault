@@ -85,24 +85,89 @@ public sealed class TankDrawable : IDrawable
 
     private static void DrawShield(DrawingContext ctx, double x, double y, int s, uint tick)
     {
-        bool bright = (tick / 3 % 2 == 0);
-        byte alpha = bright ? (byte)180 : (byte)70;
-        var pen = new Pen(new SolidColorBrush(Color.FromArgb(alpha, 0, 200, 255)), 2);
-
         double cx = x + s / 2.0;
         double cy = y + s / 2.0;
-        double r  = s / 2.0 + 5;
-        double a  = tick * 0.06;
 
+        // Pulse: alternates every 4 ticks (≈ 15 times/sec at 60 fps)
+        bool pulse = (tick / 4 % 2 == 0);
+
+        double r1 =  s / 2.0 + 9;  // outer diamond orbit radius
+        double r2 =  s / 2.0 + 3;  // inner diamond orbit radius
+        double a1 =  tick * 0.045; // outer: slow clockwise
+        double a2 = -tick * 0.070; // inner: faster counter-clockwise
+
+        // ── 1. Soft field glow behind everything ──────────────────────────
+        ctx.FillRectangle(
+            new SolidColorBrush(Color.FromArgb(18, 0, 180, 255)),
+            new Rect(x - 8, y - 8, s + 16, s + 16));
+
+        // ── 2. Outer dashed diamond ───────────────────────────────────────
+        byte outerAlpha = pulse ? (byte)210 : (byte)80;
+        DrawDashedDiamond(ctx, cx, cy, r1, a1,
+            Color.FromArgb(outerAlpha, 0, 200, 255), thickness: 2);
+
+        // ── 3. Inner dashed diamond (opposite spin) ───────────────────────
+        byte innerAlpha = pulse ? (byte)130 : (byte)45;
+        DrawDashedDiamond(ctx, cx, cy, r2, a2,
+            Color.FromArgb(innerAlpha, 140, 230, 255), thickness: 1.5);
+
+        // ── 4. Cross sparks at the 4 outer-diamond vertices ───────────────
+        byte sparkAlpha = pulse ? (byte)255 : (byte)140;
+        var  sparkBrush = new SolidColorBrush(Color.FromArgb(sparkAlpha, 210, 245, 255));
+
+        for (int i = 0; i < 4; i++)
+        {
+            double angle = a1 + i * Math.PI / 2;
+            double px = cx + r1 * Math.Cos(angle);
+            double py = cy + r1 * Math.Sin(angle);
+
+            // Pixel-art "+" cross spark (longer arm on pulse)
+            double arm = pulse ? 4.0 : 2.5;
+            ctx.FillRectangle(sparkBrush, new Rect(px - 1,   py - arm, 2,       arm * 2)); // vertical
+            ctx.FillRectangle(sparkBrush, new Rect(px - arm, py - 1,   arm * 2, 2));       // horizontal
+        }
+    }
+
+    /// <summary>
+    /// Draws a diamond (rotated square) as 3 dashed segments per side,
+    /// giving a pixel-art "dashed orbit ring" look.
+    /// </summary>
+    private static void DrawDashedDiamond(DrawingContext ctx,
+        double cx, double cy, double r, double angle,
+        Color color, double thickness)
+    {
+        // Pre-build pen once per call (avoids allocating inside inner loop)
+        var pen = new Pen(new SolidColorBrush(color), thickness);
+
+        // 4 corner vertices spaced 90° apart, starting at 'angle'
         var pts = new Point[4];
         for (int i = 0; i < 4; i++)
-            pts[i] = new Point(cx + r * Math.Cos(a + i * Math.PI / 2),
-                               cy + r * Math.Sin(a + i * Math.PI / 2));
+            pts[i] = new Point(
+                cx + r * Math.Cos(angle + i * Math.PI / 2),
+                cy + r * Math.Sin(angle + i * Math.PI / 2));
 
-        ctx.DrawLine(pen, pts[0], pts[1]);
-        ctx.DrawLine(pen, pts[1], pts[2]);
-        ctx.DrawLine(pen, pts[2], pts[3]);
-        ctx.DrawLine(pen, pts[3], pts[0]);
+        // 3 dashes per side: draw segments at t ∈ [0.08, 0.42], [0.41, 0.74], [0.75, 0.92]
+        ReadOnlySpan<(double t0, double t1)> dashRanges =
+        [
+            (0.06, 0.38),
+            (0.45, 0.72),
+            (0.79, 0.94),
+        ];
+
+        for (int side = 0; side < 4; side++)
+        {
+            var p1 = pts[side];
+            var p2 = pts[(side + 1) % 4];
+
+            foreach (var (t0, t1) in dashRanges)
+            {
+                var segStart = new Point(p1.X + (p2.X - p1.X) * t0,
+                                         p1.Y + (p2.Y - p1.Y) * t0);
+                var segEnd   = new Point(p1.X + (p2.X - p1.X) * t1,
+                                         p1.Y + (p2.Y - p1.Y) * t1);
+                ctx.DrawLine(pen, segStart, segEnd);
+            }
+        }
     }
 
     private static double DirectionToRadians(Direction dir) => dir switch
