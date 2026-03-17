@@ -39,7 +39,9 @@ public partial class GameView : UserControl
         vm.FrameTick           += OnFrameTick;
         vm.Engine.StateChanged += OnStateChanged;
         vm.Engine.ScoreChanged += OnScoreChanged;
+        // Shot fired by any tank → shoot blip (debounced inside RetroSound)
         vm.Engine.ShotFired    += (_, _) => RetroSound.PlayShoot();
+        // Any bullet → explosion → hit sound
         vm.Engine.HitOccurred  += (_, _) => RetroSound.PlayExplosion();
         GameCanvas.Attach(vm.Engine);
     }
@@ -72,6 +74,7 @@ public partial class GameView : UserControl
     private void StartOrRestart()
     {
         if (_vm is null) return;
+        RetroSound.StopMovement();   // kill any leftover engine sound from previous run
         _vm.Stop();
         _vm.StartGame();
         PauseButton.IsEnabled = true;
@@ -93,7 +96,19 @@ public partial class GameView : UserControl
             );
         }
 
-        GameCanvas.Tick(dt);
+        GameCanvas.Tick(dt);   // engine tick — updates Velocity.IsMoving
+
+        // ── Movement sound: sync with player tank state ───────────────────────
+        // Check AFTER Tick() so Velocity.IsMoving reflects this frame's result.
+        bool engineRunning = _vm?.Engine is { State: GameState.Playing } eng
+                          && eng.Player  is { IsAlive: true, Velocity.IsMoving: true };
+
+        if (engineRunning)
+            RetroSound.StartMovement();
+        else
+            RetroSound.StopMovement();
+        // ─────────────────────────────────────────────────────────────────────
+
         UpdateHud();
     }
 
@@ -127,6 +142,10 @@ public partial class GameView : UserControl
         {
             PauseButton.IsEnabled = true;
         }
+
+        // Stop engine rumble whenever the game is not actively running
+        if (state != GameState.Playing)
+            RetroSound.StopMovement();
     }
 
     private void OnScoreChanged(object? sender, int score)

@@ -3,89 +3,295 @@ using System.Runtime.InteropServices;
 namespace IronVault.Desktop.Audio;
 
 /// <summary>
-/// Retro synthesized sound effects via winmm.dll PlaySound (Windows only).
-/// All sounds are generated from code — no audio file assets needed.
+/// Synthesized game audio — zero asset files, zero NuGet dependencies.
+///
+/// Architecture:
+///   • One-shots (click / shoot / explosion) → winmm.dll PlaySound  (channel A)
+///   • Movement loop                         → waveOut API           (channel B, independent)
+///
+/// Two separate Windows audio channels means the engine-rumble loop runs
+/// continuously in parallel with clicks, shots and explosions — no interruption.
+/// Both paths are pure P/Invoke: AOT-safe and trimmer-safe.
 /// </summary>
-internal static partial class RetroSound
+internal static class RetroSound
 {
-    // Pre-built WAV buffers (synthesized once at startup)
-    private static readonly byte[] _shoot     = MakeDecayBlip(hz: 900,  ms: 80);
-    private static readonly byte[] _explosion = MakeNoiseBurst(ms: 180);
-    private static readonly byte[] _click     = MakeDecayBlip(hz: 1200, ms: 40);
+    // All synthesis uses 16-bit mono PCM at 22 050 Hz
+    private const int Rate = 22_050;
 
-    public static void PlayShoot()     => TryPlay(_shoot);
-    public static void PlayExplosion() => TryPlay(_explosion);
-    public static void PlayClick()     => TryPlay(_click);
+    // ── Pre-built buffers (synthesised once at class load) ────────────────────
+    // One-shots are wrapped in a WAV container so PlaySound can consume them.
+    private static readonly byte[] _click     = WrapWav(SynthClick());
+    private static readonly byte[] _shoot     = WrapWav(SynthShoot());
+    private static readonly byte[] _explosion = WrapWav(SynthExplosion());
+    // Movement is raw PCM fed directly to waveOut (no WAV header needed).
+    private static readonly byte[] _movement  = SynthMovement();
 
-    // ── Windows PlaySound P/Invoke ────────────────────────────────────────────
+    // ── Shoot debounce (prevents enemy-fire spam drowning the mix) ────────────
+    private static long _lastShootTick;
+    private const  long ShootCooldownMs = 130;
 
-    private static void TryPlay(byte[] wav)
+    // ── Public API ────────────────────────────────────────────────────────────
+
+    public static void PlayClick()     => TryPlayWav(_click);
+    public static void PlayExplosion() => TryPlayWav(_explosion);
+
+    public static void PlayShoot()
     {
-        if (!OperatingSystem.IsWindows()) return;
-        try { PlaySound(wav, 0, SND_MEMORY | SND_ASYNC | SND_NODEFAULT); }
-        catch { /* audio unavailable */ }
+        long now = Environment.TickCount64;
+        if (now - _lastShootTick < ShootCooldownMs) return;
+        _lastShootTick = now;
+        TryPlayWav(_shoot);
     }
 
-    [DllImport("winmm.dll")]
-    private static extern bool PlaySound(byte[] pszSound, nint hmod, uint fdwSound);
+    /// <summary>Begin looping the engine-rumble sound (no-op if already playing).</summary>
+    public static void StartMovement()
+    {
+        if (!OperatingSystem.IsWindows()) return;
+        MoveLoop.Start(_movement);
+    }
 
-    private const uint SND_ASYNC     = 0x0001;
-    private const uint SND_NODEFAULT = 0x0002;
-    private const uint SND_MEMORY    = 0x0004;
+    /// <summary>Stop the engine-rumble loop (no-op if already stopped).</summary>
+    public static void StopMovement()
+    {
+        if (!OperatingSystem.IsWindows()) return;
+        MoveLoop.Stop();
+    }
+
+    // ── PlaySound one-shot helper ─────────────────────────────────────────────
+
+    private static void TryPlayWav(byte[] wav)
+    {
+        if (!OperatingSystem.IsWindows()) return;
+        try { WinMM.PlaySound(wav, 0, WinMM.SND_MEMORY | WinMM.SND_ASYNC | WinMM.SND_NODEFAULT); }
+        catch { /* audio subsystem unavailable */ }
+    }
 
     // ── Sound synthesis ───────────────────────────────────────────────────────
 
-    /// <summary>Square wave blip with linear amplitude decay.</summary>
-    private static byte[] MakeDecayBlip(double hz, int ms)
+    /// <summary>UI click: 1 kHz square-wave tick, 28 ms, cubic decay.</summary>
+    private static byte[] SynthClick()
     {
-        const int rate = 8000;
-        int n = rate * ms / 1000;
-        double period = rate / hz;
-        var pcm = new byte[n];
+        int n = Rate * 28 / 1000;
+        var buf = new byte[n * 2];
         for (int i = 0; i < n; i++)
         {
-            double amp = 1.0 - (double)i / n;           // linear decay
-            bool hi = (i % (int)period) < period / 2;
-            pcm[i] = (byte)(128 + (hi ? 1 : -1) * (int)(amp * 96));
+            double t = (double)i / n;
+            double amp   = Math.Pow(1 - t, 3) * 0.65;
+            double phase = 2 * Math.PI * 1000 * i / Rate;
+            Write16(buf, i, Math.Sign(Math.Sin(phase)) * amp);
         }
-        return WavWrap(rate, pcm);
+        return buf;
     }
 
-    /// <summary>White-noise burst with amplitude decay (explosion).</summary>
-    private static byte[] MakeNoiseBurst(int ms)
+    /// <summary>Player shoots: frequency-sweep chirp 680 → 110 Hz, 95 ms, square wave.</summary>
+    private static byte[] SynthShoot()
     {
-        const int rate = 8000;
-        int n = rate * ms / 1000;
-        var rng = new Random(42);   // fixed seed → deterministic
-        var pcm = new byte[n];
+        int n = Rate * 95 / 1000;
+        var buf = new byte[n * 2];
+        double phase = 0;
         for (int i = 0; i < n; i++)
         {
-            double amp = 1.0 - (double)i / n;
-            int noise = (int)((rng.NextDouble() * 2.0 - 1.0) * amp * 80);
-            pcm[i] = (byte)Math.Clamp(128 + noise, 0, 255);
+            double t  = (double)i / n;
+            double hz = 680 * Math.Pow(0.16, t);   // exponential sweep downward
+            phase += 2 * Math.PI * hz / Rate;
+            double amp = (1.0 - t) * 0.78;
+            Write16(buf, i, Math.Sign(Math.Sin(phase)) * amp);
         }
-        return WavWrap(rate, pcm);
+        return buf;
     }
 
-    /// <summary>Wraps raw 8-bit mono PCM bytes in a minimal WAV container.</summary>
-    private static byte[] WavWrap(int sampleRate, byte[] pcm)
+    /// <summary>
+    /// Hit / explosion: white noise + 52 Hz sub-thud, 280 ms, sqrt-decay envelope.
+    /// The low thud gives a physical "weight" the original square-wave lacked.
+    /// </summary>
+    private static byte[] SynthExplosion()
     {
-        using var ms = new MemoryStream(44 + pcm.Length);
+        int n = Rate * 280 / 1000;
+        var buf = new byte[n * 2];
+        var rng = new Random(77);   // fixed seed → same sound every time
+        for (int i = 0; i < n; i++)
+        {
+            double t    = (double)i / n;
+            double amp  = Math.Pow(1 - t, 0.45) * 0.88;
+            double noise = rng.NextDouble() * 2 - 1;
+            double thud  = Math.Sin(2 * Math.PI * 52 * i / Rate);
+            Write16(buf, i, (noise * 0.58 + thud * 0.42) * amp);
+        }
+        return buf;
+    }
+
+    /// <summary>
+    /// Engine rumble: 90 Hz fundamental + 3 harmonics, seamlessly loopable.
+    /// 22 050 / 90 = 245 samples per cycle exactly → 100 cycles = 24 500 samples,
+    /// zero phase error at the loop point.
+    /// </summary>
+    private static byte[] SynthMovement()
+    {
+        int cycleLen = Rate / 90;   // = 245 (exact integer, no rounding)
+        int n        = cycleLen * 100;
+        var buf      = new byte[n * 2];
+        var rng      = new Random(13);
+        for (int i = 0; i < n; i++)
+        {
+            double ph = 2 * Math.PI * 90 * i / Rate;
+            double engine = Math.Sin(ph)     * 0.50
+                          + Math.Sin(2 * ph) * 0.26
+                          + Math.Sin(3 * ph) * 0.14
+                          + Math.Sin(4 * ph) * 0.10;
+            double noise  = (rng.NextDouble() * 2 - 1) * 0.055;
+            Write16(buf, i, (engine + noise) * 0.48);
+        }
+        return buf;
+    }
+
+    // ── PCM / WAV helpers ─────────────────────────────────────────────────────
+
+    /// <summary>Write a normalised sample [-1 .. 1] as a 16-bit LE integer into buf.</summary>
+    private static void Write16(byte[] buf, int i, double sample)
+    {
+        short s = (short)Math.Clamp(sample * 28_000, -32_768, 32_767);
+        buf[i * 2]     = (byte)(s & 0xFF);
+        buf[i * 2 + 1] = (byte)(s >> 8);
+    }
+
+    /// <summary>Wrap raw 16-bit mono PCM in a minimal RIFF/WAV container.</summary>
+    private static byte[] WrapWav(byte[] pcm16)
+    {
+        using var ms = new MemoryStream(44 + pcm16.Length);
         using var w  = new BinaryWriter(ms);
         w.Write("RIFF"u8);
-        w.Write(36 + pcm.Length);   // RIFF chunk size
+        w.Write(36 + pcm16.Length);
         w.Write("WAVE"u8);
         w.Write("fmt "u8);
-        w.Write(16);                // fmt chunk size
-        w.Write((short)1);          // PCM
-        w.Write((short)1);          // mono
-        w.Write(sampleRate);
-        w.Write(sampleRate);        // ByteRate = rate * 1 * 1
-        w.Write((short)1);          // BlockAlign
-        w.Write((short)8);          // BitsPerSample
+        w.Write(16);            // PCM fmt chunk is always 16 bytes
+        w.Write((short)1);      // wFormatTag  = PCM
+        w.Write((short)1);      // nChannels   = mono
+        w.Write(Rate);          // nSamplesPerSec
+        w.Write(Rate * 2);      // nAvgBytesPerSec (16-bit mono → rate × 2)
+        w.Write((short)2);      // nBlockAlign
+        w.Write((short)16);     // wBitsPerSample
         w.Write("data"u8);
-        w.Write(pcm.Length);
-        w.Write(pcm);
+        w.Write(pcm16.Length);
+        w.Write(pcm16);
         return ms.ToArray();
+    }
+
+    // ── winmm.dll PlaySound wrapper ───────────────────────────────────────────
+
+    private static class WinMM
+    {
+        public const uint SND_ASYNC     = 0x0001;
+        public const uint SND_NODEFAULT = 0x0002;
+        public const uint SND_MEMORY    = 0x0004;
+
+        [DllImport("winmm.dll")]
+        public static extern bool PlaySound(byte[] pszSound, nint hmod, uint fdwSound);
+    }
+
+    // ── waveOut movement loop (independent audio channel) ────────────────────
+
+    /// <summary>
+    /// Manages a persistent waveOut stream for seamless looping playback.
+    /// Lives completely independently of the PlaySound channel so that
+    /// clicks / shots / explosions never interrupt the engine rumble.
+    /// </summary>
+    private static class MoveLoop
+    {
+        // WAVEHDR flags
+        private const uint WHDR_BEGINLOOP = 0x04;
+        private const uint WHDR_ENDLOOP   = 0x08;
+
+        // waveOut P/Invoke declarations
+        [DllImport("winmm.dll")] static extern uint waveOutOpen(out nint hwo, uint dev, ref WAVEFORMATEX fmt, nint cb, nint inst, uint flags);
+        [DllImport("winmm.dll")] static extern uint waveOutPrepareHeader(nint hwo, ref WAVEHDR hdr, uint sz);
+        [DllImport("winmm.dll")] static extern uint waveOutWrite(nint hwo, ref WAVEHDR hdr, uint sz);
+        [DllImport("winmm.dll")] static extern uint waveOutReset(nint hwo);
+        [DllImport("winmm.dll")] static extern uint waveOutUnprepareHeader(nint hwo, ref WAVEHDR hdr, uint sz);
+        [DllImport("winmm.dll")] static extern uint waveOutClose(nint hwo);
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct WAVEFORMATEX
+        {
+            public ushort wFormatTag, nChannels;
+            public uint   nSamplesPerSec, nAvgBytesPerSec;
+            public ushort nBlockAlign, wBitsPerSample, cbSize;
+        }
+
+        // WAVEHDR is a static field so it never moves in memory — safe for async P/Invoke.
+        [StructLayout(LayoutKind.Sequential)]
+        private struct WAVEHDR
+        {
+            public nint  lpData;
+            public uint  dwBufferLength, dwBytesRecorded;
+            public nint  dwUser;
+            public uint  dwFlags, dwLoops;
+            public nint  lpNext, reserved;
+        }
+
+        private static nint    _handle;
+        private static GCHandle _pin;
+        private static WAVEHDR  _hdr;                    // static → GC-stable address
+        private static readonly object _lock = new();
+
+        public static void Start(byte[] pcm)
+        {
+            lock (_lock)
+            {
+                if (_handle != 0) return;   // already running
+                try
+                {
+                    var fmt = new WAVEFORMATEX
+                    {
+                        wFormatTag      = 1,             // PCM
+                        nChannels       = 1,
+                        nSamplesPerSec  = Rate,
+                        nAvgBytesPerSec = (uint)(Rate * 2),
+                        nBlockAlign     = 2,
+                        wBitsPerSample  = 16,
+                    };
+
+                    if (waveOutOpen(out _handle, unchecked((uint)-1) /*WAVE_MAPPER*/, ref fmt, 0, 0, 0) != 0)
+                        return;
+
+                    // Pin the PCM array so the GC won't move it during playback
+                    _pin = GCHandle.Alloc(pcm, GCHandleType.Pinned);
+                    _hdr = new WAVEHDR
+                    {
+                        lpData         = _pin.AddrOfPinnedObject(),
+                        dwBufferLength = (uint)pcm.Length,
+                        dwFlags        = WHDR_BEGINLOOP | WHDR_ENDLOOP,
+                        dwLoops        = uint.MaxValue,   // ~136 years at 1.1 s/loop
+                    };
+
+                    uint sz = (uint)Marshal.SizeOf<WAVEHDR>();
+                    if (waveOutPrepareHeader(_handle, ref _hdr, sz) != 0) { Cleanup(); return; }
+                    if (waveOutWrite(_handle, ref _hdr, sz) != 0)         { Cleanup(); return; }
+                }
+                catch { Cleanup(); }
+            }
+        }
+
+        public static void Stop()
+        {
+            lock (_lock) { Cleanup(); }
+        }
+
+        private static void Cleanup()
+        {
+            if (_handle == 0) return;
+            try
+            {
+                uint sz = (uint)Marshal.SizeOf<WAVEHDR>();
+                waveOutReset(_handle);
+                waveOutUnprepareHeader(_handle, ref _hdr, sz);
+                waveOutClose(_handle);
+            }
+            catch { }
+            finally
+            {
+                _handle = 0;
+                if (_pin.IsAllocated) _pin.Free();
+            }
+        }
     }
 }
