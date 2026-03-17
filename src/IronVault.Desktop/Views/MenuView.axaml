@@ -6,35 +6,65 @@
   <Grid Background="{DynamicResource PipboyBackgroundBrush}">
     <StackPanel VerticalAlignment="Center"
                 HorizontalAlignment="Center"
-                Width="440"
+                Width="460"
                 Spacing="0">
 
       <!-- ── Logo / Title ── -->
-      <Border Classes="pipboy-panel" Margin="0,0,0,20">
+      <Border Classes="pipboy-panel" Margin="0,0,0,14">
         <StackPanel Spacing="6" HorizontalAlignment="Center">
-          <TextBlock Text="IRON VAULT"
+          <TextBlock x:Name="TitleText"
+                     Text="IRON VAULT"
                      Classes="h1"
                      FontSize="34"
                      HorizontalAlignment="Center" />
-          <TextBlock Text="铁  窖  计  划"
+          <TextBlock x:Name="SubtitleText"
+                     Text="铁  窖  计  划"
                      HorizontalAlignment="Center"
                      Opacity="0.6"
                      FontSize="15" />
-          <TextBlock Text="━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          <TextBlock Text="━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
                      Classes="dim"
                      HorizontalAlignment="Center"
                      FontSize="10" />
-          <TextBlock Text="ARMOURED COMBAT SIMULATION  ·  VECTOR ENGINE"
+          <TextBlock x:Name="TaglineText"
+                     Text="ARMOURED COMBAT SIMULATION  ·  VECTOR ENGINE"
                      Classes="dim"
                      HorizontalAlignment="Center"
                      FontSize="11" />
         </StackPanel>
       </Border>
 
+      <!-- ── Game Mode selection ── -->
+      <Border Classes="pipboy-panel" Margin="0,0,0,14">
+        <StackPanel Spacing="10">
+          <TextBlock x:Name="ModeLabel"
+                     Text="GAME MODE"
+                     Classes="h2"
+                     HorizontalAlignment="Center" />
+          <StackPanel Orientation="Horizontal"
+                      HorizontalAlignment="Center"
+                      Spacing="8">
+            <Button x:Name="ClassicBtn"
+                    Width="180"
+                    HorizontalContentAlignment="Center" />
+            <Button x:Name="DefenseBtn"
+                    Width="180"
+                    HorizontalContentAlignment="Center" />
+          </StackPanel>
+          <TextBlock x:Name="ModeDesc"
+                     HorizontalAlignment="Center"
+                     Classes="dim"
+                     FontSize="11"
+                     TextWrapping="Wrap"
+                     TextAlignment="Center" />
+        </StackPanel>
+      </Border>
+
       <!-- ── Difficulty selection ── -->
       <Border Classes="pipboy-panel" Margin="0,0,0,14">
         <StackPanel Spacing="10">
-          <TextBlock Text="TACTICAL RATING"
+          <TextBlock x:Name="DifficultyLabel"
+                     Text="TACTICAL RATING"
                      Classes="h2"
                      HorizontalAlignment="Center" />
           <StackPanel Orientation="Horizontal"
@@ -59,6 +89,25 @@
         </StackPanel>
       </Border>
 
+      <!-- ── Language toggle ── -->
+      <Border Classes="pipboy-panel" Margin="0,0,0,14">
+        <StackPanel Orientation="Horizontal"
+                    HorizontalAlignment="Center"
+                    Spacing="10">
+          <TextBlock x:Name="LangLabel"
+                     Text="LANGUAGE"
+                     Classes="dim"
+                     VerticalAlignment="Center"
+                     FontSize="12" />
+          <Button x:Name="LangEnBtn"
+                  Width="70"
+                  HorizontalContentAlignment="Center" />
+          <Button x:Name="LangZhBtn"
+                  Width="70"
+                  HorizontalContentAlignment="Center" />
+        </StackPanel>
+      </Border>
+
       <!-- ── Action buttons ── -->
       <Button x:Name="StartBtn"
               HorizontalAlignment="Stretch"
@@ -66,18 +115,19 @@
               FontSize="15"
               Padding="12,10"
               Margin="0,0,0,8">
-        <TextBlock Text="▶  DEPLOY FORCES  ◀" />
+        <TextBlock x:Name="DeployText" Text="▶  DEPLOY FORCES  ◀" />
       </Button>
 
       <Button x:Name="ExitBtn"
               HorizontalAlignment="Stretch"
               HorizontalContentAlignment="Center"
               Padding="10,8">
-        <TextBlock Text="ABORT MISSION" Classes="dim" />
+        <TextBlock x:Name="AbortText" Text="ABORT MISSION" Classes="dim" />
       </Button>
 
       <!-- Footer -->
-      <TextBlock Text="© IRON VAULT SIM  ·  PURE VECTOR RENDERING  ·  AOT-COMPATIBLE"
+      <TextBlock x:Name="FooterText"
+                 Text="© IRON VAULT SIM  ·  PURE VECTOR RENDERING  ·  AOT-COMPATIBLE"
                  Classes="dim"
                  FontSize="9"
                  HorizontalAlignment="Center"

@@ -2,6 +2,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using IronVault.Core.Engine;
 using IronVault.Core.Engine.Entities;
+using IronVault.Core.Localization;
 using IronVault.Desktop.ViewModels;
 
 namespace IronVault.Desktop.Views;
@@ -21,6 +22,10 @@ public partial class GameView : UserControl
         Focusable = true;
         KeyDown += OnKeyDown;
         KeyUp   += OnKeyUp;
+
+        // Subscribe to language changes
+        I18n.LanguageChanged += RefreshText;
+        RefreshText();
     }
 
     /// <summary>
@@ -36,15 +41,38 @@ public partial class GameView : UserControl
         GameCanvas.Attach(vm.Engine);
     }
 
+    // ── Localisation ─────────────────────────────────────────────────────────
+
+    private void RefreshText()
+    {
+        TitleText.Text      = I18n.T("hud.title");
+        StatusLabel.Text    = I18n.T("hud.status");
+        WaveLabel.Text      = I18n.T("hud.wave");
+        ScoreLabel.Text     = I18n.T("hud.score");
+        LivesLabel.Text     = I18n.T("hud.lives");
+        EnemiesLabel.Text   = I18n.T("hud.enemies");
+        ArmorLabel.Text     = I18n.T("hud.armor");
+        ControlsLabel.Text  = I18n.T("hud.controls");
+        CtrlMove.Text       = I18n.T("hud.ctrl.move");
+        CtrlFire.Text       = I18n.T("hud.ctrl.fire");
+        CtrlPause.Text      = I18n.T("hud.ctrl.pause");
+        CtrlStart.Text      = I18n.T("hud.ctrl.start");
+
+        // Buttons — preserve started/not-started state
+        bool isStarted = _vm?.Engine.State != GameState.NotStarted;
+        StartButton.Content = isStarted ? I18n.T("btn.redeploy") : I18n.T("btn.deploy");
+        PauseButton.Content = I18n.T("btn.hold");
+    }
+
     // ── Helpers ───────────────────────────────────────────────────────────────
 
     private void StartOrRestart()
     {
         if (_vm is null) return;
         _vm.Stop();
-        _vm.StartGame();          // uses Normal difficulty (menu already started game with chosen difficulty)
+        _vm.StartGame();
         PauseButton.IsEnabled = true;
-        StartButton.Content   = "[REDEPLOY]";
+        StartButton.Content   = I18n.T("btn.redeploy");
         Focus();
     }
 
@@ -90,7 +118,7 @@ public partial class GameView : UserControl
         if (state is GameState.GameOver or GameState.Victory or GameState.WaveComplete)
         {
             PauseButton.IsEnabled = false;
-            StartButton.Content   = "[REDEPLOY]";
+            StartButton.Content   = I18n.T("btn.redeploy");
         }
         else if (state == GameState.Playing)
         {

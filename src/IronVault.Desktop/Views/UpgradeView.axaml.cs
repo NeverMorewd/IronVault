@@ -1,5 +1,6 @@
 using Avalonia.Controls;
 using IronVault.Core.Engine;
+using IronVault.Core.Localization;
 
 namespace IronVault.Desktop.Views;
 
@@ -7,6 +8,10 @@ public partial class UpgradeView : UserControl
 {
     private UpgradeType[] _choices = new UpgradeType[3];
     private bool _grantsAlly;
+
+    // Keep the last engine/wave so we can re-populate on language change
+    private GameEngine? _lastEngine;
+    private int         _lastWave;
 
     /// <summary>Raised when the player picks an upgrade or skips.  Parameter = null for skip.</summary>
     public event EventHandler<UpgradeType?>? ContinueRequested;
@@ -19,6 +24,9 @@ public partial class UpgradeView : UserControl
         UpBtn1.Click  += (_, _) => ContinueRequested?.Invoke(this, _choices[1]);
         UpBtn2.Click  += (_, _) => ContinueRequested?.Invoke(this, _choices[2]);
         SkipBtn.Click += (_, _) => ContinueRequested?.Invoke(this, null);
+
+        I18n.LanguageChanged += OnLanguageChanged;
+        RefreshStaticText();
     }
 
     /// <summary>
@@ -27,15 +35,49 @@ public partial class UpgradeView : UserControl
     /// </summary>
     public void Prepare(int clearedWave, GameEngine engine)
     {
-        WaveClearedText.Text  = $"WAVE  {clearedWave:D2}  CLEARED";
-        ScoreText.Text        = engine.Score.ToString("D5");
-        NextWaveText.Text     = $"{clearedWave + 1:D2}";
+        _lastEngine = engine;
+        _lastWave   = clearedWave;
+
+        WaveClearedText.Text = FormatWaveCleared(clearedWave);
+        ScoreText.Text       = engine.Score.ToString("D5");
+        NextWaveText.Text    = $"{clearedWave + 1:D2}";
 
         _grantsAlly = WaveScript.ForWave(clearedWave + 1).GrantsAlly;
         AllyRewardBanner.IsVisible = _grantsAlly;
 
         _choices = GenerateChoices(engine);
+        PopulateCards();
+        RefreshStaticText();
+    }
 
+    // ── Localisation ─────────────────────────────────────────────────────────
+
+    private void OnLanguageChanged()
+    {
+        RefreshStaticText();
+        // Refresh dynamic data if we have it
+        if (_lastEngine is not null)
+        {
+            WaveClearedText.Text = FormatWaveCleared(_lastWave);
+            PopulateCards();
+        }
+    }
+
+    private void RefreshStaticText()
+    {
+        DebriefLabel.Text   = I18n.T("upg.debrief");
+        ScoreLabel.Text     = I18n.T("upg.score");
+        NextWaveLabel.Text  = I18n.T("upg.next_wave");
+        SelectHeader.Text   = I18n.T("upg.select_hdr");
+        SelectHint0.Text    = I18n.T("upg.select");
+        SelectHint1.Text    = I18n.T("upg.select");
+        SelectHint2.Text    = I18n.T("upg.select");
+        SkipText.Text       = I18n.T("upg.skip");
+        AllyRewardText.Text = I18n.T("upg.ally");
+    }
+
+    private void PopulateCards()
+    {
         var slots = new[]
         {
             (UpIcon0, UpName0, UpDesc0),
@@ -51,6 +93,9 @@ public partial class UpgradeView : UserControl
             slots[i].Item3.Text = info.Desc;
         }
     }
+
+    private static string FormatWaveCleared(int wave)
+        => $"{I18n.T("hud.wave")}  {wave:D2}  {(I18n.Current == Language.Chinese ? "通过" : "CLEARED")}";
 
     // ── Helpers ──────────────────────────────────────────────────────────────
 

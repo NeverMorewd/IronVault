@@ -48,9 +48,9 @@ public partial class MainWindow : Window
         }
     }
 
-    private void OnMenuStart(object? sender, AIDifficulty difficulty)
+    private void OnMenuStart(object? sender, (AIDifficulty Difficulty, GameMode Mode) args)
     {
-        _vm.StartGame(difficulty);
+        _vm.StartGame(args.Difficulty, args.Mode);
         ShowScreen(AppScreen.Game);
     }
 

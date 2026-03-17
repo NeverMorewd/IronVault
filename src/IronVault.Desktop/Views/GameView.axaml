@@ -22,7 +22,8 @@
       <StackPanel Margin="8,8,12,8" Spacing="10">
 
         <!-- Title -->
-        <TextBlock Text="IRON VAULT"
+        <TextBlock x:Name="TitleText"
+                   Text="IRON VAULT"
                    Classes="h1"
                    HorizontalAlignment="Center" />
 
@@ -31,20 +32,20 @@
         <!-- Status Panel -->
         <Border Classes="pipboy-panel">
           <StackPanel Spacing="6">
-            <TextBlock Text="STATUS" Classes="h2" />
+            <TextBlock x:Name="StatusLabel" Text="STATUS" Classes="h2" />
 
             <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto,Auto,Auto">
-              <TextBlock Grid.Row="0" Grid.Column="0" Text="WAVE"  Classes="dim" />
-              <TextBlock Grid.Row="0" Grid.Column="1" x:Name="WaveText"  Text="01" />
+              <TextBlock Grid.Row="0" Grid.Column="0" x:Name="WaveLabel"    Text="WAVE"    Classes="dim" />
+              <TextBlock Grid.Row="0" Grid.Column="1" x:Name="WaveText"     Text="01" />
 
-              <TextBlock Grid.Row="1" Grid.Column="0" Text="SCORE" Classes="dim" />
-              <TextBlock Grid.Row="1" Grid.Column="1" x:Name="ScoreText" Text="00000" />
+              <TextBlock Grid.Row="1" Grid.Column="0" x:Name="ScoreLabel"   Text="SCORE"   Classes="dim" />
+              <TextBlock Grid.Row="1" Grid.Column="1" x:Name="ScoreText"    Text="00000" />
 
-              <TextBlock Grid.Row="2" Grid.Column="0" Text="LIVES" Classes="dim" />
-              <TextBlock Grid.Row="2" Grid.Column="1" x:Name="LivesText" Text="III" />
+              <TextBlock Grid.Row="2" Grid.Column="0" x:Name="LivesLabel"   Text="LIVES"   Classes="dim" />
+              <TextBlock Grid.Row="2" Grid.Column="1" x:Name="LivesText"    Text="III" />
 
-              <TextBlock Grid.Row="3" Grid.Column="0" Text="ENEMIES" Classes="dim" />
-              <TextBlock Grid.Row="3" Grid.Column="1" x:Name="EnemiesText" Text="20" />
+              <TextBlock Grid.Row="3" Grid.Column="0" x:Name="EnemiesLabel" Text="ENEMIES" Classes="dim" />
+              <TextBlock Grid.Row="3" Grid.Column="1" x:Name="EnemiesText"  Text="20" />
             </Grid>
           </StackPanel>
         </Border>
@@ -52,7 +53,7 @@
         <!-- Player HP -->
         <Border Classes="pipboy-panel">
           <StackPanel Spacing="4">
-            <TextBlock Text="ARMOR" Classes="h2" />
+            <TextBlock x:Name="ArmorLabel" Text="ARMOR" Classes="h2" />
             <pipboy:SegmentedBar x:Name="HpBar"
                                  Maximum="3"
                                  Value="3"
@@ -63,11 +64,11 @@
         <!-- Controls reference -->
         <Border Classes="pipboy-panel">
           <StackPanel Spacing="3">
-            <TextBlock Text="CONTROLS" Classes="h2" />
-            <TextBlock Text="[W/A/S/D]  MOVE"  Classes="dim" FontSize="11" />
-            <TextBlock Text="[SPACE]    FIRE"   Classes="dim" FontSize="11" />
-            <TextBlock Text="[P]        PAUSE"  Classes="dim" FontSize="11" />
-            <TextBlock Text="[ENTER]    START"  Classes="dim" FontSize="11" />
+            <TextBlock x:Name="ControlsLabel" Text="CONTROLS" Classes="h2" />
+            <TextBlock x:Name="CtrlMove"  Text="[W/A/S/D]  MOVE"  Classes="dim" FontSize="11" />
+            <TextBlock x:Name="CtrlFire"  Text="[SPACE]    FIRE"   Classes="dim" FontSize="11" />
+            <TextBlock x:Name="CtrlPause" Text="[P]        PAUSE"  Classes="dim" FontSize="11" />
+            <TextBlock x:Name="CtrlStart" Text="[ENTER]    START"  Classes="dim" FontSize="11" />
           </StackPanel>
         </Border>
 
