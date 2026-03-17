@@ -137,8 +137,8 @@ public sealed class TankDrawable : IDrawable
     private static void DrawEnemyTank(DrawingContext ctx, double x, double y, int s, uint tick)
     {
         // ── Brushes ──────────────────────────────────────────────────────────
-        var trackBody  = new SolidColorBrush(Color.FromRgb(0x3C, 0x18, 0x00));
-        var trackDark  = new SolidColorBrush(Color.FromRgb(0x20, 0x08, 0x00));
+        var trackBody  = new SolidColorBrush(Color.FromRgb(0x72, 0x32, 0x10)); // lifted: visible against black bg
+        var trackDark  = new SolidColorBrush(Color.FromRgb(0x48, 0x1A, 0x06)); // tread stripe: darker but still readable
         var hull       = DrawColors.EnemyBrush;                                // red-orange
         var hullBrow   = new SolidColorBrush(Color.FromRgb(0xFF, 0x66, 0x00)); // brighter orange
         var hullShade  = new SolidColorBrush(Color.FromRgb(0xAA, 0x22, 0x00)); // dark red
