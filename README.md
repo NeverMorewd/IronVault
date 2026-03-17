@@ -1,79 +1,47 @@
-# Iron Vault
+# Iron Vault — 铁窖计划
 
-A retro-styled armoured combat simulation built with [Avalonia UI](https://avaloniaui.net/).
-Pure vector rendering — no sprite sheets, no bitmaps — every tank, bullet, and explosion is
-drawn at runtime from geometric primitives. Runs as a native Windows desktop application and
-as a WebAssembly browser game deployed to GitHub Pages.
+[![Play Online](https://img.shields.io/badge/Play%20Online-WebAssembly-brightgreen?logo=googlechrome&logoColor=white)](https://nevermowd.github.io/IronVault/)
+[![Built with Claude AI](https://img.shields.io/badge/Built%20with-Claude%20AI-blueviolet?logo=anthropic&logoColor=white)](https://www.anthropic.com/claude)
+[![.NET 10](https://img.shields.io/badge/.NET-10.0-512BD4?logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
----
+A retro armoured-combat game built with [Avalonia UI](https://avaloniaui.net/). Every tank, bullet, and explosion is drawn from pure vector geometry — no sprites, no bitmaps. Play it directly in your browser via WebAssembly, or run it natively on the desktop.
 
-## Features
-
-- **Two game modes**
-  - *Classic* — clear all enemy waves to achieve victory; the number of waves scales with
-    difficulty.
-  - *Defense* — survive a scripted 10-wave campaign with escalating enemy tier distributions;
-    complete a wave to choose a field upgrade for your tank.
-
-- **Four enemy tiers**
-  Each tier has a distinct silhouette, color scheme, armor detail, and barrel configuration so
-  you can identify threats at a glance.
-
-- **Power-ups**
-  Shield, Freeze, Fortress, and Overload drop randomly from destroyed enemies.
-
-- **Ally tanks**
-  Earned by completing specific waves in Defense mode; they navigate the map autonomously using
-  a rule-based AI with stuck detection.
-
-- **Field upgrade system** (Defense mode)
-  After each wave you choose one of three random upgrades: Armor Plating, Nitro Boosters, Rapid
-  Fire, Dual Cannon, Armour Piercing, or Repair Kit.
-
-- **CRT aesthetic**
-  The game canvas is wrapped in a CRT post-processing layer (scanlines, animated scan beam,
-  static noise, vignette) courtesy of the
-  [Pipboy.Avalonia](https://github.com/NeverMorewd/Pipboy.Avalonia) library.
-
-- **Bilingual UI**
-  Toggle between English and Chinese at any time from the menu or by pressing `L`.
-
-- **AOT and trim compatible**
-  The entire codebase compiles with `IsAotCompatible=true` and `IsTrimmable=true`.
+> **🎮 [Play now in your browser →](https://nevermowd.github.io/IronVault/)**
 
 ---
 
-## Getting Started
+## Gameplay
 
-### Prerequisites
+You command a single tank on a tile-based battlefield. Destroy all enemy tanks to advance through waves. Enemy tanks come in four tiers — each with a distinct silhouette and color scheme — and grow progressively more dangerous as waves escalate.
 
-| Tool | Version |
-|------|---------|
-| .NET SDK | 10.0 or later |
-| wasm-tools workload (browser build only) | `dotnet workload install wasm-tools` |
+### Game Modes
 
-### Clone
+| Mode | Description |
+|------|-------------|
+| **Classic** | Survive all waves. Difficulty controls wave count and enemy composition. |
+| **Defense** | A scripted 10-wave campaign. Clear a wave to pick a **Field Upgrade** for your tank. |
 
-```bash
-# Iron Vault and Pipboy.Avalonia must be siblings so the relative ProjectReference resolves.
-git clone https://github.com/<your-org>/IronVault
-git clone https://github.com/NeverMorewd/Pipboy.Avalonia
-```
+### Power-ups
 
-### Run the desktop app
+Destroyed enemies randomly drop one of four power-ups:
 
-```bash
-cd IronVault
-dotnet run --project src/IronVault.Desktop
-```
+| Icon | Name | Effect |
+|------|------|--------|
+| ★ | Shield | Your tank becomes invulnerable temporarily |
+| ⏸ | Freeze | All enemies stop moving and firing |
+| ⬛ | Fortress | Reinforces your base walls |
+| ▲ | Overload | Increases bullet speed and penetration |
 
-### Publish the browser build
+### Field Upgrades (Defense mode)
 
-```bash
-cd IronVault
-dotnet publish src/IronVault.Browser -c Release -o publish
-# Static web files land in publish/wwwroot/
-```
+After each wave, choose one of three random upgrades:
+
+**Armor Plating** · **Nitro Boosters** · **Rapid Fire** · **Dual Cannon** · **Armour Piercing** · **Repair Kit**
+
+### Ally Tanks
+
+In Defense mode certain waves grant you an allied tank. Allies navigate the map autonomously and engage enemies without any input required.
 
 ---
 
@@ -81,49 +49,25 @@ dotnet publish src/IronVault.Browser -c Release -o publish
 
 | Key | Action |
 |-----|--------|
-| W / A / S / D or Arrow keys | Move tank |
-| Space | Fire |
-| P | Pause / Resume |
-| Enter | Start / Restart |
-| Escape | Return to menu |
-| L | Toggle language (English / Chinese) |
+| `W A S D` / Arrow keys | Move |
+| `Space` | Fire |
+| `P` | Pause / Resume |
+| `Enter` | Start / Restart |
+| `Esc` | Return to menu |
+| `L` | Toggle English / 中文 |
 
 ---
 
-## Project Structure
+## Run Locally
 
+```bash
+# Both repos must be cloned as siblings
+git clone https://github.com/NeverMorewd/IronVault
+git clone https://github.com/NeverMorewd/Pipboy.Avalonia
+
+cd IronVault
+dotnet run --project src/IronVault.Desktop
 ```
-IronVault/
-├── src/
-│   ├── IronVault.Core/        # Game engine — ECS, physics, AI, wave scripts
-│   ├── IronVault.Renderer/    # Avalonia DrawingContext drawables
-│   ├── IronVault.Desktop/     # Windows desktop host (PipboyWindow, audio)
-│   └── IronVault.Browser/     # WebAssembly browser host
-├── docs/
-│   └── ARCHITECTURE.md        # Code design document
-└── .github/
-    └── workflows/
-        └── deploy-pages.yml   # GitHub Actions → GitHub Pages
-```
-
-For a detailed explanation of every layer, the ECS design, and how to extend the game, read
-[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
-
----
-
-## Deployment
-
-Pushing to the `main` branch triggers the GitHub Actions workflow at
-`.github/workflows/deploy-pages.yml`. The workflow:
-
-1. Checks out both `IronVault` and `Pipboy.Avalonia` as sibling directories so the relative
-   `ProjectReference` path resolves correctly.
-2. Installs the .NET 10 SDK and the `wasm-tools` workload.
-3. Runs `dotnet publish` on `IronVault.Browser`.
-4. Uploads `publish/wwwroot/` as a GitHub Pages artifact and deploys it.
-
-Enable GitHub Pages in your repository settings (**Settings → Pages → Source: GitHub Actions**)
-before the first deployment.
 
 ---
 
