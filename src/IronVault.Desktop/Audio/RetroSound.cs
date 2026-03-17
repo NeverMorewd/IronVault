@@ -20,11 +20,15 @@ internal static class RetroSound
 
     // ── Pre-built buffers (synthesised once at class load) ────────────────────
     // One-shots are wrapped in a WAV container so PlaySound can consume them.
-    private static readonly byte[] _click     = WrapWav(SynthClick());
-    private static readonly byte[] _shoot     = WrapWav(SynthShoot());
-    private static readonly byte[] _explosion = WrapWav(SynthExplosion());
+    private static readonly byte[] _click           = WrapWav(SynthClick());
+    private static readonly byte[] _shoot           = WrapWav(SynthShoot());
+    private static readonly byte[] _explosion       = WrapWav(SynthExplosion());
+    private static readonly byte[] _enemyDestroyed  = WrapWav(SynthEnemyDestroyed());
+    private static readonly byte[] _playerHurt      = WrapWav(SynthPlayerHurt());
+    private static readonly byte[] _gameOver        = WrapWav(SynthGameOver());
+    private static readonly byte[] _victory         = WrapWav(SynthVictory());
     // Movement is raw PCM fed directly to waveOut (no WAV header needed).
-    private static readonly byte[] _movement  = SynthMovement();
+    private static readonly byte[] _movement        = SynthMovement();
 
     // ── Shoot debounce (prevents enemy-fire spam drowning the mix) ────────────
     private static long _lastShootTick;
@@ -32,8 +36,12 @@ internal static class RetroSound
 
     // ── Public API ────────────────────────────────────────────────────────────
 
-    public static void PlayClick()     => TryPlayWav(_click);
-    public static void PlayExplosion() => TryPlayWav(_explosion);
+    public static void PlayClick()          => TryPlayWav(_click);
+    public static void PlayExplosion()      => TryPlayWav(_explosion);
+    public static void PlayEnemyDestroyed() => TryPlayWav(_enemyDestroyed);
+    public static void PlayPlayerHurt()     => TryPlayWav(_playerHurt);
+    public static void PlayGameOver()       => TryPlayWav(_gameOver);
+    public static void PlayVictory()        => TryPlayWav(_victory);
 
     public static void PlayShoot()
     {
@@ -118,6 +126,116 @@ internal static class RetroSound
             Write16(buf, i, (noise * 0.58 + thud * 0.42) * amp);
         }
         return buf;
+    }
+
+    /// <summary>
+    /// Enemy tank destroyed: deep 40 Hz thud + sharp crack at front, 400 ms, sqrt-decay.
+    /// Heavier than the bullet-hit explosion to mark a full tank kill.
+    /// </summary>
+    private static byte[] SynthEnemyDestroyed()
+    {
+        int n   = Rate * 400 / 1000;
+        var buf = new byte[n * 2];
+        var rng = new Random(42);
+        for (int i = 0; i < n; i++)
+        {
+            double t     = (double)i / n;
+            double amp   = Math.Pow(1 - t, 0.35) * 0.95;
+            double noise = rng.NextDouble() * 2 - 1;
+            double thud  = Math.Sin(2 * Math.PI * 40 * i / Rate);
+            // Brief high crack in first 20 ms
+            double crack = i < Rate * 20 / 1000
+                           ? (rng.NextDouble() * 2 - 1) * 0.35
+                           : 0;
+            Write16(buf, i, (noise * 0.45 + thud * 0.55 + crack) * amp);
+        }
+        return buf;
+    }
+
+    /// <summary>
+    /// Player hurt: harsh square-wave sweep 700 → 100 Hz, 160 ms, linear decay.
+    /// Distinctive alert tone distinct from weapon sounds.
+    /// </summary>
+    private static byte[] SynthPlayerHurt()
+    {
+        int n   = Rate * 160 / 1000;
+        var buf = new byte[n * 2];
+        double phase = 0;
+        for (int i = 0; i < n; i++)
+        {
+            double t   = (double)i / n;
+            double hz  = 700 * Math.Pow(700.0 / 100.0, -t);  // 700 → 100 exponential
+            phase += 2 * Math.PI * hz / Rate;
+            double amp = (1.0 - t) * 0.80;
+            Write16(buf, i, Math.Sign(Math.Sin(phase)) * amp);
+        }
+        return buf;
+    }
+
+    /// <summary>
+    /// Game-over: descending three-note dirge G4 → E4 → C4 → G3 (~900 ms total).
+    /// </summary>
+    private static byte[] SynthGameOver()
+    {
+        // note durations and frequencies
+        var pcm = Concat(
+            SynthNote(392.0, 200, 0.70),   // G4
+            Silence(40),
+            SynthNote(329.6, 200, 0.65),   // E4
+            Silence(40),
+            SynthNote(261.6, 220, 0.60),   // C4
+            Silence(40),
+            SynthNote(196.0, 300, 0.55)    // G3 — long final note
+        );
+        return pcm;
+    }
+
+    /// <summary>
+    /// Victory fanfare: ascending C4 → E4 → G4 → C5 (~700 ms total).
+    /// </summary>
+    private static byte[] SynthVictory()
+    {
+        var pcm = Concat(
+            SynthNote(261.6, 140, 0.68),   // C4
+            Silence(30),
+            SynthNote(329.6, 140, 0.72),   // E4
+            Silence(30),
+            SynthNote(392.0, 140, 0.76),   // G4
+            Silence(30),
+            SynthNote(523.3, 280, 0.82)    // C5 — long final note
+        );
+        return pcm;
+    }
+
+    /// <summary>Synthesise a single square-wave note with a short cubic-decay envelope.</summary>
+    private static byte[] SynthNote(double hz, int ms, double peakAmp)
+    {
+        int n   = Rate * ms / 1000;
+        var buf = new byte[n * 2];
+        double phase = 0;
+        for (int i = 0; i < n; i++)
+        {
+            double t = (double)i / n;
+            phase += 2 * Math.PI * hz / Rate;
+            double amp = peakAmp * Math.Pow(1 - t, 1.5);
+            Write16(buf, i, Math.Sign(Math.Sin(phase)) * amp);
+        }
+        return buf;
+    }
+
+    /// <summary>Returns a silent PCM buffer of the given duration.</summary>
+    private static byte[] Silence(int ms)
+        => new byte[Rate * ms / 1000 * 2];
+
+    /// <summary>Concatenates raw PCM byte arrays in order.</summary>
+    private static byte[] Concat(params byte[][] parts)
+    {
+        int total = 0;
+        foreach (var p in parts) total += p.Length;
+        var result = new byte[total];
+        int offset = 0;
+        foreach (var p in parts) { Buffer.BlockCopy(p, 0, result, offset, p.Length); offset += p.Length; }
+        return result;
     }
 
     /// <summary>

@@ -47,6 +47,10 @@ public sealed class GameEngine
     public event EventHandler? ShotFired;
     /// <summary>Fired when one or more new explosions are created this tick.</summary>
     public event EventHandler? HitOccurred;
+    /// <summary>Fired when an enemy tank is destroyed (health reaches zero).</summary>
+    public event EventHandler? EnemyDestroyed;
+    /// <summary>Fired when the player tank takes damage this tick.</summary>
+    public event EventHandler? PlayerHurt;
 
     // ── Player ───────────────────────────────────────────────────────────────
     public TankEntity? Player { get; private set; }
@@ -136,6 +140,7 @@ public sealed class GameEngine
 
         int prevBullets    = Bullets.Count;
         int prevExplosions = Explosions.Count;
+        int prevPlayerHp   = Player?.Health.Current ?? 0;
 
         // Systems update
         MoveSystem.Update(Tanks, Map, dt);
@@ -144,6 +149,10 @@ public sealed class GameEngine
         AISystem.Update(Tanks, Bullets, Map, Difficulty, dt);
         AllyAISystem.Update(Tanks, Map, dt);
         ExplosionSystem.Update(Explosions, dt);
+
+        // Player hurt check (before cleanup removes dead player)
+        if (Player is { IsAlive: true } p && p.Health.Current < prevPlayerHp)
+            PlayerHurt?.Invoke(this, EventArgs.Empty);
 
         // Wave spawn
         UpdateWaveSpawn(dt);
@@ -300,6 +309,7 @@ public sealed class GameEngine
                 {
                     EnemiesLeft--;
                     AddScore(100 * (int)tank.Tier);
+                    EnemyDestroyed?.Invoke(this, EventArgs.Empty);
                 }
                 Tanks.RemoveAt(i);
             }

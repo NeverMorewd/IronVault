@@ -40,9 +40,13 @@ public partial class GameView : UserControl
         vm.Engine.StateChanged += OnStateChanged;
         vm.Engine.ScoreChanged += OnScoreChanged;
         // Shot fired by any tank → shoot blip (debounced inside RetroSound)
-        vm.Engine.ShotFired    += (_, _) => RetroSound.PlayShoot();
+        vm.Engine.ShotFired        += (_, _) => RetroSound.PlayShoot();
         // Any bullet → explosion → hit sound
-        vm.Engine.HitOccurred  += (_, _) => RetroSound.PlayExplosion();
+        vm.Engine.HitOccurred      += (_, _) => RetroSound.PlayExplosion();
+        // Enemy tank fully destroyed
+        vm.Engine.EnemyDestroyed   += (_, _) => RetroSound.PlayEnemyDestroyed();
+        // Player took damage
+        vm.Engine.PlayerHurt       += (_, _) => RetroSound.PlayPlayerHurt();
         GameCanvas.Attach(vm.Engine);
     }
 
@@ -146,6 +150,10 @@ public partial class GameView : UserControl
         // Stop engine rumble whenever the game is not actively running
         if (state != GameState.Playing)
             RetroSound.StopMovement();
+
+        // Terminal state sounds
+        if (state == GameState.GameOver) RetroSound.PlayGameOver();
+        if (state == GameState.Victory)  RetroSound.PlayVictory();
     }
 
     private void OnScoreChanged(object? sender, int score)
