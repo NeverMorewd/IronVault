@@ -79,7 +79,7 @@ public sealed class GameCanvas : Control
         // 1. Background fill
         ctx.FillRectangle(DrawColors.BackgroundBrush, new Rect(0, 0, mapW, mapH));
 
-        // 2. Tile map — _mapDrawable is always in sync with _engine.Map (rebuilt in Tick)
+        // 2. Ground tiles (Forest is intentionally skipped here — drawn last as canopy)
         _mapDrawable?.Draw(ctx, _frameTick);
 
         // 3. Power-ups (below tanks)
@@ -94,11 +94,15 @@ public sealed class GameCanvas : Control
         foreach (var bullet in _engine.Bullets)
             new BulletDrawable(bullet).Draw(ctx, _frameTick);
 
-        // 6. Explosions (top layer)
+        // 6. Explosions
         foreach (var exp in _engine.Explosions)
             new ExplosionDrawable(exp).Draw(ctx, _frameTick);
 
-        // 7. Game state overlay
+        // 7. Forest canopy — rendered AFTER all entities so tanks/bullets inside
+        //    forest appear beneath the foliage (stealth mechanic, classic Battle City)
+        _mapDrawable?.DrawCanopy(ctx, _frameTick);
+
+        // 8. Game state overlay
         if (_engine.State == GameState.GameOver)
             DrawOverlay(ctx, mapW, mapH, "GAME OVER",  Color.FromRgb(200, 0, 0));
         else if (_engine.State == GameState.Victory)

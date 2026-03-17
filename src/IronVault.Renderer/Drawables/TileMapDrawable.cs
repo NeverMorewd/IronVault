@@ -11,6 +11,11 @@ public sealed class TileMapDrawable : IDrawable
 
     public TileMapDrawable(TileMap map) { _map = map; }
 
+    /// <summary>
+    /// Ground pass — draws every tile EXCEPT Forest.
+    /// Call this before rendering tanks / bullets so that entities appear
+    /// above ground terrain but below the forest canopy.
+    /// </summary>
     public void Draw(DrawingContext ctx, uint frameTick)
     {
         int ts = TileMap.TileSize;
@@ -19,10 +24,30 @@ public sealed class TileMapDrawable : IDrawable
         for (int c = 0; c < _map.Cols; c++)
         {
             var tile = _map[c, r];
-            if (tile == TileType.Empty || tile == TileType.Spawn) continue;
+            // Empty, Spawn and Forest are skipped in the ground pass.
+            // Forest is drawn separately in DrawCanopy() so it overlays entities.
+            if (tile == TileType.Empty  ||
+                tile == TileType.Spawn  ||
+                tile == TileType.Forest) continue;
 
-            var rect = new Rect(c * ts, r * ts, ts, ts);
-            DrawTile(ctx, tile, rect, frameTick);
+            DrawTile(ctx, tile, new Rect(c * ts, r * ts, ts, ts), frameTick);
+        }
+    }
+
+    /// <summary>
+    /// Canopy pass — draws only Forest tiles.
+    /// Call this AFTER rendering all game entities (tanks, bullets, explosions)
+    /// so the forest canopy is composited on top, hiding anything beneath it.
+    /// </summary>
+    public void DrawCanopy(DrawingContext ctx, uint frameTick)
+    {
+        int ts = TileMap.TileSize;
+
+        for (int r = 0; r < _map.Rows; r++)
+        for (int c = 0; c < _map.Cols; c++)
+        {
+            if (_map[c, r] != TileType.Forest) continue;
+            DrawForest(ctx, new Rect(c * ts, r * ts, ts, ts));
         }
     }
 
