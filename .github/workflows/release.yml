@@ -1,0 +1,165 @@
+name: Release
+
+on:
+  push:
+    tags: [ 'v*' ]
+  workflow_dispatch:
+
+concurrency:
+  group: release-${{ github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  # ── WASM build ─────────────────────────────────────────────────────────────
+  build-wasm:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Install wasm-tools workload
+        run: dotnet workload install wasm-tools
+
+      - name: Restore
+        run: dotnet restore src/IronVault.Browser/IronVault.Browser.csproj
+
+      - name: Publish WASM
+        run: |
+          dotnet publish src/IronVault.Browser/IronVault.Browser.csproj \
+            -c Release \
+            -f net10.0-browser \
+            -o publish
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: publish/wwwroot
+
+  # ── Desktop AOT builds ─────────────────────────────────────────────────────
+  build-desktop:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            rid: win-x64
+          - os: ubuntu-latest
+            rid: linux-x64
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      # NativeAOT on Linux requires clang and zlib headers
+      - name: Install native build tools (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get install -y clang zlib1g-dev
+
+      - name: Restore
+        run: dotnet restore src/IronVault.Desktop/IronVault.Desktop.csproj -r ${{ matrix.rid }}
+
+      - name: Publish AOT
+        run: |
+          dotnet publish src/IronVault.Desktop/IronVault.Desktop.csproj \
+            -c Release \
+            -r ${{ matrix.rid }} \
+            --self-contained \
+            -o publish/${{ matrix.rid }}
+
+      # ── Strip PDB files ────────────────────────────────────────────────────
+      - name: Remove PDB files (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: Get-ChildItem -Path publish\${{ matrix.rid }} -Recurse -Filter "*.pdb" | Remove-Item -Force
+
+      - name: Remove PDB files (Linux)
+        if: runner.os == 'Linux'
+        run: find publish/${{ matrix.rid }} -name "*.pdb" -delete
+
+      # ── Create archive ─────────────────────────────────────────────────────
+      - name: Create zip (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $tag = "${{ github.ref_name }}"
+          if (-not $tag) { $tag = "dev" }
+          Compress-Archive -Path publish\${{ matrix.rid }}\* `
+            -DestinationPath "IronVault-${tag}-${{ matrix.rid }}.zip"
+
+      - name: Create zip (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          TAG="${{ github.ref_name }}"
+          if [ -z "$TAG" ]; then TAG="dev"; fi
+          cd publish/${{ matrix.rid }}
+          zip -r "../../IronVault-${TAG}-${{ matrix.rid }}.zip" .
+
+      - name: Upload desktop artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: desktop-${{ matrix.rid }}
+          path: IronVault-*-${{ matrix.rid }}.zip
+          retention-days: 1
+
+  # ── Deploy to GitHub Pages ─────────────────────────────────────────────────
+  deploy-pages:
+    needs: build-wasm
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+
+    concurrency:
+      group: pages
+      cancel-in-progress: true
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+  # ── Create GitHub Release ──────────────────────────────────────────────────
+  create-release:
+    needs: build-desktop
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download Windows artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: desktop-win-x64
+
+      - name: Download Linux artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: desktop-linux-x64
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: ${{ github.ref_name }}
+          draft: false
+          prerelease: ${{ contains(github.ref_name, '-') }}
+          generate_release_notes: true
+          files: |
+            IronVault-*-win-x64.zip
+            IronVault-*-linux-x64.zip

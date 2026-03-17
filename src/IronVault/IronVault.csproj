@@ -20,9 +20,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Pipboy.Avalonia" Version="0.0.2-beta" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\IronVault.Core\IronVault.Core.csproj" />
     <ProjectReference Include="..\IronVault.Renderer\IronVault.Renderer.csproj" />
-    <ProjectReference Include="..\..\..\Pipboy.Avalonia\src\Pipboy.Avalonia\Pipboy.Avalonia.csproj" />
   </ItemGroup>
 
 </Project>

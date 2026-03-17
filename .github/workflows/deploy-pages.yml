@@ -2,7 +2,7 @@ name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [ main ]
+    branches: [ master ]
   workflow_dispatch:
 
 permissions:
@@ -21,18 +21,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # IronVault must be checked out at a sibling path alongside Pipboy.Avalonia
-      # so the relative ProjectReference  ../../../Pipboy.Avalonia/...  resolves correctly.
-      - name: Checkout IronVault
+      - name: Checkout
         uses: actions/checkout@v4
-        with:
-          path: IronVault
-
-      - name: Checkout Pipboy.Avalonia
-        uses: actions/checkout@v4
-        with:
-          repository: NeverMorewd/Pipboy.Avalonia
-          path: Pipboy.Avalonia
 
       - name: Setup .NET 10
         uses: actions/setup-dotnet@v4
@@ -43,11 +33,9 @@ jobs:
         run: dotnet workload install wasm-tools
 
       - name: Restore dependencies
-        working-directory: IronVault
         run: dotnet restore src/IronVault.Browser/IronVault.Browser.csproj
 
       - name: Publish WASM
-        working-directory: IronVault
         run: |
           dotnet publish src/IronVault.Browser/IronVault.Browser.csproj \
             -c Release \
@@ -58,7 +46,7 @@ jobs:
         uses: actions/upload-pages-artifact@v3
         with:
           # Microsoft.NET.Sdk.WebAssembly places static web files in publish/wwwroot/
-          path: IronVault/publish/wwwroot
+          path: publish/wwwroot
 
   # ── Deploy ─────────────────────────────────────────────────────────────────
   deploy:
