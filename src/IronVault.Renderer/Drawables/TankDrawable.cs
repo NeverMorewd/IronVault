@@ -46,6 +46,10 @@ public sealed class TankDrawable : IDrawable
         // Shield is drawn without rotation (world-space)
         if (_tank.IsInvincible)
             DrawShield(ctx, x, y, s, frameTick);
+
+        // Ice slide effect — shown whenever the player carries non-zero momentum
+        if (_tank.IsPlayerControlled && _tank.IceMomentum > 0.05f)
+            DrawIceSlide(ctx, x, y, s, _tank.IceMomentum, frameTick);
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
@@ -358,6 +362,58 @@ public sealed class TankDrawable : IDrawable
                     new Point(p1.X + (p2.X - p1.X) * t1, p1.Y + (p2.Y - p1.Y) * t1));
             }
         }
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // ICE SLIDE EFFECT  —  cyan glow border + corner crystal sparks
+    // Drawn in world-space (outside rotation transform) while IceMomentum > 0.
+    // ═══════════════════════════════════════════════════════════════════════════
+    private static void DrawIceSlide(DrawingContext ctx,
+        double x, double y, int s, float momentum, uint tick)
+    {
+        byte borderAlpha = (byte)(momentum * 170);
+        byte sparkAlpha  = (byte)(momentum * 220);
+
+        // 1. Thin cyan glow border around the tank bounding box
+        var borderPen = new Pen(
+            new SolidColorBrush(Color.FromArgb(borderAlpha, 0, 210, 255)), 1.5);
+        double pad = 4;
+        ctx.DrawLine(borderPen, new Point(x - pad,     y - pad),     new Point(x + s + pad, y - pad));
+        ctx.DrawLine(borderPen, new Point(x - pad,     y + s + pad), new Point(x + s + pad, y + s + pad));
+        ctx.DrawLine(borderPen, new Point(x - pad,     y - pad),     new Point(x - pad,     y + s + pad));
+        ctx.DrawLine(borderPen, new Point(x + s + pad, y - pad),     new Point(x + s + pad, y + s + pad));
+
+        // 2. Inner soft field tint (very translucent)
+        ctx.FillRectangle(
+            new SolidColorBrush(Color.FromArgb((byte)(momentum * 28), 0, 180, 255)),
+            new Rect(x - pad, y - pad, s + pad * 2, s + pad * 2));
+
+        // 3. Corner ice-crystal sparks (blink at 8-tick intervals)
+        bool blink = (tick / 8 % 2 == 0);
+        if (blink)
+        {
+            var spark = new SolidColorBrush(Color.FromArgb(sparkAlpha, 200, 240, 255));
+            double arm = 2.5 + momentum * 3.0;
+            DrawIceSpark(ctx, spark, x - pad,     y - pad,     arm);
+            DrawIceSpark(ctx, spark, x + s + pad, y - pad,     arm);
+            DrawIceSpark(ctx, spark, x - pad,     y + s + pad, arm);
+            DrawIceSpark(ctx, spark, x + s + pad, y + s + pad, arm);
+        }
+
+        // 4. Momentum bar — tiny horizontal strip at the bottom of the tank
+        //    shows how much slide is left (full width = 100 % momentum)
+        double barW = (s - 8) * momentum;
+        ctx.FillRectangle(
+            new SolidColorBrush(Color.FromArgb(160, 0, 200, 255)),
+            new Rect(x + 4, y + s + pad + 2, barW, 2));
+    }
+
+    /// <summary>Draws a '+' cross spark at (cx, cy) with the given arm length.</summary>
+    private static void DrawIceSpark(DrawingContext ctx, SolidColorBrush brush,
+        double cx, double cy, double arm)
+    {
+        ctx.FillRectangle(brush, new Rect(cx - 1,   cy - arm, 2,       arm * 2));
+        ctx.FillRectangle(brush, new Rect(cx - arm, cy - 1,   arm * 2, 2));
     }
 
     private static double DirectionToRadians(Direction dir) => dir switch

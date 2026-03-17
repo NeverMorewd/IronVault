@@ -102,6 +102,14 @@ public sealed class TileMap
         FillRect(map, 16, 20, 2, 2, TileType.Forest);
         FillRect(map, 10, 13, 2, 2, TileType.Forest);
 
+        // ── Ice patches ───────────────────────────────────────────────────────
+        // Left corridor (between brick rows 9-11 and 16-19)
+        FillRect(map,  3, 13, 3, 3, TileType.Ice);
+        // Right corridor (symmetric)
+        FillRect(map, 19, 13, 3, 3, TileType.Ice);
+        // Centre-top approach: the column the player naturally charges up
+        FillRect(map, 12,  6, 2, 3, TileType.Ice);
+
         // ── Base protection (bottom-center) ───────────────────────────────────
         // Eagle / HQ at (13, 23)
         int mid = DefaultCols / 2;  // 13

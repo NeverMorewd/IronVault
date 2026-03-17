@@ -53,10 +53,6 @@ public sealed class TileMapDrawable : IDrawable
 
     private static void DrawTile(DrawingContext ctx, TileType tile, Rect rect, uint tick)
     {
-        int ts = TileMap.TileSize;
-        double h = rect.X;
-        double v = rect.Y;
-
         switch (tile)
         {
             case TileType.Brick:
@@ -76,10 +72,7 @@ public sealed class TileMapDrawable : IDrawable
                 break;
 
             case TileType.Ice:
-                ctx.FillRectangle(DrawColors.IceBrush, rect);
-                // Crack lines
-                ctx.DrawLine(new Pen(DrawColors.SteelBrush, 1),
-                    new Point(h + 4, v + 4), new Point(h + ts - 4, v + ts - 4));
+                DrawIce(ctx, rect, tick);
                 break;
 
             case TileType.Base:
@@ -132,6 +125,36 @@ public sealed class TileMapDrawable : IDrawable
         ctx.FillRectangle(fg, new Rect(x + 2, y + 2, w - 4, 4));
         ctx.FillRectangle(fg, new Rect(x + 4, y + 10, w - 8, 4));
         ctx.FillRectangle(fg, new Rect(x + 2, y + 18, w - 4, 4));
+    }
+
+    private static void DrawIce(DrawingContext ctx, Rect r, uint tick)
+    {
+        double x = r.X, y = r.Y, w = r.Width, h = r.Height;
+
+        // Subtle shimmer animation: alternate between two very close shades
+        bool shimmer = (tick / 14 % 2 == 0);
+        var iceBase    = new SolidColorBrush(Color.FromRgb(0xB8, 0xE4, 0xF8)); // muted ice blue
+        var iceShimmer = new SolidColorBrush(Color.FromRgb(0xD0, 0xF0, 0xFF)); // brighter shimmer frame
+        ctx.FillRectangle(shimmer ? iceShimmer : iceBase, r);
+
+        // Crystal fracture lines — star/spider-web pattern
+        var crackPen  = new Pen(new SolidColorBrush(Color.FromArgb(100, 120, 180, 220)), 1);
+        var crackPen2 = new Pen(new SolidColorBrush(Color.FromArgb(60,  160, 210, 240)), 1);
+
+        // Primary diagonal crack (top-left → bottom-right)
+        ctx.DrawLine(crackPen, new Point(x + 3,     y + 3),     new Point(x + w - 3, y + h - 3));
+        // Counter diagonal (top-right → bottom-left)
+        ctx.DrawLine(crackPen2, new Point(x + w - 4, y + 3),    new Point(x + 4,     y + h - 3));
+        // Horizontal stress vein (slightly offset from centre for realism)
+        ctx.DrawLine(crackPen2, new Point(x + 2, y + h * 0.42), new Point(x + w - 2, y + h * 0.58));
+
+        // Ice-crystal glint dots at fixed positions (simulate specular reflection)
+        byte glintA = shimmer ? (byte)210 : (byte)100;
+        var  glint  = new SolidColorBrush(Color.FromArgb(glintA, 255, 255, 255));
+        ctx.FillRectangle(glint, new Rect(x + 3,     y + 3,     3, 3)); // top-left
+        ctx.FillRectangle(glint, new Rect(x + w - 6, y + h - 6, 3, 3)); // bottom-right
+        ctx.FillRectangle(glint, new Rect(x + w - 5, y + 3,     2, 2)); // top-right
+        ctx.FillRectangle(glint, new Rect(x + 4,     y + h - 5, 2, 2)); // bottom-left
     }
 
     private static void DrawForest(DrawingContext ctx, Rect r)
