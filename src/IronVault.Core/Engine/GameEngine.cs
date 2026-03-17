@@ -1,6 +1,7 @@
 using IronVault.Core.Engine.Entities;
 using IronVault.Core.Engine.Systems;
 using IronVault.Core.Map;
+using System.Linq;
 
 namespace IronVault.Core.Engine;
 
@@ -102,6 +103,7 @@ public sealed class GameEngine
         TotalEnemies = EnemiesPerWave;
         _enemiesSpawned = 0;
         _spawnTimer = 0;
+        AISystem.Reset(); // clear per-tank AI state for the new game
     }
 
     private void SpawnPlayer()
@@ -169,6 +171,9 @@ public sealed class GameEngine
                 Tanks.RemoveAt(i);
             }
         }
+
+        // Prune AI state entries for tanks that are no longer alive
+        AISystem.Cleanup(Tanks.Select(t => t.Id));
     }
 
     private void AddScore(int points)

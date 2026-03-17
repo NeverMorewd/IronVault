@@ -28,6 +28,50 @@ public static class MoveSystem
                 tank.BlinkVisible = true;
             }
 
+            // ── Player ice-momentum: slide when no keys held ──────────────────
+            if (tank.IsPlayerControlled)
+            {
+                bool onIce = IsOnIce(tank, map);
+
+                // Leaving ice immediately kills any remaining slide
+                if (!onIce) tank.IceMomentum = 0f;
+
+                var input = tank.Input;
+                bool hasInput = input.MoveUp || input.MoveDown ||
+                                input.MoveLeft || input.MoveRight;
+
+                if (!hasInput && onIce && tank.IceMomentum > 0f)
+                {
+                    // Decay momentum (2 units/s) then apply remaining slide
+                    tank.IceMomentum = MathF.Max(0f, tank.IceMomentum - 2.0f * dt);
+                    if (tank.IceMomentum > 0f)
+                    {
+                        float slideSpeed = tank.Velocity.Speed * tank.IceMomentum;
+                        (float sdx, float sdy) = DirectionDelta(tank.IceMomentumDir);
+                        float snx = tank.Position.X + sdx * slideSpeed * dt;
+                        float sny = tank.Position.Y + sdy * slideSpeed * dt;
+
+                        if (CanMoveTo(snx, sny, map))
+                        {
+                            tank.Position.X = snx;
+                            tank.Position.Y = sny;
+                            tank.Velocity.IsMoving = true;
+                        }
+                        else
+                        {
+                            tank.IceMomentum = 0f;   // hit a wall, stop sliding
+                            tank.Velocity.IsMoving = false;
+                        }
+                    }
+                    else
+                    {
+                        tank.Velocity.IsMoving = false;
+                    }
+                    continue; // slide handled — skip normal movement this frame
+                }
+            }
+            // ─────────────────────────────────────────────────────────────────
+
             // Player: direction from input; AI: always wants to move in current facing
             Direction? desiredDir = GetDesiredDirection(tank);
             if (desiredDir is null)
@@ -38,10 +82,13 @@ public static class MoveSystem
 
             var dir = desiredDir.Value;
 
-            // When turning, snap to tile grid to avoid off-axis drift
+            // When turning, snap to tile grid to avoid off-axis drift.
+            // While the player is still carrying ice momentum, skip the snap
+            // for a smoother directional transition on the ice surface.
             if (tank.Position.Facing != dir)
             {
-                SnapToGrid(tank);
+                if (!tank.IsPlayerControlled || tank.IceMomentum <= 0f)
+                    SnapToGrid(tank);
                 tank.Position.Facing = dir;
             }
 
@@ -55,6 +102,13 @@ public static class MoveSystem
                 tank.Position.X = nx;
                 tank.Position.Y = ny;
                 tank.Velocity.IsMoving = true;
+
+                // Record momentum direction every frame the player moves on ice
+                if (tank.IsPlayerControlled && IsOnIce(tank, map))
+                {
+                    tank.IceMomentum    = 1.0f;
+                    tank.IceMomentumDir = dir;
+                }
             }
             else if (tank.IsPlayerControlled)
             {
@@ -71,6 +125,7 @@ public static class MoveSystem
                 }
                 else
                 {
+                    tank.IceMomentum = 0f; // wall collision stops ice slide
                     tank.Velocity.IsMoving = false;
                 }
             }
@@ -85,6 +140,17 @@ public static class MoveSystem
     }
 
     // ── Helpers ──────────────────────────────────────────────────────────────
+
+    /// <summary>Returns true when the tank's centre pixel sits on an Ice tile.</summary>
+    private static bool IsOnIce(TankEntity tank, TileMap map)
+    {
+        float cx = tank.Position.X + TankEntity.Size * 0.5f;
+        float cy = tank.Position.Y + TankEntity.Size * 0.5f;
+        int col = (int)(cx / TileMap.TileSize);
+        int row = (int)(cy / TileMap.TileSize);
+        if (col < 0 || col >= map.Cols || row < 0 || row >= map.Rows) return false;
+        return map[col, row] == TileType.Ice;
+    }
 
     private static Direction? GetDesiredDirection(TankEntity tank)
     {
