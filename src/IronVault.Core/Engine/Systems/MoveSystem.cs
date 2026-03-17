@@ -13,14 +13,15 @@ public static class MoveSystem
             if (!tank.IsAlive) continue;
             if (tank.IsFrozen) continue;   // Clock power-up: enemy freeze
 
-            // Invincibility blink
+            // ── Invincibility blink ───────────────────────────────────────────
             if (tank.IsInvincible)
             {
-                tank.SpawnInvincibleTimer -= dt;
+                if (tank.SpawnInvincibleTimer > 0) tank.SpawnInvincibleTimer -= dt;
+                if (tank.PowerUpInvincibleTimer > 0) tank.PowerUpInvincibleTimer -= dt;
                 tank.BlinkTimer += dt;
                 if (tank.BlinkTimer >= 0.1f)
                 {
-                    tank.BlinkTimer = 0;
+                    tank.BlinkTimer  = 0;
                     tank.BlinkVisible = !tank.BlinkVisible;
                 }
             }
@@ -33,10 +34,9 @@ public static class MoveSystem
             if (tank.IsPlayerControlled)
             {
                 bool onIce = IsOnIce(tank, map);
-
                 if (!onIce) tank.IceMomentum = 0f;
 
-                var input = tank.Input;
+                var input    = tank.Input;
                 bool hasInput = input.MoveUp || input.MoveDown ||
                                 input.MoveLeft || input.MoveRight;
 
@@ -52,13 +52,13 @@ public static class MoveSystem
 
                         if (CanMoveTo(snx, sny, map, tanks, tank))
                         {
-                            tank.Position.X = snx;
-                            tank.Position.Y = sny;
+                            tank.Position.X  = snx;
+                            tank.Position.Y  = sny;
                             tank.Velocity.IsMoving = true;
                         }
                         else
                         {
-                            tank.IceMomentum = 0f;
+                            tank.IceMomentum       = 0f;
                             tank.Velocity.IsMoving = false;
                         }
                     }
@@ -69,7 +69,6 @@ public static class MoveSystem
                     continue;
                 }
             }
-            // ─────────────────────────────────────────────────────────────────
 
             Direction? desiredDir = GetDesiredDirection(tank);
             if (desiredDir is null)
@@ -82,10 +81,28 @@ public static class MoveSystem
 
             if (tank.Position.Facing != dir)
             {
-                if (!tank.IsPlayerControlled || tank.IceMomentum <= 0f)
+                if (tank.IsPlayerControlled)
+                {
+                    // ── Fix 2: player rotates in place — no snap, no displacement ──
+                    // On the NEXT frame (still holding the key) the tank will move.
+                    tank.Position.Facing   = dir;
+                    tank.Velocity.IsMoving = false;
+                    continue;
+                }
+                else
+                {
+                    // Enemies snap to grid on turn for clean grid-based navigation
                     SnapToGrid(tank);
-                tank.Position.Facing = dir;
+                    tank.Position.Facing = dir;
+                }
             }
+
+            // ── Align perpendicular axis for smooth corridor navigation ────────
+            // Replaces the old "snap-on-turn" for the player.  Snaps the axis
+            // that is NOT the movement axis to the nearest grid line — but only
+            // when the result is passable and doesn't increase tank overlap.
+            if (tank.IsPlayerControlled)
+                TryAlignPerpAxis(tank, dir, map, tanks);
 
             float speed = tank.Velocity.Speed;
             (float dx, float dy) = DirectionDelta(dir);
@@ -94,8 +111,8 @@ public static class MoveSystem
 
             if (CanMoveTo(nx, ny, map, tanks, tank))
             {
-                tank.Position.X = nx;
-                tank.Position.Y = ny;
+                tank.Position.X  = nx;
+                tank.Position.Y  = ny;
                 tank.Velocity.IsMoving = true;
 
                 if (tank.IsPlayerControlled && IsOnIce(tank, map))
@@ -106,21 +123,23 @@ public static class MoveSystem
             }
             else if (tank.IsPlayerControlled)
             {
-                if (CanMoveTo(nx, tank.Position.Y, map, tanks, tank))
+                // ── Fix 1 (partial): only try a partial move when the component
+                // actually differs from the current value, so we never "succeed"
+                // by re-checking the current position (which caused the full lock). ──
+                bool moved = false;
+                if (dx != 0 && CanMoveTo(nx, tank.Position.Y, map, tanks, tank))
                 {
-                    tank.Position.X = nx;
-                    tank.Velocity.IsMoving = true;
+                    tank.Position.X  = nx;
+                    moved = true;
                 }
-                else if (CanMoveTo(tank.Position.X, ny, map, tanks, tank))
+                else if (dy != 0 && CanMoveTo(tank.Position.X, ny, map, tanks, tank))
                 {
-                    tank.Position.Y = ny;
-                    tank.Velocity.IsMoving = true;
+                    tank.Position.Y  = ny;
+                    moved = true;
                 }
-                else
-                {
-                    tank.IceMomentum = 0f;
-                    tank.Velocity.IsMoving = false;
-                }
+
+                tank.IceMomentum       = moved ? tank.IceMomentum : 0f;
+                tank.Velocity.IsMoving = moved;
             }
             else
             {
@@ -131,6 +150,40 @@ public static class MoveSystem
     }
 
     // ── Helpers ──────────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Snaps the perpendicular axis to the nearest tile boundary so the player
+    /// glides smoothly through corridor openings.  Only applied when the result
+    /// passes both tile and tank-overlap checks.
+    /// </summary>
+    private static void TryAlignPerpAxis(TankEntity tank, Direction dir,
+        TileMap map, IReadOnlyList<TankEntity> tanks)
+    {
+        float half = TileMap.TileSize;
+        float sx = tank.Position.X, sy = tank.Position.Y;
+        float tx, ty;
+
+        if (dir == Direction.Up || dir == Direction.Down)
+        {
+            tx = MathF.Round(sx / half) * half;
+            ty = sy;
+        }
+        else
+        {
+            tx = sx;
+            ty = MathF.Round(sy / half) * half;
+        }
+
+        if (tx == sx && ty == sy) return;  // Already aligned
+
+        // Apply only if the snapped position is fully passable and doesn't
+        // increase tank overlap (the escape logic in CanMoveTo handles this).
+        if (CanMoveTo(tx, ty, map, tanks, tank))
+        {
+            tank.Position.X = tx;
+            tank.Position.Y = ty;
+        }
+    }
 
     private static bool IsOnIce(TankEntity tank, TileMap map)
     {
@@ -144,8 +197,7 @@ public static class MoveSystem
 
     private static Direction? GetDesiredDirection(TankEntity tank)
     {
-        if (!tank.IsPlayerControlled)
-            return tank.Position.Facing;
+        if (!tank.IsPlayerControlled) return tank.Position.Facing;
 
         var input = tank.Input;
         if (input.MoveUp)    return Direction.Up;
@@ -176,8 +228,8 @@ public static class MoveSystem
             {
                 SnapToGrid(tank);
                 tank.Position.Facing = alt;
-                tank.Position.X = anx;
-                tank.Position.Y = any;
+                tank.Position.X      = anx;
+                tank.Position.Y      = any;
                 return true;
             }
         }
@@ -192,7 +244,9 @@ public static class MoveSystem
         _               => (1,  0),
     };
 
-    /// <summary>Checks tile passability AND no overlap with other alive tanks.</summary>
+    /// <summary>
+    /// Checks tile passability AND no harmful tank overlap at (x, y).
+    /// </summary>
     private static bool CanMoveTo(float x, float y, TileMap map,
         IReadOnlyList<TankEntity> tanks, TankEntity self)
         => CanMoveTo(x, y, map) && !OverlapsTank(x, y, tanks, self);
@@ -200,7 +254,7 @@ public static class MoveSystem
     /// <summary>Tile-only passability check (used internally).</summary>
     private static bool CanMoveTo(float x, float y, TileMap map)
     {
-        int size = TankEntity.Size;
+        int   size   = TankEntity.Size;
         const float margin = 1f;
         return IsTilePassable(x + margin,        y + margin,        map)
             && IsTilePassable(x + size - margin, y + margin,        map)
@@ -216,34 +270,51 @@ public static class MoveSystem
     }
 
     /// <summary>
-    /// Returns true if placing a tank at (x,y) would overlap any other alive tank.
-    /// Uses AABB with a small 2-pixel gap tolerance.
+    /// Returns true when placing <paramref name="self"/> at (x, y) would cause
+    /// a harmful tank-vs-tank overlap.
+    ///
+    /// Uses strict AABB and an "escape" rule:
+    ///   • If the two tanks are NOT currently overlapping → block any new overlap.
+    ///   • If they ARE already overlapping (rare bad state after a snap) →
+    ///     allow movement only when it REDUCES the overlap area, so the tank
+    ///     can always escape rather than being permanently frozen.
     /// </summary>
-    private static bool OverlapsTank(float x, float y,
+    private static bool OverlapsTank(float nx, float ny,
         IReadOnlyList<TankEntity> tanks, TankEntity self)
     {
-        const float gap = 2f;
-        float halfOverlap = TankEntity.Size - gap;
-        float cx = x + TankEntity.Size * 0.5f;
-        float cy = y + TankEntity.Size * 0.5f;
+        int size = TankEntity.Size;
 
         for (int i = 0; i < tanks.Count; i++)
         {
             var other = tanks[i];
             if (ReferenceEquals(other, self) || !other.IsAlive) continue;
 
-            float ocx = other.Position.X + TankEntity.Size * 0.5f;
-            float ocy = other.Position.Y + TankEntity.Size * 0.5f;
+            float ox = other.Position.X;
+            float oy = other.Position.Y;
 
-            if (MathF.Abs(cx - ocx) < halfOverlap && MathF.Abs(cy - ocy) < halfOverlap)
-                return true;
+            // AABB overlap area at the new position
+            float aw = MathF.Max(0, MathF.Min(nx + size, ox + size) - MathF.Max(nx, ox));
+            float ah = MathF.Max(0, MathF.Min(ny + size, oy + size) - MathF.Max(ny, oy));
+            float newArea = aw * ah;
+
+            if (newArea <= 0) continue;  // No overlap at new position — allow
+
+            // There IS overlap at the new position. Check current overlap.
+            float sx = self.Position.X, sy = self.Position.Y;
+            float cw = MathF.Max(0, MathF.Min(sx + size, ox + size) - MathF.Max(sx, ox));
+            float ch = MathF.Max(0, MathF.Min(sy + size, oy + size) - MathF.Max(sy, oy));
+            float curArea = cw * ch;
+
+            // Allow only if the move strictly reduces the existing overlap
+            // (escape mode).  Block if overlap is new or not shrinking.
+            if (newArea >= curArea) return true;
         }
         return false;
     }
 
     private static void SnapToGrid(TankEntity tank)
     {
-        float half = TileMap.TileSize;
+        float half   = TileMap.TileSize;
         tank.Position.X = MathF.Round(tank.Position.X / half) * half;
         tank.Position.Y = MathF.Round(tank.Position.Y / half) * half;
     }
