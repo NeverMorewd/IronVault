@@ -88,11 +88,12 @@ jobs:
         run: find publish/${{ matrix.rid }} -name "*.pdb" -delete
 
       - name: Create zip
+        shell: pwsh
         run: |
-          TAG="${{ github.ref_name }}"
-          [ -z "$TAG" ] && TAG="dev"
-          cd publish/${{ matrix.rid }}
-          zip -r "../../IronVault-${TAG}-${{ matrix.rid }}.zip" .
+          $tag = '${{ github.ref_name }}'
+          if (-not $tag) { $tag = 'dev' }
+          $rid = '${{ matrix.rid }}'
+          Compress-Archive -Path "publish/$rid/*" -DestinationPath "IronVault-${tag}-${rid}.zip"
 
       - name: Upload desktop artifact
         uses: actions/upload-artifact@v4
