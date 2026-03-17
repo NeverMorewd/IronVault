@@ -13,6 +13,7 @@ public sealed class GameEngine
     public GameState    State       { get; private set; } = GameState.NotStarted;
     public TileMap      Map         { get; private set; }
     public AIDifficulty Difficulty  { get; set; } = AIDifficulty.Normal;
+    public GameMode     Mode        { get; set; } = GameMode.Classic;
 
     // ── Entity lists ─────────────────────────────────────────────────────────
     public List<TankEntity>      Tanks      { get; } = [];
@@ -42,6 +43,10 @@ public sealed class GameEngine
     public event EventHandler<int>?       ScoreChanged;
     /// <summary>Fired when all enemies in the current wave are destroyed. Parameter = wave number.</summary>
     public event EventHandler<int>?       WaveCleared;
+    /// <summary>Fired when one or more new bullets are spawned this tick.</summary>
+    public event EventHandler? ShotFired;
+    /// <summary>Fired when one or more new explosions are created this tick.</summary>
+    public event EventHandler? HitOccurred;
 
     // ── Player ───────────────────────────────────────────────────────────────
     public TankEntity? Player { get; private set; }
@@ -79,7 +84,7 @@ public sealed class GameEngine
         if (State != GameState.WaveComplete) return;
 
         Wave++;
-        _currentScript          = WaveScript.ForWave(Wave);
+        _currentScript          = GetScript(Wave);
         _enemiesSpawned         = 0;
         _waveClearFired         = false;
         EnemiesLeft             = _currentScript.TotalEnemies;
@@ -129,6 +134,9 @@ public sealed class GameEngine
     {
         if (State != GameState.Playing) return;
 
+        int prevBullets    = Bullets.Count;
+        int prevExplosions = Explosions.Count;
+
         // Systems update
         MoveSystem.Update(Tanks, Map, dt);
         WeaponSystem.Update(Tanks, Bullets, dt);
@@ -145,6 +153,10 @@ public sealed class GameEngine
 
         // Win / lose / wave-clear checks
         CheckEndConditions();
+
+        // Sound signals
+        if (Bullets.Count    > prevBullets)    ShotFired?.Invoke(this, EventArgs.Empty);
+        if (Explosions.Count > prevExplosions) HitOccurred?.Invoke(this, EventArgs.Empty);
     }
 
     // ── Private helpers ──────────────────────────────────────────────────────
@@ -159,7 +171,7 @@ public sealed class GameEngine
         Score                   = 0;
         Wave                    = 1;
         Lives                   = 3;
-        _currentScript          = WaveScript.ForWave(1);
+        _currentScript          = GetScript(1);
         EnemiesLeft             = _currentScript.TotalEnemies;
         TotalEnemies            = _currentScript.TotalEnemies;
         _maxSimultaneousEnemies = _currentScript.MaxSimultaneous;
@@ -219,13 +231,63 @@ public sealed class GameEngine
 
         if (spawns.Count == 0) return;
 
-        var (sc, sr) = spawns[_rng.Next(spawns.Count)];
-        var tier     = _currentScript.RollTier(_rng);
-        var enemy    = TankEntity.CreateEnemy(tier, sc * TileMap.TileSize, sr * TileMap.TileSize);
+        // Only use spawns where the tank has room to move
+        var usable = spawns
+            .Where(s => SpawnIsUsable(s.c, s.r))
+            .OrderBy(_ => _rng.Next())
+            .ToList();
+
+        // All spawns blocked → retry next tick (don't advance spawn counter)
+        if (usable.Count == 0) return;
+
+        var (sc, sr) = usable[0];
+        var tier  = _currentScript.RollTier(_rng);
+        var enemy = TankEntity.CreateEnemy(tier, sc * TileMap.TileSize, sr * TileMap.TileSize);
         enemy.Position.Facing = Components.Direction.Down;
         Tanks.Add(enemy);
         _enemiesSpawned++;
     }
+
+    /// <summary>
+    /// Returns true when a spawn tile at (col,row) has a clear 2-tile footprint
+    /// AND at least one passable step downward, AND no existing tank is too close.
+    /// </summary>
+    private bool SpawnIsUsable(int col, int row)
+    {
+        float px = col * TileMap.TileSize;
+        float py = row * TileMap.TileSize;
+
+        // Tank footprint must be fully passable
+        if (!TankFootprintClear(px, py)) return false;
+
+        // Must be able to move one tile downward (initial facing = Down)
+        if (!TankFootprintClear(px, py + TileMap.TileSize)) return false;
+
+        // No other alive tank within 2-tile radius
+        float minDist = TankEntity.Size + TileMap.TileSize;
+        foreach (var t in Tanks)
+        {
+            if (!t.IsAlive) continue;
+            float dx = MathF.Abs(px - t.Position.X);
+            float dy = MathF.Abs(py - t.Position.Y);
+            if (dx < minDist && dy < minDist) return false;
+        }
+        return true;
+    }
+
+    /// <summary>Checks that a 48×48 tank body fits entirely on passable tiles.</summary>
+    private bool TankFootprintClear(float x, float y)
+    {
+        const float margin = 1f;
+        int size = TankEntity.Size;
+        return IsPixelPassable(x + margin,        y + margin)
+            && IsPixelPassable(x + size - margin, y + margin)
+            && IsPixelPassable(x + margin,        y + size - margin)
+            && IsPixelPassable(x + size - margin, y + size - margin);
+    }
+
+    private bool IsPixelPassable(float px, float py)
+        => Map.IsPassable((int)(px / TileMap.TileSize), (int)(py / TileMap.TileSize));
 
     private void CleanupDeadTanks()
     {
@@ -247,6 +309,12 @@ public sealed class GameEngine
         AISystem.Cleanup(Tanks.Select(t => t.Id));
         AllyAISystem.Cleanup(Tanks.Select(t => t.Id));
     }
+
+    /// <summary>Returns the correct wave script for the current game mode.</summary>
+    private WaveScript GetScript(int wave)
+        => Mode == GameMode.Defense
+               ? DefenseWaveScript.ForWave(wave)
+               : WaveScript.ForWave(wave);
 
     private void AddScore(int points)
     {
@@ -298,6 +366,15 @@ public sealed class GameEngine
             if (!anyEnemy)
             {
                 _waveClearFired = true;
+
+                // Defense mode: final wave → go directly to Victory
+                if (Mode == GameMode.Defense && Wave >= DefenseWaveScript.TotalWaves)
+                {
+                    State = GameState.Victory;
+                    StateChanged?.Invoke(this, State);
+                    return;
+                }
+
                 State = GameState.WaveComplete;
                 StateChanged?.Invoke(this, State);
                 WaveCleared?.Invoke(this, Wave);

@@ -1,6 +1,8 @@
 using Avalonia.Controls;
+using Avalonia.Input;
 using IronVault.Core.Engine;
 using IronVault.Core.Localization;
+using IronVault.Desktop.Audio;
 
 namespace IronVault.Desktop.Views;
 
@@ -8,8 +10,6 @@ public partial class UpgradeView : UserControl
 {
     private UpgradeType[] _choices = new UpgradeType[3];
     private bool _grantsAlly;
-
-    // Keep the last engine/wave so we can re-populate on language change
     private GameEngine? _lastEngine;
     private int         _lastWave;
 
@@ -20,18 +20,52 @@ public partial class UpgradeView : UserControl
     {
         InitializeComponent();
 
-        UpBtn0.Click  += (_, _) => ContinueRequested?.Invoke(this, _choices[0]);
-        UpBtn1.Click  += (_, _) => ContinueRequested?.Invoke(this, _choices[1]);
-        UpBtn2.Click  += (_, _) => ContinueRequested?.Invoke(this, _choices[2]);
-        SkipBtn.Click += (_, _) => ContinueRequested?.Invoke(this, null);
+        UpBtn0.Click  += (_, _) => { RetroSound.PlayClick(); ContinueRequested?.Invoke(this, _choices[0]); };
+        UpBtn1.Click  += (_, _) => { RetroSound.PlayClick(); ContinueRequested?.Invoke(this, _choices[1]); };
+        UpBtn2.Click  += (_, _) => { RetroSound.PlayClick(); ContinueRequested?.Invoke(this, _choices[2]); };
+        SkipBtn.Click += (_, _) => { RetroSound.PlayClick(); ContinueRequested?.Invoke(this, null); };
+
+        // Keyboard navigation
+        Focusable = true;
+        KeyDown  += OnKeyDown;
 
         I18n.LanguageChanged += OnLanguageChanged;
         RefreshStaticText();
     }
 
+    // ── Keyboard navigation ───────────────────────────────────────────────────
+
+    private void OnKeyDown(object? sender, KeyEventArgs e)
+    {
+        switch (e.Key)
+        {
+            case Key.D1:
+            case Key.NumPad1:
+                ContinueRequested?.Invoke(this, _choices[0]);
+                e.Handled = true;
+                break;
+            case Key.D2:
+            case Key.NumPad2:
+                ContinueRequested?.Invoke(this, _choices[1]);
+                e.Handled = true;
+                break;
+            case Key.D3:
+            case Key.NumPad3:
+                ContinueRequested?.Invoke(this, _choices[2]);
+                e.Handled = true;
+                break;
+            case Key.Space:
+            case Key.Enter:
+            case Key.Escape:
+            case Key.S:
+                ContinueRequested?.Invoke(this, null);
+                e.Handled = true;
+                break;
+        }
+    }
+
     /// <summary>
     /// Called by MainWindow just before this view is made visible.
-    /// Populates the wave-clear stats and generates 3 upgrade choices.
     /// </summary>
     public void Prepare(int clearedWave, GameEngine engine)
     {
@@ -55,7 +89,6 @@ public partial class UpgradeView : UserControl
     private void OnLanguageChanged()
     {
         RefreshStaticText();
-        // Refresh dynamic data if we have it
         if (_lastEngine is not null)
         {
             WaveClearedText.Text = FormatWaveCleared(_lastWave);
@@ -84,10 +117,9 @@ public partial class UpgradeView : UserControl
             (UpIcon1, UpName1, UpDesc1),
             (UpIcon2, UpName2, UpDesc2),
         };
-
         for (int i = 0; i < 3; i++)
         {
-            var info        = UpgradeDescriptions.For(_choices[i]);
+            var info = UpgradeDescriptions.For(_choices[i]);
             slots[i].Item1.Text = info.Icon;
             slots[i].Item2.Text = info.Name;
             slots[i].Item3.Text = info.Desc;
@@ -112,20 +144,13 @@ public partial class UpgradeView : UserControl
         };
 
         var player = engine.Player;
-
-        // Only offer RepairKit when the player is actually damaged
         if (player?.Health.Current >= player?.Health.Max)
             pool.Remove(UpgradeType.RepairKit);
-
-        // Only offer ArmourPiercing before the player has it
         if (player?.Weapon.Power >= 2)
             pool.Remove(UpgradeType.ArmourPiercing);
-
-        // Only offer DualCannon below the shell cap
         if (player?.Weapon.MaxBullets >= 5)
             pool.Remove(UpgradeType.DualCannon);
 
-        // Shuffle → take 3
         var rng = new Random();
         return [..pool.OrderBy(_ => rng.Next()).Take(3)];
     }

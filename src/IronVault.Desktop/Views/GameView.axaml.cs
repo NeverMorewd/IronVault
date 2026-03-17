@@ -3,6 +3,7 @@ using Avalonia.Input;
 using IronVault.Core.Engine;
 using IronVault.Core.Engine.Entities;
 using IronVault.Core.Localization;
+using IronVault.Desktop.Audio;
 using IronVault.Desktop.ViewModels;
 
 namespace IronVault.Desktop.Views;
@@ -38,6 +39,8 @@ public partial class GameView : UserControl
         vm.FrameTick           += OnFrameTick;
         vm.Engine.StateChanged += OnStateChanged;
         vm.Engine.ScoreChanged += OnScoreChanged;
+        vm.Engine.ShotFired    += (_, _) => RetroSound.PlayShoot();
+        vm.Engine.HitOccurred  += (_, _) => RetroSound.PlayExplosion();
         GameCanvas.Attach(vm.Engine);
     }
 

@@ -76,7 +76,7 @@ public sealed class TileMap
         // Top row clusters
         FillRect(map, 2,  2, 3, 3, TileType.Brick);
         FillRect(map, 11, 2, 2, 3, TileType.Brick);
-        FillRect(map, 14, 2, 2, 3, TileType.Brick);   // split center top: leave col 13 clear
+        FillRect(map, 15, 2, 2, 3, TileType.Brick);   // split center top: leave col 13 clear
         FillRect(map, 21, 2, 3, 3, TileType.Brick);
 
         // Mid-row clusters
@@ -131,9 +131,9 @@ public sealed class TileMap
         map[mid + 1, DefaultRows - 2] = TileType.Brick; // col 14, row 24
 
         // ── Enemy spawn points (top strip, facing DOWN) ───────────────────────
-        map[1,              1] = TileType.Spawn;
-        map[DefaultCols - 2, 1] = TileType.Spawn;
-        map[DefaultCols / 2, 1] = TileType.Spawn;
+        map[5,  1] = TileType.Spawn;   // left — clear of left brick cluster
+        map[13, 1] = TileType.Spawn;   // center — clear after brick shift
+        map[19, 1] = TileType.Spawn;   // right — clear of right brick cluster
 
         return map;
     }

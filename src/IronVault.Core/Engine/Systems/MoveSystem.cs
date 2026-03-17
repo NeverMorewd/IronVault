@@ -33,7 +33,6 @@ public static class MoveSystem
             {
                 bool onIce = IsOnIce(tank, map);
 
-                // Leaving ice immediately kills any remaining slide
                 if (!onIce) tank.IceMomentum = 0f;
 
                 var input = tank.Input;
@@ -42,7 +41,6 @@ public static class MoveSystem
 
                 if (!hasInput && onIce && tank.IceMomentum > 0f)
                 {
-                    // Decay momentum (2 units/s) then apply remaining slide
                     tank.IceMomentum = MathF.Max(0f, tank.IceMomentum - 2.0f * dt);
                     if (tank.IceMomentum > 0f)
                     {
@@ -51,7 +49,7 @@ public static class MoveSystem
                         float snx = tank.Position.X + sdx * slideSpeed * dt;
                         float sny = tank.Position.Y + sdy * slideSpeed * dt;
 
-                        if (CanMoveTo(snx, sny, map))
+                        if (CanMoveTo(snx, sny, map, tanks, tank))
                         {
                             tank.Position.X = snx;
                             tank.Position.Y = sny;
@@ -59,7 +57,7 @@ public static class MoveSystem
                         }
                         else
                         {
-                            tank.IceMomentum = 0f;   // hit a wall, stop sliding
+                            tank.IceMomentum = 0f;
                             tank.Velocity.IsMoving = false;
                         }
                     }
@@ -67,12 +65,11 @@ public static class MoveSystem
                     {
                         tank.Velocity.IsMoving = false;
                     }
-                    continue; // slide handled — skip normal movement this frame
+                    continue;
                 }
             }
             // ─────────────────────────────────────────────────────────────────
 
-            // Player: direction from input; AI: always wants to move in current facing
             Direction? desiredDir = GetDesiredDirection(tank);
             if (desiredDir is null)
             {
@@ -82,9 +79,6 @@ public static class MoveSystem
 
             var dir = desiredDir.Value;
 
-            // When turning, snap to tile grid to avoid off-axis drift.
-            // While the player is still carrying ice momentum, skip the snap
-            // for a smoother directional transition on the ice surface.
             if (tank.Position.Facing != dir)
             {
                 if (!tank.IsPlayerControlled || tank.IceMomentum <= 0f)
@@ -97,13 +91,12 @@ public static class MoveSystem
             float nx = tank.Position.X + dx * speed * dt;
             float ny = tank.Position.Y + dy * speed * dt;
 
-            if (CanMoveTo(nx, ny, map))
+            if (CanMoveTo(nx, ny, map, tanks, tank))
             {
                 tank.Position.X = nx;
                 tank.Position.Y = ny;
                 tank.Velocity.IsMoving = true;
 
-                // Record momentum direction every frame the player moves on ice
                 if (tank.IsPlayerControlled && IsOnIce(tank, map))
                 {
                     tank.IceMomentum    = 1.0f;
@@ -112,28 +105,25 @@ public static class MoveSystem
             }
             else if (tank.IsPlayerControlled)
             {
-                // Player: slide along the wall on one axis
-                if (CanMoveTo(nx, tank.Position.Y, map))
+                if (CanMoveTo(nx, tank.Position.Y, map, tanks, tank))
                 {
                     tank.Position.X = nx;
                     tank.Velocity.IsMoving = true;
                 }
-                else if (CanMoveTo(tank.Position.X, ny, map))
+                else if (CanMoveTo(tank.Position.X, ny, map, tanks, tank))
                 {
                     tank.Position.Y = ny;
                     tank.Velocity.IsMoving = true;
                 }
                 else
                 {
-                    tank.IceMomentum = 0f; // wall collision stops ice slide
+                    tank.IceMomentum = 0f;
                     tank.Velocity.IsMoving = false;
                 }
             }
             else
             {
-                // AI: try perpendicular directions to avoid walls automatically.
-                // Alternate left/right preference per tank ID to prevent convoy lock-step.
-                bool turned = TryPerpendicularMove(tank, dir, speed, dt, map);
+                bool turned = TryPerpendicularMove(tank, dir, speed, dt, map, tanks);
                 tank.Velocity.IsMoving = turned;
             }
         }
@@ -141,7 +131,6 @@ public static class MoveSystem
 
     // ── Helpers ──────────────────────────────────────────────────────────────
 
-    /// <summary>Returns true when the tank's centre pixel sits on an Ice tile.</summary>
     private static bool IsOnIce(TankEntity tank, TileMap map)
     {
         float cx = tank.Position.X + TankEntity.Size * 0.5f;
@@ -155,7 +144,6 @@ public static class MoveSystem
     private static Direction? GetDesiredDirection(TankEntity tank)
     {
         if (!tank.IsPlayerControlled)
-            // AI always wants to advance in current facing direction
             return tank.Position.Facing;
 
         var input = tank.Input;
@@ -167,13 +155,13 @@ public static class MoveSystem
     }
 
     private static bool TryPerpendicularMove(
-        TankEntity tank, Direction blocked, float speed, float dt, TileMap map)
+        TankEntity tank, Direction blocked, float speed, float dt, TileMap map,
+        IReadOnlyList<TankEntity> tanks)
     {
         Direction[] perps = blocked is Direction.Up or Direction.Down
             ? [Direction.Left, Direction.Right]
             : [Direction.Up,   Direction.Down];
 
-        // Alternate preference by tank ID so not all tanks turn the same way
         if (tank.Id % 2 == 1)
             (perps[0], perps[1]) = (perps[1], perps[0]);
 
@@ -183,7 +171,7 @@ public static class MoveSystem
             float anx = tank.Position.X + adx * speed * dt;
             float any = tank.Position.Y + ady * speed * dt;
 
-            if (CanMoveTo(anx, any, map))
+            if (CanMoveTo(anx, any, map, tanks, tank))
             {
                 SnapToGrid(tank);
                 tank.Position.Facing = alt;
@@ -203,11 +191,16 @@ public static class MoveSystem
         _               => (1,  0),
     };
 
+    /// <summary>Checks tile passability AND no overlap with other alive tanks.</summary>
+    private static bool CanMoveTo(float x, float y, TileMap map,
+        IReadOnlyList<TankEntity> tanks, TankEntity self)
+        => CanMoveTo(x, y, map) && !OverlapsTank(x, y, tanks, self);
+
+    /// <summary>Tile-only passability check (used internally).</summary>
     private static bool CanMoveTo(float x, float y, TileMap map)
     {
         int size = TankEntity.Size;
         const float margin = 1f;
-
         return IsTilePassable(x + margin,        y + margin,        map)
             && IsTilePassable(x + size - margin, y + margin,        map)
             && IsTilePassable(x + margin,        y + size - margin, map)
@@ -219,6 +212,32 @@ public static class MoveSystem
         int col = (int)(px / TileMap.TileSize);
         int row = (int)(py / TileMap.TileSize);
         return map.IsPassable(col, row);
+    }
+
+    /// <summary>
+    /// Returns true if placing a tank at (x,y) would overlap any other alive tank.
+    /// Uses AABB with a small 2-pixel gap tolerance.
+    /// </summary>
+    private static bool OverlapsTank(float x, float y,
+        IReadOnlyList<TankEntity> tanks, TankEntity self)
+    {
+        const float gap = 2f;
+        float halfOverlap = TankEntity.Size - gap;
+        float cx = x + TankEntity.Size * 0.5f;
+        float cy = y + TankEntity.Size * 0.5f;
+
+        for (int i = 0; i < tanks.Count; i++)
+        {
+            var other = tanks[i];
+            if (ReferenceEquals(other, self) || !other.IsAlive) continue;
+
+            float ocx = other.Position.X + TankEntity.Size * 0.5f;
+            float ocy = other.Position.Y + TankEntity.Size * 0.5f;
+
+            if (MathF.Abs(cx - ocx) < halfOverlap && MathF.Abs(cy - ocy) < halfOverlap)
+                return true;
+        }
+        return false;
     }
 
     private static void SnapToGrid(TankEntity tank)
