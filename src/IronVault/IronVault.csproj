@@ -16,6 +16,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <AvaloniaResource Include="Assets\Fonts\NotoSansSC-Regular.ttf" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\IronVault.Core\IronVault.Core.csproj" />
     <ProjectReference Include="..\IronVault.Renderer\IronVault.Renderer.csproj" />
     <ProjectReference Include="..\..\..\Pipboy.Avalonia\src\Pipboy.Avalonia\Pipboy.Avalonia.csproj" />

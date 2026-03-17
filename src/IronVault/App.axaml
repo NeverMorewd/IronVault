@@ -6,5 +6,11 @@
 
     <Application.Styles>
         <pipboy:PipboyTheme />
+        <Style Selector="TextBlock">
+            <Setter Property="FontFamily" Value="Inter, fonts:IronVault#Noto Sans SC" />
+        </Style>
+        <Style Selector="TextBox">
+            <Setter Property="FontFamily" Value="Inter, fonts:IronVault#Noto Sans SC" />
+        </Style>
     </Application.Styles>
 </Application>

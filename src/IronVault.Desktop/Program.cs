@@ -1,4 +1,5 @@
 using Avalonia;
+using IronVault;
 
 namespace IronVault.Desktop;
 
@@ -12,5 +13,6 @@ class Program
         => AppBuilder.Configure<global::IronVault.App>()
             .UsePlatformDetect()
             .WithInterFont()
+            .WithIronVaultFonts()
             .LogToTrace();
 }

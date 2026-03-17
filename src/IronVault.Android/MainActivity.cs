@@ -2,6 +2,7 @@ using Android.App;
 using Android.Content.PM;
 using Avalonia;
 using Avalonia.Android;
+using IronVault;
 
 namespace IronVault.Android;
 
@@ -15,5 +16,6 @@ public class MainActivity : AvaloniaMainActivity<global::IronVault.App>
     protected override AppBuilder CustomizeAppBuilder(AppBuilder builder)
         => base.CustomizeAppBuilder(builder)
                .WithInterFont()
+               .WithIronVaultFonts()
                .LogToTrace();
 }
