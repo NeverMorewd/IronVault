@@ -8,31 +8,41 @@ namespace IronVault.Desktop.Views;
 
 public partial class GameView : UserControl
 {
-    private readonly GameViewModel _vm = new();
+    private GameViewModel? _vm;
     private readonly HashSet<Key> _heldKeys = [];
 
     public GameView()
     {
         InitializeComponent();
 
-        _vm.FrameTick += OnFrameTick;
-        _vm.Engine.StateChanged  += OnStateChanged;
-        _vm.Engine.ScoreChanged  += OnScoreChanged;
-
-        GameCanvas.Attach(_vm.Engine);
-
         StartButton.Click += (_, _) => StartOrRestart();
-        PauseButton.Click += (_, _) => _vm.TogglePause();
+        PauseButton.Click += (_, _) => _vm?.TogglePause();
 
         Focusable = true;
         KeyDown += OnKeyDown;
         KeyUp   += OnKeyUp;
     }
 
+    /// <summary>
+    /// Called by MainWindow after construction to wire up the shared ViewModel.
+    /// Must be called before the first frame tick.
+    /// </summary>
+    public void SetViewModel(GameViewModel vm)
+    {
+        _vm = vm;
+        vm.FrameTick           += OnFrameTick;
+        vm.Engine.StateChanged += OnStateChanged;
+        vm.Engine.ScoreChanged += OnScoreChanged;
+        GameCanvas.Attach(vm.Engine);
+    }
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
+
     private void StartOrRestart()
     {
+        if (_vm is null) return;
         _vm.Stop();
-        _vm.StartGame();
+        _vm.StartGame();          // uses Normal difficulty (menu already started game with chosen difficulty)
         PauseButton.IsEnabled = true;
         StartButton.Content   = "[REDEPLOY]";
         Focus();
@@ -40,8 +50,8 @@ public partial class GameView : UserControl
 
     private void OnFrameTick(object? sender, float dt)
     {
-        // Build input state from held keys
-        if (_vm.Engine.Player is { } player)
+        // Build input state from currently held keys
+        if (_vm?.Engine.Player is { } player)
         {
             player.Input = new TankInput(
                 MoveUp:    _heldKeys.Contains(Key.W) || _heldKeys.Contains(Key.Up),
@@ -58,21 +68,33 @@ public partial class GameView : UserControl
 
     private void UpdateHud()
     {
-        WaveText.Text    = _vm.Engine.Wave.ToString("D2");
-        ScoreText.Text   = _vm.Engine.Score.ToString("D5");
-        LivesText.Text   = new string('I', Math.Max(0, _vm.Engine.Lives));
-        EnemiesText.Text = _vm.Engine.EnemiesLeft.ToString("D2");
+        if (_vm is null) return;
+        var eng = _vm.Engine;
 
-        if (_vm.Engine.Player is { } p && p.Health is { } hp)
-            HpBar.Value = hp.Current;
+        WaveText.Text    = eng.Wave.ToString("D2");
+        ScoreText.Text   = eng.Score.ToString("D5");
+        LivesText.Text   = new string('I', Math.Max(0, eng.Lives));
+        EnemiesText.Text = eng.EnemiesLeft.ToString("D2");
+
+        if (eng.Player is { } p && p.Health is { } hp)
+        {
+            // Keep Maximum + SegmentCount in sync so ArmorPlating upgrades show correctly
+            HpBar.Maximum      = hp.Max;
+            HpBar.SegmentCount = hp.Max;
+            HpBar.Value        = hp.Current;
+        }
     }
 
     private void OnStateChanged(object? sender, GameState state)
     {
-        if (state is GameState.GameOver or GameState.Victory)
+        if (state is GameState.GameOver or GameState.Victory or GameState.WaveComplete)
         {
             PauseButton.IsEnabled = false;
             StartButton.Content   = "[REDEPLOY]";
+        }
+        else if (state == GameState.Playing)
+        {
+            PauseButton.IsEnabled = true;
         }
     }
 
@@ -84,8 +106,8 @@ public partial class GameView : UserControl
         _heldKeys.Add(e.Key);
 
         if (e.Key == Key.P)
-            _vm.TogglePause();
-        else if (e.Key == Key.Enter && _vm.Engine.State == GameState.NotStarted)
+            _vm?.TogglePause();
+        else if (e.Key == Key.Enter && _vm?.Engine.State == GameState.NotStarted)
             StartOrRestart();
     }
 

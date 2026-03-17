@@ -23,9 +23,9 @@ public sealed class GameViewModel
         _timer.Tick += OnTimerTick;
     }
 
-    public void StartGame()
+    public void StartGame(AIDifficulty difficulty = AIDifficulty.Normal)
     {
-        Engine.Difficulty = AIDifficulty.Normal;
+        Engine.Difficulty = difficulty;
         Engine.StartGame();
         _lastTick = DateTime.UtcNow;
         _timer.Start();

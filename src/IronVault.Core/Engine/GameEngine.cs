@@ -5,14 +5,14 @@ using System.Linq;
 
 namespace IronVault.Core.Engine;
 
-public enum GameState { NotStarted, Playing, Paused, Victory, GameOver }
+public enum GameState { NotStarted, Playing, Paused, WaveComplete, Victory, GameOver }
 
 public sealed class GameEngine
 {
     // ── State ────────────────────────────────────────────────────────────────
-    public GameState State { get; private set; } = GameState.NotStarted;
-    public TileMap   Map   { get; private set; }
-    public AIDifficulty Difficulty { get; set; } = AIDifficulty.Normal;
+    public GameState    State       { get; private set; } = GameState.NotStarted;
+    public TileMap      Map         { get; private set; }
+    public AIDifficulty Difficulty  { get; set; } = AIDifficulty.Normal;
 
     // ── Entity lists ─────────────────────────────────────────────────────────
     public List<TankEntity>      Tanks      { get; } = [];
@@ -28,17 +28,20 @@ public sealed class GameEngine
     public int TotalEnemies { get; private set; }
 
     // ── Wave management ──────────────────────────────────────────────────────
-    private float _spawnTimer;
+    private float       _spawnTimer;
     private const float SpawnInterval = 4f;
-    private const int   EnemiesPerWave = 20;
     private int         _enemiesSpawned;
     private int         _maxSimultaneousEnemies = 4;
+    private WaveScript  _currentScript = WaveScript.ForWave(1);
+    private bool        _waveClearFired;   // prevents double-firing WaveCleared event
 
     private readonly Random _rng = new();
 
     // ── Events ───────────────────────────────────────────────────────────────
     public event EventHandler<GameState>? StateChanged;
     public event EventHandler<int>?       ScoreChanged;
+    /// <summary>Fired when all enemies in the current wave are destroyed. Parameter = wave number.</summary>
+    public event EventHandler<int>?       WaveCleared;
 
     // ── Player ───────────────────────────────────────────────────────────────
     public TankEntity? Player { get; private set; }
@@ -49,6 +52,7 @@ public sealed class GameEngine
     }
 
     // ── Public API ───────────────────────────────────────────────────────────
+
     public void StartGame()
     {
         Reset();
@@ -66,6 +70,60 @@ public sealed class GameEngine
         StateChanged?.Invoke(this, State);
     }
 
+    /// <summary>
+    /// Call from the UpgradeView after the player chooses (or skips) an upgrade.
+    /// Advances the wave counters and resumes play.
+    /// </summary>
+    public void ContinueToNextWave()
+    {
+        if (State != GameState.WaveComplete) return;
+
+        Wave++;
+        _currentScript          = WaveScript.ForWave(Wave);
+        _enemiesSpawned         = 0;
+        _waveClearFired         = false;
+        EnemiesLeft             = _currentScript.TotalEnemies;
+        TotalEnemies            = _currentScript.TotalEnemies;
+        _maxSimultaneousEnemies = _currentScript.MaxSimultaneous;
+        _spawnTimer             = 0;
+
+        // Reward: grant an ally tank if the script asks for it
+        if (_currentScript.GrantsAlly)
+            SpawnAllyReward();
+
+        State = GameState.Playing;
+        StateChanged?.Invoke(this, State);
+    }
+
+    /// <summary>Apply a chosen upgrade to the player tank immediately.</summary>
+    public void ApplyPlayerUpgrade(UpgradeType type)
+    {
+        if (Player is null || !Player.IsAlive) return;
+        switch (type)
+        {
+            case UpgradeType.ArmorPlating:
+                Player.Health.Max += 1;
+                Player.Health.Heal(1);
+                break;
+            case UpgradeType.NitroBoosters:
+                Player.Velocity.Speed *= 1.15f;
+                break;
+            case UpgradeType.RapidFireSystem:
+                Player.Weapon.FireCooldown *= 0.80f;
+                break;
+            case UpgradeType.DualCannon:
+                Player.Weapon.MaxBullets = Math.Min(5, Player.Weapon.MaxBullets + 1);
+                break;
+            case UpgradeType.ArmourPiercing:
+                Player.Weapon.Power       = 2;
+                Player.Weapon.BulletSpeed = 320f;
+                break;
+            case UpgradeType.RepairKit:
+                Player.Health.Heal(Player.Health.Max);
+                break;
+        }
+    }
+
     /// <summary>Called every frame from the rendering thread. dt is in seconds.</summary>
     public void Tick(float dt)
     {
@@ -76,58 +134,74 @@ public sealed class GameEngine
         WeaponSystem.Update(Tanks, Bullets, dt);
         BulletSystem.Update(Bullets, Tanks, Explosions, Map, dt);
         AISystem.Update(Tanks, Bullets, Map, Difficulty, dt);
+        AllyAISystem.Update(Tanks, Map, dt);
         ExplosionSystem.Update(Explosions, dt);
 
         // Wave spawn
         UpdateWaveSpawn(dt);
 
-        // Dead enemy cleanup + score
+        // Dead entity cleanup + score
         CleanupDeadTanks();
 
-        // Win/lose checks
+        // Win / lose / wave-clear checks
         CheckEndConditions();
     }
 
     // ── Private helpers ──────────────────────────────────────────────────────
+
     private void Reset()
     {
-        Map = TileMap.CreateDefault();
+        Map                     = TileMap.CreateDefault();
         Tanks.Clear();
         Bullets.Clear();
         Explosions.Clear();
         PowerUps.Clear();
-        Score = 0;
-        Wave = 1;
-        Lives = 3;
-        EnemiesLeft = EnemiesPerWave;
-        TotalEnemies = EnemiesPerWave;
-        _enemiesSpawned = 0;
-        _spawnTimer = 0;
-        AISystem.Reset(); // clear per-tank AI state for the new game
+        Score                   = 0;
+        Wave                    = 1;
+        Lives                   = 3;
+        _currentScript          = WaveScript.ForWave(1);
+        EnemiesLeft             = _currentScript.TotalEnemies;
+        TotalEnemies            = _currentScript.TotalEnemies;
+        _maxSimultaneousEnemies = _currentScript.MaxSimultaneous;
+        _enemiesSpawned         = 0;
+        _spawnTimer             = 0;
+        _waveClearFired         = false;
+        AISystem.Reset();
+        AllyAISystem.Reset();
     }
 
     private void SpawnPlayer()
     {
         // Spawn in the clear channel between the two central brick clusters:
-        // cols 12-13, row 19 (pixel 288, 456). This is the area kept obstacle-free
-        // in TileMap.CreateDefault specifically to allow player placement and movement.
-        int midCol = Map.Cols / 2; // 13
-        float px = (midCol - 1) * TileMap.TileSize; // col 12 → x=288
-        float py = 19 * TileMap.TileSize;            // row 19 → y=456
+        // cols 12-13, row 19 (pixel 288, 456).
+        int   midCol = Map.Cols / 2; // 13
+        float px     = (midCol - 1) * TileMap.TileSize; // col 12 → x = 288
+        float py     = 19 * TileMap.TileSize;            // row 19 → y = 456
         Player = TankEntity.CreatePlayer(px, py);
-        Player.Position.Facing = IronVault.Core.Engine.Components.Direction.Up;
+        Player.Position.Facing = Components.Direction.Up;
         Tanks.Add(Player);
+    }
+
+    private void SpawnAllyReward()
+    {
+        // Place the ally a little left of the player spawn so they don't overlap
+        int   midCol = Map.Cols / 2;
+        float ax     = (midCol - 3) * TileMap.TileSize; // col 10
+        float ay     = 19 * TileMap.TileSize;
+        var   ally   = TankEntity.CreateAlly(ax, ay);
+        ally.Position.Facing = Components.Direction.Up;
+        Tanks.Add(ally);
     }
 
     private void UpdateWaveSpawn(float dt)
     {
-        if (_enemiesSpawned >= EnemiesPerWave) return;
+        if (_enemiesSpawned >= _currentScript.TotalEnemies) return;
 
-        int currentEnemies = 0;
+        int current = 0;
         foreach (var t in Tanks)
-            if (t.Team == TankTeam.Enemy && t.IsAlive) currentEnemies++;
+            if (t.Team == TankTeam.Enemy && t.IsAlive) current++;
 
-        if (currentEnemies >= _maxSimultaneousEnemies) return;
+        if (current >= _maxSimultaneousEnemies) return;
 
         _spawnTimer += dt;
         if (_spawnTimer < SpawnInterval) return;
@@ -138,7 +212,6 @@ public sealed class GameEngine
 
     private void SpawnEnemy()
     {
-        // Randomly pick a spawn tile
         var spawns = new List<(int c, int r)>();
         for (int r = 0; r < Map.Rows; r++)
             for (int c = 0; c < Map.Cols; c++)
@@ -147,11 +220,9 @@ public sealed class GameEngine
         if (spawns.Count == 0) return;
 
         var (sc, sr) = spawns[_rng.Next(spawns.Count)];
-        var tier = (TankTier)(1 + Math.Min(3, Wave / 3));
-        var enemy = TankEntity.CreateEnemy(tier, sc * TileMap.TileSize, sr * TileMap.TileSize);
-        // Start moving DOWN from the top spawn points so they don't immediately
-        // run into the steel border (row 0) on the first move.
-        enemy.Position.Facing = IronVault.Core.Engine.Components.Direction.Down;
+        var tier     = _currentScript.RollTier(_rng);
+        var enemy    = TankEntity.CreateEnemy(tier, sc * TileMap.TileSize, sr * TileMap.TileSize);
+        enemy.Position.Facing = Components.Direction.Down;
         Tanks.Add(enemy);
         _enemiesSpawned++;
     }
@@ -172,8 +243,9 @@ public sealed class GameEngine
             }
         }
 
-        // Prune AI state entries for tanks that are no longer alive
+        // Prune stale AI state entries
         AISystem.Cleanup(Tanks.Select(t => t.Id));
+        AllyAISystem.Cleanup(Tanks.Select(t => t.Id));
     }
 
     private void AddScore(int points)
@@ -184,7 +256,7 @@ public sealed class GameEngine
 
     private void CheckEndConditions()
     {
-        // Player dead?
+        // ── Player dead? ─────────────────────────────────────────────────────
         bool playerAlive = false;
         foreach (var t in Tanks)
             if (t.IsPlayerControlled && t.IsAlive) { playerAlive = true; break; }
@@ -198,10 +270,10 @@ public sealed class GameEngine
                 StateChanged?.Invoke(this, State);
                 return;
             }
-            SpawnPlayer(); // respawn
+            SpawnPlayer(); // respawn with 2s invincibility
         }
 
-        // Base destroyed?
+        // ── Base destroyed? ───────────────────────────────────────────────────
         bool baseExists = false;
         for (int r = 0; r < Map.Rows; r++)
             for (int c = 0; c < Map.Cols; c++)
@@ -214,21 +286,21 @@ public sealed class GameEngine
             return;
         }
 
-        // All enemies cleared?
-        if (EnemiesLeft <= 0 && _enemiesSpawned >= EnemiesPerWave)
+        // ── Wave cleared? ─────────────────────────────────────────────────────
+        if (!_waveClearFired
+            && EnemiesLeft <= 0
+            && _enemiesSpawned >= _currentScript.TotalEnemies)
         {
-            bool anyEnemyAlive = false;
+            bool anyEnemy = false;
             foreach (var t in Tanks)
-                if (t.Team == TankTeam.Enemy && t.IsAlive) { anyEnemyAlive = true; break; }
+                if (t.Team == TankTeam.Enemy && t.IsAlive) { anyEnemy = true; break; }
 
-            if (!anyEnemyAlive)
+            if (!anyEnemy)
             {
-                // Next wave
-                Wave++;
-                _enemiesSpawned = 0;
-                EnemiesLeft = EnemiesPerWave + Wave * 2;
-                TotalEnemies = EnemiesLeft;
-                _maxSimultaneousEnemies = Math.Min(6, 4 + Wave / 2);
+                _waveClearFired = true;
+                State = GameState.WaveComplete;
+                StateChanged?.Invoke(this, State);
+                WaveCleared?.Invoke(this, Wave);
             }
         }
     }

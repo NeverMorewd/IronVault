@@ -8,6 +8,11 @@
         WindowStartupLocation="CenterScreen"
         Background="{DynamicResource PipboyBackgroundBrush}">
 
-  <views:GameView />
+  <!-- All three screens live in the same cell; IsVisible controls which is active -->
+  <Grid>
+    <views:MenuView    x:Name="MenuView"    />
+    <views:GameView    x:Name="GameView"    IsVisible="False" />
+    <views:UpgradeView x:Name="UpgradeView" IsVisible="False" />
+  </Grid>
 
 </Window>

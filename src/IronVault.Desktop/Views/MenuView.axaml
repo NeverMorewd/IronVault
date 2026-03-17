@@ -1,0 +1,88 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:pipboy="clr-namespace:Pipboy.Avalonia;assembly=Pipboy.Avalonia"
+             x:Class="IronVault.Desktop.Views.MenuView">
+
+  <Grid Background="{DynamicResource PipboyBackgroundBrush}">
+    <StackPanel VerticalAlignment="Center"
+                HorizontalAlignment="Center"
+                Width="440"
+                Spacing="0">
+
+      <!-- ── Logo / Title ── -->
+      <Border Classes="pipboy-panel" Margin="0,0,0,20">
+        <StackPanel Spacing="6" HorizontalAlignment="Center">
+          <TextBlock Text="IRON VAULT"
+                     Classes="h1"
+                     FontSize="34"
+                     HorizontalAlignment="Center" />
+          <TextBlock Text="铁  窖  计  划"
+                     HorizontalAlignment="Center"
+                     Opacity="0.6"
+                     FontSize="15" />
+          <TextBlock Text="━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+                     Classes="dim"
+                     HorizontalAlignment="Center"
+                     FontSize="10" />
+          <TextBlock Text="ARMOURED COMBAT SIMULATION  ·  VECTOR ENGINE"
+                     Classes="dim"
+                     HorizontalAlignment="Center"
+                     FontSize="11" />
+        </StackPanel>
+      </Border>
+
+      <!-- ── Difficulty selection ── -->
+      <Border Classes="pipboy-panel" Margin="0,0,0,14">
+        <StackPanel Spacing="10">
+          <TextBlock Text="TACTICAL RATING"
+                     Classes="h2"
+                     HorizontalAlignment="Center" />
+          <StackPanel Orientation="Horizontal"
+                      HorizontalAlignment="Center"
+                      Spacing="6">
+            <Button x:Name="EasyBtn"
+                    Width="120"
+                    HorizontalContentAlignment="Center" />
+            <Button x:Name="NormalBtn"
+                    Width="120"
+                    HorizontalContentAlignment="Center" />
+            <Button x:Name="HardBtn"
+                    Width="120"
+                    HorizontalContentAlignment="Center" />
+          </StackPanel>
+          <TextBlock x:Name="DiffDesc"
+                     HorizontalAlignment="Center"
+                     Classes="dim"
+                     FontSize="11"
+                     TextWrapping="Wrap"
+                     TextAlignment="Center" />
+        </StackPanel>
+      </Border>
+
+      <!-- ── Action buttons ── -->
+      <Button x:Name="StartBtn"
+              HorizontalAlignment="Stretch"
+              HorizontalContentAlignment="Center"
+              FontSize="15"
+              Padding="12,10"
+              Margin="0,0,0,8">
+        <TextBlock Text="▶  DEPLOY FORCES  ◀" />
+      </Button>
+
+      <Button x:Name="ExitBtn"
+              HorizontalAlignment="Stretch"
+              HorizontalContentAlignment="Center"
+              Padding="10,8">
+        <TextBlock Text="ABORT MISSION" Classes="dim" />
+      </Button>
+
+      <!-- Footer -->
+      <TextBlock Text="© IRON VAULT SIM  ·  PURE VECTOR RENDERING  ·  AOT-COMPATIBLE"
+                 Classes="dim"
+                 FontSize="9"
+                 HorizontalAlignment="Center"
+                 Margin="0,18,0,0" />
+    </StackPanel>
+  </Grid>
+
+</UserControl>
