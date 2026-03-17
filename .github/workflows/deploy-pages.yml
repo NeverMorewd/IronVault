@@ -51,12 +51,13 @@ jobs:
         run: |
           dotnet publish src/IronVault.Browser/IronVault.Browser.csproj \
             -c Release \
+            -f net10.0-browser \
             -o publish
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          # Avalonia Browser places the static web files under publish/wwwroot/
+          # Microsoft.NET.Sdk.WebAssembly places static web files in publish/wwwroot/
           path: IronVault/publish/wwwroot
 
   # ── Deploy ─────────────────────────────────────────────────────────────────
