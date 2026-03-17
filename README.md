@@ -1,13 +1,13 @@
 # Iron Vault — 铁窖计划
 
-[![Play Online](https://img.shields.io/badge/Play%20Online-WebAssembly-brightgreen?logo=googlechrome&logoColor=white)](https://nevermowd.github.io/IronVault/)
+[![Play Online](https://img.shields.io/badge/Play%20Online-WebAssembly-brightgreen?logo=googlechrome&logoColor=white)](https://nevermorewd.github.io/IronVault/)
 [![Built with Claude AI](https://img.shields.io/badge/Built%20with-Claude%20AI-blueviolet?logo=anthropic&logoColor=white)](https://www.anthropic.com/claude)
 [![.NET 10](https://img.shields.io/badge/.NET-10.0-512BD4?logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 A retro armoured-combat game built with [Avalonia UI](https://avaloniaui.net/). Every tank, bullet, and explosion is drawn from pure vector geometry — no sprites, no bitmaps. Play it directly in your browser via WebAssembly, or run it natively on the desktop.
 
-> **🎮 [Play now in your browser →](https://nevermowd.github.io/IronVault/)**
+> **🎮 [Play now in your browser →](https://nevermorewd.github.io/IronVault/)**
 
 ---
 
