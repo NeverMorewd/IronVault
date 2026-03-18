@@ -119,5 +119,13 @@ public static class I18n
         ["game.victory"]      = ("VICTORY!",                                "胜  利！"),
         ["game.paused"]       = ("PAUSED",                                  "已暂停"),
         ["game.title"]        = ("IRON VAULT",                              "铁窖计划"),
+
+        // ── In-game overlays ─────────────────────────────────────────────────
+        ["overlay.settings"]     = ("SETTINGS",                             "设  置"),
+        ["overlay.resume"]       = ("▶  RESUME",                           "▶  继续"),
+        ["overlay.exit.title"]   = ("ABORT MISSION?",                       "中止任务？"),
+        ["overlay.exit.menu"]    = ("RETURN TO MENU",                       "返回菜单"),
+        ["overlay.exit.quit"]    = ("QUIT GAME",                            "退出游戏"),
+        ["overlay.exit.cancel"]  = ("CANCEL",                               "取消"),
     };
 }

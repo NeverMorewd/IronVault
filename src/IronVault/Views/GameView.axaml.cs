@@ -1,4 +1,6 @@
+using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Input;
 using IronVault.Audio;
 using IronVault.ViewModels;
@@ -13,17 +15,33 @@ public partial class GameView : UserControl
     private GameViewModel? _vm;
     private readonly HashSet<Key> _heldKeys = [];
 
-    /// <summary>Raised when the player clicks [RETREAT] or presses Escape.
-    /// MainView handles this to stop the game and return to the menu.</summary>
+    // Tracks whether an overlay auto-paused the game so we can resume on close.
+    private bool _pausedByOverlay;
+
+    /// <summary>Raised when the player confirms returning to the main menu.</summary>
     public event EventHandler? MenuRequested;
 
     public GameView()
     {
         InitializeComponent();
 
+        // Status-bar icon buttons
+        SettingsBtn.Click += (_, _) => ShowSettingsOverlay();
+        CloseBtn.Click    += (_, _) => ShowExitOverlay();
+
+        // Settings overlay
         StartButton.Click += (_, _) => StartOrRestart();
-        PauseButton.Click += (_, _) => _vm?.TogglePause();
-        MenuButton.Click  += (_, _) => RequestMenu();
+        ResumeBtn.Click   += (_, _) => HideSettingsOverlay();
+
+        // Exit overlay
+        ExitToMenuBtn.Click += (_, _) => RequestMenu();
+        ExitQuitBtn.Click   += (_, _) => QuitApp();
+        ExitCancelBtn.Click += (_, _) => HideExitOverlay();
+
+        // Quit only makes sense on desktop
+        ExitQuitBtn.IsVisible = !OperatingSystem.IsBrowser()
+                             && !OperatingSystem.IsAndroid()
+                             && !OperatingSystem.IsIOS();
 
         Focusable = true;
         KeyDown += OnKeyDown;
@@ -51,29 +69,93 @@ public partial class GameView : UserControl
         GameCanvas.Attach(vm.Engine);
     }
 
+    // ── Overlay management ────────────────────────────────────────────────────
+
+    private void ShowSettingsOverlay()
+    {
+        if (_vm?.Engine.State == GameState.Playing)
+        {
+            _vm.TogglePause();
+            _pausedByOverlay = true;
+        }
+        SettingsOverlay.IsVisible = true;
+        ExitOverlay.IsVisible     = false;
+    }
+
+    private void HideSettingsOverlay()
+    {
+        SettingsOverlay.IsVisible = false;
+        if (_pausedByOverlay)
+        {
+            _pausedByOverlay = false;
+            _vm?.TogglePause();
+        }
+        Focus();
+    }
+
+    private void ShowExitOverlay()
+    {
+        if (_vm?.Engine.State == GameState.Playing)
+        {
+            _vm.TogglePause();
+            _pausedByOverlay = true;
+        }
+        ExitOverlay.IsVisible     = true;
+        SettingsOverlay.IsVisible = false;
+    }
+
+    private void HideExitOverlay()
+    {
+        ExitOverlay.IsVisible = false;
+        if (_pausedByOverlay)
+        {
+            _pausedByOverlay = false;
+            _vm?.TogglePause();
+        }
+        Focus();
+    }
+
+    private void RequestMenu()
+    {
+        RetroSound.StopMovement();
+        RetroSound.PlayClick();
+        _vm?.Stop();
+        _pausedByOverlay          = false;
+        ExitOverlay.IsVisible     = false;
+        SettingsOverlay.IsVisible = false;
+        MenuRequested?.Invoke(this, EventArgs.Empty);
+    }
+
+    private static void QuitApp()
+        => (Application.Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime)
+               ?.Shutdown();
+
     // ── Localisation ─────────────────────────────────────────────────────────
 
     private void RefreshText()
     {
-        TitleText.Text      = I18n.T("hud.title");
-        StatusLabel.Text    = I18n.T("hud.status");
-        ModeLabel.Text      = I18n.T("hud.mode");
-        WaveLabel.Text      = I18n.T("hud.wave");
-        ScoreLabel.Text     = I18n.T("hud.score");
-        LivesLabel.Text     = I18n.T("hud.lives");
-        EnemiesLabel.Text   = I18n.T("hud.enemies");
-        ArmorLabel.Text     = I18n.T("hud.armor");
-        EffectsLabel.Text   = I18n.T("hud.effects");
-        ControlsLabel.Text  = I18n.T("hud.controls");
-        CtrlMove.Text       = I18n.T("hud.ctrl.move");
-        CtrlFire.Text       = I18n.T("hud.ctrl.fire");
-        CtrlPause.Text      = I18n.T("hud.ctrl.pause");
-        CtrlStart.Text      = I18n.T("hud.ctrl.start");
-        MenuButton.Content  = I18n.T("btn.retreat");
+        TitleText.Text         = I18n.T("hud.title");
+        ModeLabel.Text         = I18n.T("hud.mode");
+        WaveLabel.Text         = I18n.T("hud.wave");
+        ScoreLabel.Text        = I18n.T("hud.score");
+        LivesLabel.Text        = I18n.T("hud.lives");
+        EnemiesLabel.Text      = I18n.T("hud.enemies");
+        ArmorLabel.Text        = I18n.T("hud.armor");
+        EffectsLabel.Text      = I18n.T("hud.effects");
+        ControlsLabel.Text     = I18n.T("hud.controls");
+        CtrlMove.Text          = I18n.T("hud.ctrl.move");
+        CtrlFire.Text          = I18n.T("hud.ctrl.fire");
+        CtrlPause.Text         = I18n.T("hud.ctrl.pause");
+        CtrlStart.Text         = I18n.T("hud.ctrl.start");
+        SettingsTitleText.Text = I18n.T("overlay.settings");
+        ResumeBtn.Content      = I18n.T("overlay.resume");
+        ExitTitleText.Text     = I18n.T("overlay.exit.title");
+        ExitToMenuBtn.Content  = I18n.T("overlay.exit.menu");
+        ExitQuitBtn.Content    = I18n.T("overlay.exit.quit");
+        ExitCancelBtn.Content  = I18n.T("overlay.exit.cancel");
 
         bool isStarted = _vm?.Engine.State != GameState.NotStarted;
         StartButton.Content = isStarted ? I18n.T("btn.redeploy") : I18n.T("btn.deploy");
-        PauseButton.Content = I18n.T("btn.hold");
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
@@ -84,17 +166,10 @@ public partial class GameView : UserControl
         RetroSound.StopMovement();
         _vm.Stop();
         _vm.StartGame();
-        PauseButton.IsEnabled = true;
-        StartButton.Content   = I18n.T("btn.redeploy");
+        _pausedByOverlay          = false;
+        SettingsOverlay.IsVisible = false;
+        StartButton.Content       = I18n.T("btn.redeploy");
         Focus();
-    }
-
-    private void RequestMenu()
-    {
-        RetroSound.StopMovement();
-        RetroSound.PlayClick();
-        _vm?.Stop();
-        MenuRequested?.Invoke(this, EventArgs.Empty);
     }
 
     private void OnFrameTick(object? sender, float dt)
@@ -168,14 +243,7 @@ public partial class GameView : UserControl
     private void OnStateChanged(object? sender, GameState state)
     {
         if (state is GameState.GameOver or GameState.Victory or GameState.WaveComplete)
-        {
-            PauseButton.IsEnabled = false;
-            StartButton.Content   = I18n.T("btn.redeploy");
-        }
-        else if (state == GameState.Playing)
-        {
-            PauseButton.IsEnabled = true;
-        }
+            StartButton.Content = I18n.T("btn.redeploy");
 
         if (state != GameState.Playing)
             RetroSound.StopMovement();
@@ -191,12 +259,29 @@ public partial class GameView : UserControl
     {
         _heldKeys.Add(e.Key);
 
-        if (e.Key == Key.P)
-            _vm?.TogglePause();
-        else if (e.Key == Key.Enter && _vm?.Engine.State == GameState.NotStarted)
-            StartOrRestart();
-        else if (e.Key == Key.Escape)
-            RequestMenu();
+        switch (e.Key)
+        {
+            case Key.P:
+                // If settings overlay is open, P resumes; otherwise toggle pause normally
+                if (SettingsOverlay.IsVisible)
+                    HideSettingsOverlay();
+                else
+                    _vm?.TogglePause();
+                break;
+
+            case Key.Enter when _vm?.Engine.State == GameState.NotStarted:
+                StartOrRestart();
+                break;
+
+            case Key.Escape:
+                if (SettingsOverlay.IsVisible)
+                    HideSettingsOverlay();
+                else if (ExitOverlay.IsVisible)
+                    HideExitOverlay();
+                else
+                    ShowExitOverlay();
+                break;
+        }
     }
 
     private void OnKeyUp(object? sender, KeyEventArgs e)

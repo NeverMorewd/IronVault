@@ -12,5 +12,8 @@
         <Style Selector="TextBox">
             <Setter Property="FontFamily" Value="Inter, fonts:IronVault#Noto Sans SC" />
         </Style>
+        <Style Selector="Button">
+            <Setter Property="FontFamily" Value="Inter, fonts:IronVault#Noto Sans SC" />
+        </Style>
     </Application.Styles>
 </Application>
