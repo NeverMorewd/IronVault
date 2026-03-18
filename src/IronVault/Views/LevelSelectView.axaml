@@ -26,13 +26,7 @@
 
       <!-- ── Level grid (10×10) ── -->
       <Border Classes="pipboy-panel" Margin="0,0,0,14" Padding="10">
-        <ItemsControl x:Name="LevelGrid">
-          <ItemsControl.ItemsPanel>
-            <ItemsPanelTemplate>
-              <WrapPanel />
-            </ItemsPanelTemplate>
-          </ItemsControl.ItemsPanel>
-        </ItemsControl>
+        <WrapPanel x:Name="LevelGrid" />
       </Border>
 
       <!-- ── Back button ── -->

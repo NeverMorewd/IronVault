@@ -43,7 +43,7 @@ public partial class LevelSelectView : UserControl
 
     private void BuildGrid()
     {
-        LevelGrid.Items.Clear();
+        LevelGrid.Children.Clear();
         for (int i = 1; i <= MapLibrary.TotalLevels; i++)
         {
             int lvl = i; // capture
@@ -63,18 +63,17 @@ public partial class LevelSelectView : UserControl
                 UpdateSelection();
                 ConfirmSelection();
             };
-            LevelGrid.Items.Add(btn);
+            LevelGrid.Children.Add(btn);
         }
         UpdateSelection();
     }
 
     private void UpdateSelection()
     {
-        foreach (var item in LevelGrid.Items)
+        foreach (var child in LevelGrid.Children)
         {
-            if (item is Button btn && btn.Tag is int lvl)
+            if (child is Button btn && btn.Tag is int lvl)
             {
-                // Highlight selected button using Classes
                 if (lvl == _selectedLevel)
                     btn.Classes.Add("accent");
                 else
