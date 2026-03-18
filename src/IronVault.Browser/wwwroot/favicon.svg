@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Dark CRT background -->
+  <rect width="32" height="32" fill="#0d0d0d" rx="4"/>
+
+  <!-- Left track -->
+  <rect x="2" y="8" width="5" height="16" fill="#1e4d1e" rx="1"/>
+  <rect x="2" y="9" width="5" height="2"  fill="#2a6e2a"/>
+  <rect x="2" y="13" width="5" height="2" fill="#2a6e2a"/>
+  <rect x="2" y="17" width="5" height="2" fill="#2a6e2a"/>
+  <rect x="2" y="21" width="5" height="2" fill="#2a6e2a"/>
+
+  <!-- Right track -->
+  <rect x="25" y="8" width="5" height="16" fill="#1e4d1e" rx="1"/>
+  <rect x="25" y="9" width="5" height="2"  fill="#2a6e2a"/>
+  <rect x="25" y="13" width="5" height="2" fill="#2a6e2a"/>
+  <rect x="25" y="17" width="5" height="2" fill="#2a6e2a"/>
+  <rect x="25" y="21" width="5" height="2" fill="#2a6e2a"/>
+
+  <!-- Tank body -->
+  <rect x="7" y="9" width="18" height="14" fill="#2e7d32" rx="1"/>
+
+  <!-- Turret -->
+  <rect x="11" y="12" width="10" height="8" fill="#43a047" rx="2"/>
+
+  <!-- Barrel (pointing up) -->
+  <rect x="14" y="3" width="4" height="11" fill="#43a047" rx="1"/>
+  <!-- Barrel tip highlight -->
+  <rect x="14" y="3" width="4" height="2" fill="#66bb6a" rx="1"/>
+
+  <!-- Turret highlight -->
+  <rect x="12" y="13" width="4" height="2" fill="#66bb6a" rx="1"/>
+
+  <!-- CRT scanline overlay (subtle) -->
+  <rect width="32" height="32" fill="url(#scan)" rx="4" opacity="0.15"/>
+  <defs>
+    <pattern id="scan" x="0" y="0" width="1" height="4" patternUnits="userSpaceOnUse">
+      <rect x="0" y="0" width="1" height="1" fill="#000"/>
+    </pattern>
+  </defs>
+</svg>
