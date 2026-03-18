@@ -17,7 +17,7 @@ public static class MapLibrary
     {
         level = Math.Clamp(level, 1, TotalLevels);
         int mapIndex = ((level - 1) % 20) + 1;
-        return mapIndex switch
+        var map = mapIndex switch
         {
             1  => Level01(),
             2  => Level02(),
@@ -41,6 +41,23 @@ public static class MapLibrary
             20 => Level20(),
             _  => Level01(),
         };
+        FixupSpawnZones(map);
+        return map;
+    }
+
+    /// <summary>
+    /// Ensures rows 1-3 at enemy spawn columns are passable.
+    /// SpawnIsUsable() checks a tank footprint shifted one tile down from row 1,
+    /// which spans rows 2-3. Any solid tile there blocks all spawning.
+    /// </summary>
+    private static void FixupSpawnZones(TileMap map)
+    {
+        foreach (int c in new[] { 4, 10, 18, 23 })
+        {
+            map[c, 1] = TileType.Spawn;
+            map[c, 2] = TileType.Empty;
+            map[c, 3] = TileType.Empty;
+        }
     }
 
     // ─────────────────────────────────────────────────────────────────────────
