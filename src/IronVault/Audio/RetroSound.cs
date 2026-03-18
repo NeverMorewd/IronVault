@@ -31,31 +31,70 @@ internal static class RetroSound
     // Movement is raw PCM fed directly to waveOut (no WAV header needed).
     private static readonly byte[] _movement        = SynthMovement();
 
+    // ── Browser audio backend (injected by IronVault.Browser at startup) ───────
+    internal static IBrowserAudio? BrowserBackend;
+
     // ── Shoot debounce (prevents enemy-fire spam drowning the mix) ────────────
     private static long _lastShootTick;
     private const  long ShootCooldownMs = 130;
 
     // ── Public API ────────────────────────────────────────────────────────────
 
-    public static void PlayClick()          => TryPlayWav(_click);
-    public static void PlayExplosion()      => TryPlayWav(_explosion);
-    public static void PlayPowerUp()        => TryPlayWav(_powerUp);
-    public static void PlayEnemyDestroyed() => TryPlayWav(_enemyDestroyed);
-    public static void PlayPlayerHurt()     => TryPlayWav(_playerHurt);
-    public static void PlayGameOver()       => TryPlayWav(_gameOver);
-    public static void PlayVictory()        => TryPlayWav(_victory);
+    public static void PlayClick()
+    {
+        if (BrowserBackend != null) { BrowserBackend.PlayClick(); return; }
+        TryPlayWav(_click);
+    }
+
+    public static void PlayExplosion()
+    {
+        if (BrowserBackend != null) { BrowserBackend.PlayExplosion(); return; }
+        TryPlayWav(_explosion);
+    }
+
+    public static void PlayPowerUp()
+    {
+        if (BrowserBackend != null) { BrowserBackend.PlayPowerUp(); return; }
+        TryPlayWav(_powerUp);
+    }
+
+    public static void PlayEnemyDestroyed()
+    {
+        if (BrowserBackend != null) { BrowserBackend.PlayEnemyDestroyed(); return; }
+        TryPlayWav(_enemyDestroyed);
+    }
+
+    public static void PlayPlayerHurt()
+    {
+        if (BrowserBackend != null) { BrowserBackend.PlayPlayerHurt(); return; }
+        TryPlayWav(_playerHurt);
+    }
+
+    public static void PlayGameOver()
+    {
+        if (BrowserBackend != null) { BrowserBackend.PlayGameOver(); return; }
+        TryPlayWav(_gameOver);
+    }
+
+    public static void PlayVictory()
+    {
+        if (BrowserBackend != null) { BrowserBackend.PlayVictory(); return; }
+        TryPlayWav(_victory);
+    }
 
     public static void PlayShoot()
     {
         long now = Environment.TickCount64;
         if (now - _lastShootTick < ShootCooldownMs) return;
         _lastShootTick = now;
+        if (BrowserBackend != null) { BrowserBackend.PlayShoot(); return; }
         TryPlayWav(_shoot);
     }
 
     /// <summary>Begin looping the engine-rumble sound (no-op if already playing).</summary>
     public static void StartMovement()
     {
+        if (BrowserBackend != null) { BrowserBackend.StartMovement(); return; }
         if (!OperatingSystem.IsWindows()) return;
         MoveLoop.Start(_movement);
     }
@@ -63,6 +102,7 @@ internal static class RetroSound
     /// <summary>Stop the engine-rumble loop (no-op if already stopped).</summary>
     public static void StopMovement()
     {
+        if (BrowserBackend != null) { BrowserBackend.StopMovement(); return; }
         if (!OperatingSystem.IsWindows()) return;
         MoveLoop.Stop();
     }
