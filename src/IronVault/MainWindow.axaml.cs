@@ -14,13 +14,14 @@ public partial class MainWindow : PipboyWindow
         Opacity           = 0.75,
     };
 
-    public MainWindow()
+    public MainWindow(MainView mainView)
     {
         InitializeComponent();
 
+        Content         = mainView;
         TitleBarContent = _titleBarText;
 
-        var eng = RootView.Engine;
+        var eng = mainView.Engine;
         eng.ScoreChanged += (_, _) => RefreshTitleBar(eng);
         eng.StateChanged += (_, _) => RefreshTitleBar(eng);
 

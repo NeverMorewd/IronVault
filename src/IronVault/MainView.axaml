@@ -1,13 +1,8 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:views="clr-namespace:IronVault.Views"
              x:Class="IronVault.MainView">
 
-  <!-- All three screens live in the same cell; IsVisible controls which is active -->
-  <Grid>
-    <views:MenuView    x:Name="MenuView"    />
-    <views:GameView    x:Name="GameView"    IsVisible="False" />
-    <views:UpgradeView x:Name="UpgradeView" IsVisible="False" />
-  </Grid>
+  <!-- Sub-views are resolved from DI and inserted into this host at runtime -->
+  <Grid x:Name="ViewHost" />
 
 </UserControl>

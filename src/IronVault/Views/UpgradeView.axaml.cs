@@ -8,16 +8,19 @@ namespace IronVault.Views;
 
 public partial class UpgradeView : UserControl
 {
+    private readonly GameEngine _engine;
+
     private UpgradeType[] _choices = new UpgradeType[3];
-    private bool _grantsAlly;
-    private GameEngine? _lastEngine;
-    private int         _lastWave;
+    private bool _prepared;
+    private int  _lastWave;
 
     /// <summary>Raised when the player picks an upgrade or skips. Parameter = null for skip.</summary>
     public event EventHandler<UpgradeType?>? ContinueRequested;
 
-    public UpgradeView()
+    public UpgradeView(GameEngine engine)
     {
+        _engine = engine;
+
         InitializeComponent();
 
         UpBtn0.Click  += (_, _) => { RetroSound.PlayClick(); ContinueRequested?.Invoke(this, _choices[0]); };
@@ -46,19 +49,18 @@ public partial class UpgradeView : UserControl
         }
     }
 
-    public void Prepare(int clearedWave, GameEngine engine)
+    public void Prepare(int clearedWave)
     {
-        _lastEngine = engine;
-        _lastWave   = clearedWave;
+        _prepared = true;
+        _lastWave = clearedWave;
 
         WaveClearedText.Text = FormatWaveCleared(clearedWave);
-        ScoreText.Text       = engine.Score.ToString("D5");
+        ScoreText.Text       = _engine.Score.ToString("D5");
         NextWaveText.Text    = $"{clearedWave + 1:D2}";
 
-        _grantsAlly = WaveScript.ForWave(clearedWave + 1).GrantsAlly;
-        AllyRewardBanner.IsVisible = _grantsAlly;
+        AllyRewardBanner.IsVisible = WaveScript.ForWave(clearedWave + 1).GrantsAlly;
 
-        _choices = GenerateChoices(engine);
+        _choices = GenerateChoices(_engine);
         PopulateCards();
         RefreshStaticText();
     }
@@ -66,7 +68,7 @@ public partial class UpgradeView : UserControl
     private void OnLanguageChanged()
     {
         RefreshStaticText();
-        if (_lastEngine is not null)
+        if (_prepared)
         {
             WaveClearedText.Text = FormatWaveCleared(_lastWave);
             PopulateCards();

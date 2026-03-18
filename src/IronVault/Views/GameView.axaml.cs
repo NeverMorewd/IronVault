@@ -12,8 +12,8 @@ namespace IronVault.Views;
 
 public partial class GameView : UserControl
 {
-    private GameViewModel? _vm;
-    private readonly HashSet<Key> _heldKeys = [];
+    private readonly GameViewModel _vm;
+    private readonly HashSet<Key>  _heldKeys = [];
 
     // Tracks whether an overlay auto-paused the game so we can resume on close.
     private bool _pausedByOverlay;
@@ -21,9 +21,22 @@ public partial class GameView : UserControl
     /// <summary>Raised when the player confirms returning to the main menu.</summary>
     public event EventHandler? MenuRequested;
 
-    public GameView()
+    public GameView(GameViewModel vm)
     {
+        _vm = vm;
+
         InitializeComponent();
+
+        // Wire game-engine events
+        vm.FrameTick               += OnFrameTick;
+        vm.Engine.StateChanged     += OnStateChanged;
+        vm.Engine.ScoreChanged     += OnScoreChanged;
+        vm.Engine.ShotFired        += (_, _) => RetroSound.PlayShoot();
+        vm.Engine.HitOccurred      += (_, _) => RetroSound.PlayExplosion();
+        vm.Engine.EnemyDestroyed   += (_, _) => RetroSound.PlayEnemyDestroyed();
+        vm.Engine.PlayerHurt       += (_, _) => RetroSound.PlayPlayerHurt();
+        vm.Engine.PowerUpCollected += (_, _) => RetroSound.PlayPowerUp();
+        GameCanvas.Attach(vm.Engine);
 
         // Status-bar icon buttons
         SettingsBtn.Click += (_, _) => ShowSettingsOverlay();
@@ -51,29 +64,11 @@ public partial class GameView : UserControl
         RefreshText();
     }
 
-    /// <summary>
-    /// Called by MainView after construction to wire up the shared ViewModel.
-    /// Must be called before the first frame tick.
-    /// </summary>
-    public void SetViewModel(GameViewModel vm)
-    {
-        _vm = vm;
-        vm.FrameTick               += OnFrameTick;
-        vm.Engine.StateChanged     += OnStateChanged;
-        vm.Engine.ScoreChanged     += OnScoreChanged;
-        vm.Engine.ShotFired        += (_, _) => RetroSound.PlayShoot();
-        vm.Engine.HitOccurred      += (_, _) => RetroSound.PlayExplosion();
-        vm.Engine.EnemyDestroyed   += (_, _) => RetroSound.PlayEnemyDestroyed();
-        vm.Engine.PlayerHurt       += (_, _) => RetroSound.PlayPlayerHurt();
-        vm.Engine.PowerUpCollected += (_, _) => RetroSound.PlayPowerUp();
-        GameCanvas.Attach(vm.Engine);
-    }
-
     // ── Overlay management ────────────────────────────────────────────────────
 
     private void ShowSettingsOverlay()
     {
-        if (_vm?.Engine.State == GameState.Playing)
+        if (_vm.Engine.State == GameState.Playing)
         {
             _vm.TogglePause();
             _pausedByOverlay = true;
@@ -88,14 +83,14 @@ public partial class GameView : UserControl
         if (_pausedByOverlay)
         {
             _pausedByOverlay = false;
-            _vm?.TogglePause();
+            _vm.TogglePause();
         }
         Focus();
     }
 
     private void ShowExitOverlay()
     {
-        if (_vm?.Engine.State == GameState.Playing)
+        if (_vm.Engine.State == GameState.Playing)
         {
             _vm.TogglePause();
             _pausedByOverlay = true;
@@ -110,7 +105,7 @@ public partial class GameView : UserControl
         if (_pausedByOverlay)
         {
             _pausedByOverlay = false;
-            _vm?.TogglePause();
+            _vm.TogglePause();
         }
         Focus();
     }
@@ -119,7 +114,7 @@ public partial class GameView : UserControl
     {
         RetroSound.StopMovement();
         RetroSound.PlayClick();
-        _vm?.Stop();
+        _vm.Stop();
         _pausedByOverlay          = false;
         ExitOverlay.IsVisible     = false;
         SettingsOverlay.IsVisible = false;
@@ -154,15 +149,15 @@ public partial class GameView : UserControl
         ExitQuitBtn.Content    = I18n.T("overlay.exit.quit");
         ExitCancelBtn.Content  = I18n.T("overlay.exit.cancel");
 
-        bool isStarted = _vm?.Engine.State != GameState.NotStarted;
-        StartButton.Content = isStarted ? I18n.T("btn.redeploy") : I18n.T("btn.deploy");
+        StartButton.Content = _vm.Engine.State != GameState.NotStarted
+            ? I18n.T("btn.redeploy")
+            : I18n.T("btn.deploy");
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
 
     private void StartOrRestart()
     {
-        if (_vm is null) return;
         RetroSound.StopMovement();
         _vm.Stop();
         _vm.StartGame();
@@ -174,7 +169,7 @@ public partial class GameView : UserControl
 
     private void OnFrameTick(object? sender, float dt)
     {
-        if (_vm?.Engine.Player is { } player)
+        if (_vm.Engine.Player is { } player)
         {
             player.Input = new TankInput(
                 MoveUp:    _heldKeys.Contains(Key.W) || _heldKeys.Contains(Key.Up),
@@ -187,8 +182,8 @@ public partial class GameView : UserControl
 
         GameCanvas.Tick(dt);
 
-        bool engineRunning = _vm?.Engine is { State: GameState.Playing } eng
-                          && eng.Player  is { IsAlive: true, Velocity.IsMoving: true };
+        bool engineRunning = _vm.Engine is { State: GameState.Playing } eng
+                          && eng.Player is { IsAlive: true, Velocity.IsMoving: true };
 
         if (engineRunning)
             RetroSound.StartMovement();
@@ -200,7 +195,6 @@ public partial class GameView : UserControl
 
     private void UpdateHud()
     {
-        if (_vm is null) return;
         var eng = _vm.Engine;
 
         ModeText.Text = eng.Mode == GameMode.Defense
@@ -262,14 +256,13 @@ public partial class GameView : UserControl
         switch (e.Key)
         {
             case Key.P:
-                // If settings overlay is open, P resumes; otherwise toggle pause normally
                 if (SettingsOverlay.IsVisible)
                     HideSettingsOverlay();
                 else
-                    _vm?.TogglePause();
+                    _vm.TogglePause();
                 break;
 
-            case Key.Enter when _vm?.Engine.State == GameState.NotStarted:
+            case Key.Enter when _vm.Engine.State == GameState.NotStarted:
                 StartOrRestart();
                 break;
 

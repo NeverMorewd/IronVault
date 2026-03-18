@@ -6,7 +6,7 @@ namespace IronVault.ViewModels;
 
 public sealed class GameViewModel
 {
-    public GameEngine Engine { get; } = new();
+    public GameEngine Engine { get; }
 
     private readonly DispatcherTimer _timer;
     private DateTime _lastTick;
@@ -14,8 +14,10 @@ public sealed class GameViewModel
     /// <summary>Fired each frame with delta time (seconds). View calls GameCanvas.Tick(dt).</summary>
     public event EventHandler<float>? FrameTick;
 
-    public GameViewModel()
+    public GameViewModel(GameEngine engine)
     {
+        Engine = engine;
+
         _timer = new DispatcherTimer(DispatcherPriority.Render)
         {
             Interval = TimeSpan.FromMilliseconds(1000.0 / 60),
