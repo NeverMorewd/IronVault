@@ -292,8 +292,40 @@ public sealed class GameEngine
         var tier  = _currentScript.RollTier(_rng);
         var enemy = TankEntity.CreateEnemy(tier, sc * TileMap.TileSize, sr * TileMap.TileSize);
         enemy.Position.Facing = Components.Direction.Down;
+        ApplyDifficultyStats(enemy);
         Tanks.Add(enemy);
         _enemiesSpawned++;
+    }
+
+    /// <summary>
+    /// Scales enemy bullet speed and fire cooldown by difficulty so the player
+    /// has a clear reaction-time advantage on lower settings.
+    ///
+    /// Bullet speed reference (player is always 288 px/s):
+    ///   Easy   — ~160 px/s T1 → ~208 T4  (very easy to dodge)
+    ///   Normal — ~200 px/s T1 → ~260 T4  (manageable)
+    ///   Hard   — ~250 px/s T1 → ~325 T4  (close to player speed, very dangerous)
+    /// </summary>
+    private void ApplyDifficultyStats(TankEntity enemy)
+    {
+        switch (Difficulty)
+        {
+            case AIDifficulty.Easy:
+                enemy.Weapon.BulletSpeed  *= 0.56f;   // ~160 px/s base
+                enemy.Weapon.FireCooldown *= 2.0f;    // half the fire rate
+                break;
+
+            case AIDifficulty.Normal:
+                enemy.Weapon.BulletSpeed  *= 0.70f;   // ~200 px/s base
+                enemy.Weapon.FireCooldown *= 1.4f;    // 30 % slower fire rate
+                break;
+
+            // Hard: keep CreateEnemy base values (288 / 320 / 352 px/s)
+            // but tighten cooldowns slightly to feel aggressive
+            case AIDifficulty.Hard:
+                enemy.Weapon.FireCooldown *= 0.85f;   // 15 % faster than base
+                break;
+        }
     }
 
     /// <summary>
