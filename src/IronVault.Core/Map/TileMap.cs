@@ -92,7 +92,7 @@ public sealed class TileMap
 
         // ── Water moats — upper flanks (rows 5-7) ────────────────────────────
         FillRect(map,  5,  5, 2, 3, TileType.Water);  // cols  5-6,  rows  5-7
-        FillRect(map, 20,  5, 2, 3, TileType.Water);  // cols 20-21, rows  5-7
+        FillRect(map, 21,  5, 2, 3, TileType.Water);  // cols 21-22, rows  5-7 (symmetric mirror of 5-6)
 
         // ── Ice: centre approach (rows 5-7) ──────────────────────────────────
         FillRect(map, 13,  5, 2, 3, TileType.Ice);    // cols 13-14, rows  5-7
@@ -120,8 +120,8 @@ public sealed class TileMap
         // ── Mid brick clusters (rows 12-15) ──────────────────────────────────
         FillRect(map,  6, 12, 3, 3, TileType.Brick);  // cols  6-8,  rows 12-14
         FillRect(map, 18, 12, 3, 3, TileType.Brick);  // cols 18-20, rows 12-14
-        FillRect(map,  2, 13, 2, 3, TileType.Brick);  // cols  2-3,  rows 13-15
-        FillRect(map, 24, 13, 2, 3, TileType.Brick);  // cols 24-25, rows 13-15
+        FillRect(map,  2, 14, 2, 2, TileType.Brick);  // cols  2-3,  rows 14-15 (row 13 kept for ice)
+        FillRect(map, 24, 14, 2, 2, TileType.Brick);  // cols 24-25, rows 14-15 (row 13 kept for ice)
 
         // ── Lower water patches (rows 16-17) ─────────────────────────────────
         FillRect(map,  5, 16, 2, 2, TileType.Water);  // cols  5-6,  rows 16-17
@@ -157,10 +157,17 @@ public sealed class TileMap
         // Eagle / HQ at (mid, DefaultRows-3) = (14, 25)
         int mid = DefaultCols / 2;  // 14
 
+        // Top row — fully seals the base from above
+        map[mid - 1, DefaultRows - 4] = TileType.Brick; // col 13, row 24
+        map[mid,     DefaultRows - 4] = TileType.Brick; // col 14, row 24
+        map[mid + 1, DefaultRows - 4] = TileType.Brick; // col 15, row 24
+
+        // Middle row — left and right flanks around the Eagle
         map[mid - 1, DefaultRows - 3] = TileType.Brick; // col 13, row 25
         map[mid + 1, DefaultRows - 3] = TileType.Brick; // col 15, row 25
         map[mid,     DefaultRows - 3] = TileType.Base;  // col 14, row 25  ← Eagle
 
+        // Bottom row — base of the fortification
         map[mid - 1, DefaultRows - 2] = TileType.Brick; // col 13, row 26
         map[mid,     DefaultRows - 2] = TileType.Brick; // col 14, row 26
         map[mid + 1, DefaultRows - 2] = TileType.Brick; // col 15, row 26

@@ -76,7 +76,7 @@ public sealed class TileMapDrawable : IDrawable
                 break;
 
             case TileType.Base:
-                DrawBase(ctx, rect);
+                DrawBase(ctx, rect, tick);
                 break;
         }
     }
@@ -168,20 +168,27 @@ public sealed class TileMapDrawable : IDrawable
         ctx.FillRectangle(DrawColors.ForestBrush, new Rect(x + 12, y + 14, 8, 8));
     }
 
-    private static void DrawBase(DrawingContext ctx, Rect r)
+    private static void DrawBase(DrawingContext ctx, Rect r, uint tick)
     {
-        // Eagle/HQ symbol — a stylized star/base icon
-        ctx.FillRectangle(DrawColors.BaseBrush, r);
         double x = r.X, y = r.Y, w = r.Width, h = r.Height;
-        var darkPen = new Pen(DrawColors.BrickDarkBrush, 2);
 
-        // Draw a simple "eagle" cross shape
-        ctx.FillRectangle(Brushes.Black, new Rect(x + w * 0.4, y + 2, w * 0.2, h - 4));
-        ctx.FillRectangle(Brushes.Black, new Rect(x + 2, y + h * 0.4, w - 4, h * 0.2));
-        // Diagonal arms
-        ctx.DrawLine(darkPen, new Point(x + 2, y + 2),         new Point(x + 8, y + 8));
-        ctx.DrawLine(darkPen, new Point(x + w - 2, y + 2),     new Point(x + w - 8, y + 8));
-        ctx.DrawLine(darkPen, new Point(x + 2, y + h - 2),     new Point(x + 8, y + h - 8));
-        ctx.DrawLine(darkPen, new Point(x + w - 2, y + h - 2), new Point(x + w - 8, y + h - 8));
+        // Slow pulse: alternates every 30 frames (~0.5 s at 60 fps)
+        bool pulse = (tick / 30 % 2 == 0);
+
+        // Background — bright yellow / amber alternating
+        var bg = pulse ? DrawColors.BaseBrush : DrawColors.AmberBrush;
+        ctx.FillRectangle(bg, r);
+
+        // Thick cross — 40 % of tile size (≈ 9–10 px on a 24 px tile)
+        ctx.FillRectangle(Brushes.Black, new Rect(x + w * 0.30, y + 1,        w * 0.40, h - 2));  // vertical
+        ctx.FillRectangle(Brushes.Black, new Rect(x + 1,        y + h * 0.30, w - 2,    h * 0.40)); // horizontal
+
+        // Bright centre dot — contrasts with the black cross
+        var dot = pulse ? DrawColors.AmberBrush : DrawColors.BaseBrush;
+        ctx.FillRectangle(dot, new Rect(x + w * 0.37, y + h * 0.37, w * 0.26, h * 0.26));
+
+        // 2 px amber border — makes the tile stand out against adjacent bricks
+        ctx.DrawRectangle(null, new Pen(pulse ? DrawColors.AmberBrush : DrawColors.BaseBrush, 2),
+            new Rect(x + 1, y + 1, w - 2, h - 2));
     }
 }
