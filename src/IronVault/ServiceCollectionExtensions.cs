@@ -26,11 +26,13 @@ public static class ServiceCollectionExtensions
             new GameView(sp.GetRequiredService<GameViewModel>()));
         services.AddSingleton<UpgradeView>(sp =>
             new UpgradeView(sp.GetRequiredService<GameEngine>()));
+        services.AddSingleton<LevelSelectView>();
         services.AddSingleton<MainView>(sp =>
             new MainView(
                 sp.GetRequiredService<INavigationService>(),
                 sp.GetRequiredService<GameViewModel>(),
                 sp.GetRequiredService<MenuView>(),
+                sp.GetRequiredService<LevelSelectView>(),
                 sp.GetRequiredService<GameView>(),
                 sp.GetRequiredService<UpgradeView>()));
 

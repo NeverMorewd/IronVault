@@ -27,6 +27,7 @@ public sealed class GameEngine
     public int Lives        { get; private set; } = 3;
     public int EnemiesLeft  { get; private set; }
     public int TotalEnemies { get; private set; }
+    public int Level        { get; private set; } = 1;
 
     // ── Active power-up effect timers (for HUD display) ──────────────────────
     public float StarTimer         { get; private set; }   // > 0 while player is invincible
@@ -87,8 +88,9 @@ public sealed class GameEngine
 
     // ── Public API ───────────────────────────────────────────────────────────
 
-    public void StartGame()
+    public void StartGame(int level = 1)
     {
+        Level = Math.Clamp(level, 1, MapLibrary.TotalLevels);
         Reset();
         SpawnPlayer();
         State = GameState.Playing;
@@ -203,7 +205,7 @@ public sealed class GameEngine
 
     private void Reset()
     {
-        Map                     = TileMap.CreateDefault();
+        Map                     = MapLibrary.CreateLevel(Level);
         Tanks.Clear();
         Bullets.Clear();
         Explosions.Clear();

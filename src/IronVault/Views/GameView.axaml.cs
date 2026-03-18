@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Input;
+using Avalonia.Threading;
 using IronVault.Audio;
 using IronVault.ViewModels;
 using IronVault.Core.Engine;
@@ -17,6 +18,9 @@ public partial class GameView : UserControl
 
     // Tracks whether an overlay auto-paused the game so we can resume on close.
     private bool _pausedByOverlay;
+
+    // Stage announcement timer
+    private DispatcherTimer? _stageTimer;
 
     /// <summary>Raised when the player confirms returning to the main menu.</summary>
     public event EventHandler? MenuRequested;
@@ -197,6 +201,8 @@ public partial class GameView : UserControl
     {
         var eng = _vm.Engine;
 
+        LevelText.Text = I18n.FormatLevel(eng.Level);
+
         ModeText.Text = eng.Mode == GameMode.Defense
             ? I18n.T("menu.defense")
             : I18n.T("menu.classic");
@@ -242,8 +248,29 @@ public partial class GameView : UserControl
         if (state != GameState.Playing)
             RetroSound.StopMovement();
 
+        if (state == GameState.Playing && _vm.Engine.Wave == 1)
+            ShowStageAnnouncement(_vm.Engine.Level);
+
         if (state == GameState.GameOver) RetroSound.PlayGameOver();
         if (state == GameState.Victory)  RetroSound.PlayVictory();
+    }
+
+    // ── Stage announcement ────────────────────────────────────────────────────
+
+    private void ShowStageAnnouncement(int level)
+    {
+        StageNumberText.Text = $"{I18n.T("level.stage")} {level}";
+        StageSubText.Text    = I18n.FormatLevel(level);
+        StageOverlay.IsVisible = true;
+
+        _stageTimer?.Stop();
+        _stageTimer = new DispatcherTimer(TimeSpan.FromSeconds(2.5), DispatcherPriority.Normal,
+            (_, _) =>
+            {
+                StageOverlay.IsVisible = false;
+                _stageTimer?.Stop();
+            });
+        _stageTimer.Start();
     }
 
     private void OnScoreChanged(object? sender, int score)

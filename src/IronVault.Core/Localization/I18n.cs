@@ -28,6 +28,26 @@ public static class I18n
                ? (_current == Language.Chinese ? pair.zh : pair.en)
                : key;
 
+    /// <summary>
+    /// Returns the formatted level name for the current language.
+    /// English: "STAGE 1", Chinese: "第一关"
+    /// </summary>
+    public static string FormatLevel(int level)
+        => _current == Language.Chinese
+               ? $"第{ToChineseNumber(level)}关"
+               : $"STAGE {level}";
+
+    private static string ToChineseNumber(int n)
+    {
+        string[] digits = ["〇", "一", "二", "三", "四", "五", "六", "七", "八", "九"];
+        if (n <= 0)  return digits[0];
+        if (n < 10)  return digits[n];
+        if (n == 10) return "十";
+        if (n < 20)  return $"十{digits[n % 10]}";
+        if (n % 10 == 0) return $"{digits[n / 10]}十";
+        return $"{digits[n / 10]}十{digits[n % 10]}";
+    }
+
     // ── String table ─────────────────────────────────────────────────────────
     // Each entry: (English, Chinese)
 
@@ -127,5 +147,13 @@ public static class I18n
         ["overlay.exit.menu"]    = ("RETURN TO MENU",                       "返回菜单"),
         ["overlay.exit.quit"]    = ("QUIT GAME",                            "退出游戏"),
         ["overlay.exit.cancel"]  = ("CANCEL",                               "取消"),
+
+        // ── Level selection ───────────────────────────────────────────────────
+        ["level.stage"]       = ("STAGE",                                   "第"),
+        ["level.suffix"]      = ("",                                        "关"),
+        ["level.select"]      = ("SELECT STAGE",                            "选择关卡"),
+        ["level.announce"]    = ("STAGE",                                   "第"),
+        ["level.back"]        = ("◀  BACK",                                 "◀  返回"),
+        ["level.locked"]      = ("LOCKED",                                  "未解锁"),
     };
 }

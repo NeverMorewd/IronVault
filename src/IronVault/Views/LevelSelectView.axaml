@@ -1,0 +1,49 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="IronVault.Views.LevelSelectView">
+
+  <Grid Background="{DynamicResource PipboyBackgroundBrush}">
+    <StackPanel VerticalAlignment="Center"
+                HorizontalAlignment="Center"
+                Width="560"
+                Spacing="0">
+
+      <!-- ── Header ── -->
+      <Border Classes="pipboy-panel" Margin="0,0,0,14">
+        <StackPanel Spacing="4" HorizontalAlignment="Center">
+          <TextBlock x:Name="SelectLabel"
+                     Text="SELECT STAGE"
+                     Classes="h1"
+                     FontSize="22"
+                     HorizontalAlignment="Center" />
+          <TextBlock x:Name="HintText"
+                     Text="Use arrow keys or click to select · ENTER to deploy"
+                     Classes="dim"
+                     FontSize="10"
+                     HorizontalAlignment="Center" />
+        </StackPanel>
+      </Border>
+
+      <!-- ── Level grid (10×10) ── -->
+      <Border Classes="pipboy-panel" Margin="0,0,0,14" Padding="10">
+        <ItemsControl x:Name="LevelGrid">
+          <ItemsControl.ItemsPanel>
+            <ItemsPanelTemplate>
+              <WrapPanel />
+            </ItemsPanelTemplate>
+          </ItemsControl.ItemsPanel>
+        </ItemsControl>
+      </Border>
+
+      <!-- ── Back button ── -->
+      <Button x:Name="BackBtn"
+              HorizontalAlignment="Stretch"
+              HorizontalContentAlignment="Center"
+              Padding="10,8">
+        <TextBlock x:Name="BackText" Text="◀  BACK" Classes="dim" />
+      </Button>
+
+    </StackPanel>
+  </Grid>
+
+</UserControl>

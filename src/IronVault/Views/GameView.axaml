@@ -29,6 +29,11 @@
                        VerticalAlignment="Center" />
             <TextBlock Text="|" Classes="dim" FontSize="9" VerticalAlignment="Center" />
 
+            <TextBlock x:Name="LevelText"
+                       FontSize="9" FontWeight="Bold"
+                       VerticalAlignment="Center" />
+            <TextBlock Text="|" Classes="dim" FontSize="9" VerticalAlignment="Center" />
+
             <StackPanel Orientation="Horizontal" Spacing="3" VerticalAlignment="Center">
               <TextBlock x:Name="ModeLabel"  Classes="dim" FontSize="9" VerticalAlignment="Center" />
               <TextBlock x:Name="ModeText"   FontSize="9"  VerticalAlignment="Center" />
@@ -220,6 +225,33 @@
                   HorizontalAlignment="Stretch"
                   HorizontalContentAlignment="Center" />
 
+        </StackPanel>
+      </Border>
+    </Grid>
+
+    <!-- ══════════════════════════════════════════════════════════════════════ -->
+    <!-- Stage Announcement Overlay — shown briefly when a level starts        -->
+    <!-- ══════════════════════════════════════════════════════════════════════ -->
+    <Grid x:Name="StageOverlay"
+          IsVisible="False"
+          ZIndex="200"
+          Background="#CC000000">
+      <Border Classes="pipboy-panel"
+              Width="360"
+              Padding="32,24"
+              HorizontalAlignment="Center"
+              VerticalAlignment="Center">
+        <StackPanel Spacing="8" HorizontalAlignment="Center">
+          <TextBlock x:Name="StageNumberText"
+                     Text="STAGE 1"
+                     Classes="h1"
+                     FontSize="36"
+                     HorizontalAlignment="Center" />
+          <TextBlock x:Name="StageSubText"
+                     Text="第一关"
+                     Classes="dim"
+                     FontSize="18"
+                     HorizontalAlignment="Center" />
         </StackPanel>
       </Border>
     </Grid>
