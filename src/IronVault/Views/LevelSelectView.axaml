@@ -5,28 +5,53 @@
   <Grid Background="{DynamicResource PipboyBackgroundBrush}">
     <StackPanel VerticalAlignment="Center"
                 HorizontalAlignment="Center"
-                Width="560"
+                Width="620"
                 Spacing="0">
 
       <!-- ── Header ── -->
-      <Border Classes="pipboy-panel" Margin="0,0,0,14">
+      <Border Classes="pipboy-panel" Margin="0,0,0,10">
         <StackPanel Spacing="4" HorizontalAlignment="Center">
           <TextBlock x:Name="SelectLabel"
-                     Text="SELECT STAGE"
                      Classes="h1"
-                     FontSize="22"
+                     FontSize="20"
+                     HorizontalAlignment="Center" />
+          <TextBlock Text="━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+                     Classes="dim"
+                     FontSize="7"
                      HorizontalAlignment="Center" />
           <TextBlock x:Name="HintText"
-                     Text="Use arrow keys or click to select · ENTER to deploy"
                      Classes="dim"
                      FontSize="10"
                      HorizontalAlignment="Center" />
         </StackPanel>
       </Border>
 
-      <!-- ── Level grid (10×10) ── -->
-      <Border Classes="pipboy-panel" Margin="0,0,0,14" Padding="10">
+      <!-- ── Level grid — 10 × 10, each slot 60 px (56 btn + 2 margin each side) ── -->
+      <Border Classes="pipboy-panel" Margin="0,0,0,10" Padding="10">
         <WrapPanel x:Name="LevelGrid" />
+      </Border>
+
+      <!-- ── Selected level info + Deploy button ── -->
+      <Border Classes="pipboy-panel" Margin="0,0,0,10" Padding="14,10">
+        <Grid ColumnDefinitions="*,Auto">
+
+          <StackPanel Grid.Column="0" Spacing="2" VerticalAlignment="Center">
+            <TextBlock x:Name="StageNameText"
+                       FontSize="13"
+                       FontWeight="Bold" />
+            <TextBlock x:Name="ThemeNameText"
+                       Classes="dim"
+                       FontSize="10" />
+          </StackPanel>
+
+          <Button x:Name="DeployBtn"
+                  Grid.Column="1"
+                  Classes="accent"
+                  Padding="22,10"
+                  FontSize="13"
+                  VerticalAlignment="Center" />
+
+        </Grid>
       </Border>
 
       <!-- ── Back button ── -->
@@ -34,7 +59,7 @@
               HorizontalAlignment="Stretch"
               HorizontalContentAlignment="Center"
               Padding="10,8">
-        <TextBlock x:Name="BackText" Text="◀  BACK" Classes="dim" />
+        <TextBlock x:Name="BackText" Classes="dim" FontSize="11" />
       </Button>
 
     </StackPanel>
