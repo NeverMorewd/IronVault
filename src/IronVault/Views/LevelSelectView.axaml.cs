@@ -49,7 +49,7 @@ public partial class LevelSelectView : UserControl
             int lvl = i; // capture
             var btn = new Button
             {
-                Width   = 44,
+                Width   = 50,
                 Height  = 32,
                 Margin  = new Avalonia.Thickness(2),
                 HorizontalContentAlignment = Avalonia.Layout.HorizontalAlignment.Center,
