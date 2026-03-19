@@ -4,6 +4,7 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Input;
 using Avalonia.Threading;
 using IronVault.Audio;
+using IronVault.Input;
 using IronVault.ViewModels;
 using IronVault.Core.Engine;
 using IronVault.Core.Engine.Entities;
@@ -176,11 +177,11 @@ public partial class GameView : UserControl
         if (_vm.Engine.Player is { } player)
         {
             player.Input = new TankInput(
-                MoveUp:    _heldKeys.Contains(Key.W) || _heldKeys.Contains(Key.Up),
-                MoveDown:  _heldKeys.Contains(Key.S) || _heldKeys.Contains(Key.Down),
-                MoveLeft:  _heldKeys.Contains(Key.A) || _heldKeys.Contains(Key.Left),
-                MoveRight: _heldKeys.Contains(Key.D) || _heldKeys.Contains(Key.Right),
-                Fire:      _heldKeys.Contains(Key.Space)
+                MoveUp:    _heldKeys.Contains(Key.W) || _heldKeys.Contains(Key.Up)    || TouchInputState.Up,
+                MoveDown:  _heldKeys.Contains(Key.S) || _heldKeys.Contains(Key.Down)  || TouchInputState.Down,
+                MoveLeft:  _heldKeys.Contains(Key.A) || _heldKeys.Contains(Key.Left)  || TouchInputState.Left,
+                MoveRight: _heldKeys.Contains(Key.D) || _heldKeys.Contains(Key.Right) || TouchInputState.Right,
+                Fire:      _heldKeys.Contains(Key.Space)                               || TouchInputState.Fire
             );
         }
 

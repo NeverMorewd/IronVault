@@ -1,7 +1,17 @@
 /**
  * IronVault Touch Controls
- * Virtual joystick (left thumb) + FIRE button (right thumb) for mobile browsers.
- * Simulates Arrow-key + Space keyboard events so Avalonia receives standard input.
+ *
+ * Virtual joystick (left) + FIRE button (right) for mobile browsers.
+ *
+ * INPUT: Calls window.IronVaultInput.setMove / setFire ([JSExport] C# methods)
+ *        directly — bypasses synthesized KeyboardEvents which are ignored by
+ *        Avalonia (isTrusted = false filter).
+ *
+ * LAYOUT: Toggles body.iv-game which shrinks #out via CSS var(--ctrl-h) so
+ *         the Avalonia canvas never renders behind the controls.
+ *
+ * AUX BUTTONS (START / PAUSE / MENU): dispatch KeyboardEvents as a best-
+ *        effort fallback for one-shot actions (not held movement).
  */
 (function () {
     'use strict';
@@ -11,53 +21,38 @@
     const hasTouch   = forceTouch || ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
     if (!hasTouch) return;
 
-    // ── Key simulation ────────────────────────────────────────────────────
-    const _held = new Set();
-
-    /** Dispatch a keydown to document (Avalonia Browser listens at document/window). */
-    function kd(code, key, keyCode) {
-        if (_held.has(code)) return;
-        _held.add(code);
-        document.dispatchEvent(new KeyboardEvent('keydown', {
+    /* ── Aux key simulation (one-shot actions only) ──────────────────────
+     * Movement and fire use [JSExport] interop instead (see IronVaultInput).
+     * Aux keys are dispatched to window so they reach Avalonia's global
+     * keyboard handler regardless of focused element.                      */
+    function dispatchKey(type, code, key, keyCode) {
+        window.dispatchEvent(new KeyboardEvent(type, {
             code, key, keyCode, which: keyCode, bubbles: true, cancelable: true
         }));
     }
-
-    /** Dispatch a keyup to document. */
-    function ku(code, key, keyCode) {
-        if (!_held.has(code)) return;
-        _held.delete(code);
-        document.dispatchEvent(new KeyboardEvent('keyup', {
-            code, key, keyCode, which: keyCode, bubbles: true, cancelable: true
-        }));
+    function tapKey(code, key, keyCode) {
+        dispatchKey('keydown', code, key, keyCode);
+        setTimeout(() => dispatchKey('keyup', code, key, keyCode), 80);
     }
 
-    // Key descriptor tuples [code, key, keyCode]
-    const K = {
-        up:    ['ArrowUp',    'ArrowUp',    38],
-        down:  ['ArrowDown',  'ArrowDown',  40],
-        left:  ['ArrowLeft',  'ArrowLeft',  37],
-        right: ['ArrowRight', 'ArrowRight', 39],
-        fire:  ['Space',      ' ',          32],
-        enter: ['Enter',      'Enter',      13],
-        pause: ['KeyP',       'p',          80],
-        esc:   ['Escape',     'Escape',     27],
-    };
-
-    // ── Joystick direction state ──────────────────────────────────────────
+    /* ── Joystick direction state ────────────────────────────────────────
+     * Tracks active dirs so we can release them on screen change / blur.  */
     let _activeDirs = new Set();
 
     function setDirs(nextArr) {
-        const next = new Set(nextArr);
-        for (const d of _activeDirs) if (!next.has(d)) ku(...K[d]);
-        for (const d of next)        if (!_activeDirs.has(d)) kd(...K[d]);
-        _activeDirs = next;
+        _activeDirs = new Set(nextArr);
+        const inp = window.IronVaultInput;
+        if (inp) inp.setMove(
+            _activeDirs.has('up'),
+            _activeDirs.has('down'),
+            _activeDirs.has('left'),
+            _activeDirs.has('right')
+        );
     }
 
     /**
-     * Map a joystick displacement (dx, dy) → array of direction names.
-     * Uses 8-way detection: 45° sectors with slight diagonal tolerance.
-     *   angle 0° = right, 90° = down (screen coords, Y grows down)
+     * Map joystick displacement → direction names (8-way).
+     * Screen coords: Y grows downward, so dy > 0 → "down".
      */
     function dirsFromDelta(dx, dy, dist, deadzone) {
         if (dist < deadzone) return [];
@@ -70,7 +65,7 @@
         return dirs;
     }
 
-    // ── Inject styles ─────────────────────────────────────────────────────
+    /* ── Inject CSS ──────────────────────────────────────────────────────*/
     const css = document.createElement('style');
     css.textContent = `
         /* ── Overlay shell ── */
@@ -89,36 +84,23 @@
             position: absolute;
             bottom: 24px;
             left: 24px;
-            width: 136px;
-            height: 136px;
+            width: 140px;
+            height: 140px;
             border-radius: 50%;
-            background: rgba(8, 6, 0, 0.60);
-            border: 2px solid rgba(255, 165, 0, 0.30);
+            background: rgba(8, 6, 0, 0.62);
+            border: 2px solid rgba(255, 165, 0, 0.32);
             box-shadow:
                 0 0 24px rgba(255, 140, 0, 0.10),
                 inset 0 0 28px rgba(0, 0, 0, 0.55);
             pointer-events: all;
             touch-action: none;
         }
-        /* subtle cardinal arrows */
-        #iv-stick-base::before {
-            content: '▲  ▼';
-            position: absolute;
-            inset: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 8px;
-            color: rgba(255,165,0,0.18);
-            letter-spacing: 44px;
-            pointer-events: none;
-        }
 
         /* ── Joystick knob ── */
         #iv-stick-knob {
             position: absolute;
-            width: 52px;
-            height: 52px;
+            width: 54px;
+            height: 54px;
             border-radius: 50%;
             background: radial-gradient(
                 circle at 36% 32%,
@@ -126,7 +108,7 @@
                 rgba(170, 90, 0, 0.80)
             );
             border: 1.5px solid rgba(255, 165, 0, 0.55);
-            box-shadow: 0 0 12px rgba(255, 165, 0, 0.38);
+            box-shadow: 0 0 14px rgba(255, 165, 0, 0.40);
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
@@ -139,8 +121,8 @@
             position: absolute;
             bottom: 36px;
             right: 28px;
-            width: 96px;
-            height: 96px;
+            width: 100px;
+            height: 100px;
             border-radius: 50%;
             background: radial-gradient(
                 circle at 36% 32%,
@@ -172,59 +154,60 @@
                 rgba(200, 70, 0, 0.92)
             );
             box-shadow:
-                0 0 36px rgba(255, 140, 0, 0.60),
+                0 0 38px rgba(255, 140, 0, 0.65),
                 inset 0 0 8px rgba(0, 0, 0, 0.20);
         }
 
-        /* ── Auxiliary buttons (START / PAUSE / MENU) ── */
+        /* ── Auxiliary buttons ── */
         .iv-aux {
             position: absolute;
-            width: 52px;
-            height: 28px;
+            height: 32px;
+            padding: 0 12px;
             border-radius: 6px;
-            background: rgba(8, 6, 0, 0.62);
+            background: rgba(8, 6, 0, 0.65);
             border: 1.5px solid rgba(255, 165, 0, 0.28);
             display: flex;
             align-items: center;
             justify-content: center;
             font-family: Consolas, 'Courier New', monospace;
-            font-size: 8px;
+            font-size: 9px;
             letter-spacing: 0.10em;
             color: rgba(255, 165, 0, 0.65);
-            text-shadow: 0 0 6px rgba(255,165,0,0.35);
+            text-shadow: 0 0 6px rgba(255, 165, 0, 0.30);
             pointer-events: all;
             touch-action: none;
             cursor: pointer;
             transition: border-color 60ms, color 60ms;
+            white-space: nowrap;
         }
         .iv-aux.iv-active {
             border-color: rgba(255, 165, 0, 0.65);
             color: rgba(255, 220, 120, 0.95);
         }
 
-        #iv-start-btn  { bottom: 172px; left: 42px; }
-        #iv-pause-btn  { bottom: 172px; right: 74px; }
-        #iv-esc-btn    { top: 18px;    right: 18px; }
+        #iv-start-btn { bottom: 180px; left:  38px; }
+        #iv-pause-btn { bottom: 180px; right: 146px; }
+        #iv-esc-btn   { top:    16px;  right:  16px; }
 
-        /* ── Safe area padding for notched phones ── */
+        /* ── Safe-area padding for notched phones ── */
         @supports (padding: env(safe-area-inset-bottom)) {
-            #iv-stick-base { bottom: calc(24px + env(safe-area-inset-bottom)); }
-            #iv-fire-btn   { bottom: calc(36px + env(safe-area-inset-bottom)); }
-            #iv-start-btn  { bottom: calc(172px + env(safe-area-inset-bottom)); }
-            #iv-pause-btn  { bottom: calc(172px + env(safe-area-inset-bottom)); }
+            #iv-stick-base { bottom: calc(24px  + env(safe-area-inset-bottom)); }
+            #iv-fire-btn   { bottom: calc(36px  + env(safe-area-inset-bottom)); }
+            #iv-start-btn  { bottom: calc(180px + env(safe-area-inset-bottom)); }
+            #iv-pause-btn  { bottom: calc(180px + env(safe-area-inset-bottom)); }
         }
     `;
     document.head.appendChild(css);
 
-    // ── Build overlay DOM ─────────────────────────────────────────────────
+    /* ── Build overlay DOM ───────────────────────────────────────────────*/
     function mkEl(tag, id, cls) {
         const e = document.createElement(tag);
-        if (id)  e.id = id;
+        if (id)  e.id        = id;
         if (cls) e.className = cls;
         return e;
     }
 
-    const overlay  = mkEl('div', 'iv-overlay');
+    const overlay   = mkEl('div', 'iv-overlay');
     const stickBase = mkEl('div', 'iv-stick-base');
     const stickKnob = mkEl('div', 'iv-stick-knob');
     const fireBtn   = mkEl('div', 'iv-fire-btn');
@@ -241,28 +224,40 @@
     overlay.append(stickBase, fireBtn, startBtn, pauseBtn, escBtn);
     document.body.appendChild(overlay);
 
-    // ── Public API — hidden by default, shown only during gameplay ────────
-    // C# calls window.IronVaultControls.setScreen('game') via [JSImport]
-    // when navigation transitions to the Game screen, and 'menu' otherwise.
+    /* ── Hidden until the game screen is active ──────────────────────────*/
     overlay.style.display = 'none';
 
+    /* ── Public screen API ───────────────────────────────────────────────
+     * Called from BrowserNavBridge.cs via [JSImport] on every navigation. */
     window.IronVaultControls = {
         setScreen(screen) {
-            overlay.style.display = screen === 'game' ? '' : 'none';
-            // Release any held inputs when leaving the game
-            if (screen !== 'game') {
+            const isGame = screen === 'game';
+
+            // Show / hide controls overlay
+            overlay.style.display = isGame ? '' : 'none';
+
+            // Toggle body class → CSS adjusts #out bottom via --ctrl-h
+            if (isGame) {
+                document.body.classList.add('iv-game');
+            } else {
+                document.body.classList.remove('iv-game');
+            }
+
+            // Release all touch inputs when leaving the game
+            if (!isGame) {
                 setDirs([]);
                 _firePids.clear();
                 fireBtn.classList.remove('iv-active');
-                ku(...K.fire);
+                const inp = window.IronVaultInput;
+                if (inp) inp.releaseAll();
             }
         }
     };
 
-    // ── Joystick pointer handling ─────────────────────────────────────────
-    const BASE_R  = 68;   // radius of stick base (136/2)
-    const DEADZONE = 14;  // px before directions register
-    const KNOB_MAX = BASE_R - 26; // max knob travel from center
+    /* ── Joystick pointer handling ───────────────────────────────────────*/
+    const BASE_R   = 70;    // half of stick base (140/2)
+    const DEADZONE = 14;    // px before directions register
+    const KNOB_MAX = BASE_R - 27; // max knob travel from center
 
     let _stickPid = null;
     let _stickOx  = 0, _stickOy = 0;
@@ -280,15 +275,15 @@
         _stickPid = e.pointerId;
         stickBase.setPointerCapture(e.pointerId);
         const rc = stickBase.getBoundingClientRect();
-        _stickOx = rc.left + rc.width  / 2;
-        _stickOy = rc.top  + rc.height / 2;
+        _stickOx  = rc.left + rc.width  / 2;
+        _stickOy  = rc.top  + rc.height / 2;
         e.preventDefault();
     }, { passive: false });
 
     stickBase.addEventListener('pointermove', e => {
         if (e.pointerId !== _stickPid) return;
-        const dx = e.clientX - _stickOx;
-        const dy = e.clientY - _stickOy;
+        const dx   = e.clientX - _stickOx;
+        const dy   = e.clientY - _stickOy;
         const dist = Math.hypot(dx, dy);
         knobTo(dx, dy, dist);
         setDirs(dirsFromDelta(dx, dy, dist, DEADZONE));
@@ -304,14 +299,15 @@
     stickBase.addEventListener('pointerup',     stickEnd);
     stickBase.addEventListener('pointercancel', stickEnd);
 
-    // ── Fire button ───────────────────────────────────────────────────────
-    let _firePids = new Set();
+    /* ── Fire button ─────────────────────────────────────────────────────*/
+    const _firePids = new Set();
 
     fireBtn.addEventListener('pointerdown', e => {
         fireBtn.setPointerCapture(e.pointerId);
         _firePids.add(e.pointerId);
         fireBtn.classList.add('iv-active');
-        kd(...K.fire);
+        const inp = window.IronVaultInput;
+        if (inp) inp.setFire(true);
         e.preventDefault();
     }, { passive: false });
 
@@ -319,39 +315,42 @@
         _firePids.delete(e.pointerId);
         if (_firePids.size === 0) {
             fireBtn.classList.remove('iv-active');
-            ku(...K.fire);
+            const inp = window.IronVaultInput;
+            if (inp) inp.setFire(false);
         }
     }
     fireBtn.addEventListener('pointerup',     fireEnd);
     fireBtn.addEventListener('pointercancel', fireEnd);
 
-    // ── Auxiliary buttons ─────────────────────────────────────────────────
-    function hookAux(btn, keyTuple) {
+    /* ── Auxiliary buttons (best-effort keyboard dispatch) ───────────────*/
+    function hookAux(btn, code, key, keyCode) {
         btn.addEventListener('pointerdown', e => {
             btn.setPointerCapture(e.pointerId);
             btn.classList.add('iv-active');
-            kd(...keyTuple);
+            tapKey(code, key, keyCode);
             e.preventDefault();
         }, { passive: false });
-        const up = e => { btn.classList.remove('iv-active'); ku(...keyTuple); };
+        const up = () => btn.classList.remove('iv-active');
         btn.addEventListener('pointerup',     up);
         btn.addEventListener('pointercancel', up);
     }
 
-    hookAux(startBtn, K.enter);
-    hookAux(pauseBtn, K.pause);
-    hookAux(escBtn,   K.esc);
+    hookAux(startBtn, 'Enter',  'Enter',  13);
+    hookAux(pauseBtn, 'KeyP',   'p',      80);
+    hookAux(escBtn,   'Escape', 'Escape', 27);
 
-    // ── Prevent accidental page scroll on controls ────────────────────────
+    /* ── Global guards ───────────────────────────────────────────────────*/
+    // Prevent page scroll when touching the overlay
     overlay.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
 
-    // ── Release all held keys on visibility change (app switch, etc.) ─────
+    // Release all inputs when app goes to background
     document.addEventListener('visibilitychange', () => {
         if (document.hidden) {
             setDirs([]);
-            ku(...K.fire);
-            ku(...K.enter);
-            ku(...K.pause);
+            _firePids.clear();
+            fireBtn.classList.remove('iv-active');
+            const inp = window.IronVaultInput;
+            if (inp) inp.releaseAll();
         }
     });
 
