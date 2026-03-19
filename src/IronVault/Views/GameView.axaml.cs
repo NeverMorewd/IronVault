@@ -321,9 +321,9 @@ public partial class GameView : UserControl
     private const double TouchZoneHeight = 220.0; // bottom px that act as controls
     private const double StickDeadzone   = 18.0;  // px before direction registers
 
-    private ulong? _stickPid;
-    private Point  _stickOrigin;
-    private ulong? _firePid;
+    private int?  _stickPid;
+    private Point _stickOrigin;
+    private int?  _firePid;
 
     private void InitBrowserTouchControls()
     {
