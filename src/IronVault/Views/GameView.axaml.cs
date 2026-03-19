@@ -67,6 +67,9 @@ public partial class GameView : UserControl
 
         I18n.LanguageChanged += RefreshText;
         RefreshText();
+
+        // Register browser touch-zone handlers (no-op on desktop)
+        InitBrowserTouchControls();
     }
 
     // ── Overlay management ────────────────────────────────────────────────────
@@ -307,4 +310,87 @@ public partial class GameView : UserControl
 
     private void OnKeyUp(object? sender, KeyEventArgs e)
         => _heldKeys.Remove(e.Key);
+
+    // ── Browser virtual touch controls ───────────────────────────────────────
+    // The lower portion of the viewport is split into two half-screen zones:
+    //   Left  half → 8-direction virtual joystick  (sets TouchInputState)
+    //   Right half → fire button                   (sets TouchInputState.Fire)
+    // The HTML overlay (touch-controls.js) shows decorative visuals on top
+    // with pointer-events:none so all touches fall through to this handler.
+
+    private const double TouchZoneHeight = 220.0; // bottom px that act as controls
+    private const double StickDeadzone   = 18.0;  // px before direction registers
+
+    private ulong? _stickPid;
+    private Point  _stickOrigin;
+    private ulong? _firePid;
+
+    private void InitBrowserTouchControls()
+    {
+        if (!OperatingSystem.IsBrowser()) return;
+        PointerPressed  += OnTouchPressed;
+        PointerMoved    += OnTouchMoved;
+        PointerReleased += OnTouchReleased;
+    }
+
+    private void OnTouchPressed(object? sender, PointerPressedEventArgs e)
+    {
+        var pos = e.GetPosition(this);
+        // Only react inside the bottom touch-zone
+        if (pos.Y <= Bounds.Height - TouchZoneHeight) return;
+
+        if (pos.X < Bounds.Width / 2.0 && _stickPid == null)
+        {
+            _stickPid    = e.Pointer.Id;
+            _stickOrigin = pos;        // relative joystick: centre = first touch point
+            e.Handled    = true;
+        }
+        else if (pos.X >= Bounds.Width / 2.0 && _firePid == null)
+        {
+            _firePid             = e.Pointer.Id;
+            TouchInputState.Fire = true;
+            e.Handled            = true;
+        }
+    }
+
+    private void OnTouchMoved(object? sender, PointerEventArgs e)
+    {
+        if (e.Pointer.Id != _stickPid) return;
+
+        var pos  = e.GetPosition(this);
+        var dx   = pos.X - _stickOrigin.X;
+        var dy   = pos.Y - _stickOrigin.Y;
+        var dist = Math.Sqrt(dx * dx + dy * dy);
+
+        if (dist < StickDeadzone)
+        {
+            // Inside dead-zone: stop moving but keep tracking
+            TouchInputState.Up = TouchInputState.Down =
+            TouchInputState.Left = TouchInputState.Right = false;
+            return;
+        }
+
+        // 8-way mapping: atan2 returns -180..180 (Y grows downward → down = positive)
+        var a = Math.Atan2(dy, dx) * (180.0 / Math.PI);
+        TouchInputState.Up    = a < -22.5  && a > -157.5;
+        TouchInputState.Down  = a >  22.5  && a <  157.5;
+        TouchInputState.Left  = a >  112.5 || a < -112.5;
+        TouchInputState.Right = a > -67.5  && a <  67.5;
+        e.Handled = true;
+    }
+
+    private void OnTouchReleased(object? sender, PointerReleasedEventArgs e)
+    {
+        if (e.Pointer.Id == _stickPid)
+        {
+            _stickPid = null;
+            TouchInputState.Up = TouchInputState.Down =
+            TouchInputState.Left = TouchInputState.Right = false;
+        }
+        if (e.Pointer.Id == _firePid)
+        {
+            _firePid             = null;
+            TouchInputState.Fire = false;
+        }
+    }
 }

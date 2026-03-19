@@ -7,8 +7,11 @@
   <!-- Root: single grid, fills window; overlays sit on top at ZIndex 100 -->
   <Grid>
 
-    <!-- ── Main game area (canvas + compact header, centered) ── -->
-    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="0">
+    <!-- ── Main game area: Viewbox scales content down on narrow screens ── -->
+    <!-- StretchDirection="DownOnly" keeps 1:1 on desktop, shrinks on mobile  -->
+    <Viewbox Stretch="Uniform" StretchDirection="DownOnly"
+             HorizontalAlignment="Center" VerticalAlignment="Top">
+    <StackPanel Spacing="0">
 
       <!-- Compact status bar -->
       <Border Classes="pipboy-panel"
@@ -128,6 +131,7 @@
       </Border>
 
     </StackPanel>
+    </Viewbox>
 
     <!-- ══════════════════════════════════════════════════════════════════════ -->
     <!-- Settings Overlay — pause + controls reference + action buttons        -->

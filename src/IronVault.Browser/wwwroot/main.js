@@ -10,25 +10,12 @@ const dotnetRuntime = await dotnet
 
 const config = dotnetRuntime.getConfig();
 
-// ── Expose C# touch-input bridge to JavaScript ────────────────────────────
-// BrowserInput.[JSExport] methods are accessible once the runtime is created.
-// touch-controls.js calls window.IronVaultInput.setMove / setFire directly,
-// bypassing unreliable synthesized KeyboardEvents (isTrusted = false).
-try {
-    const asm = await dotnetRuntime.getAssemblyExports('IronVault.Browser');
-    const bi  = asm.IronVault.Browser.Input.BrowserInput;
-    window.IronVaultInput = {
-        setMove:    (u, d, l, r) => bi.SetMove(u, d, l, r),
-        setFire:    (f)          => bi.SetFire(f),
-        releaseAll: ()           => bi.ReleaseAll(),
-    };
-} catch (ex) {
-    console.warn('[IronVault] Touch input bridge unavailable:', ex);
-}
-
+// Start the Avalonia app (never resolves — runs the main event loop).
+// Touch input is handled entirely by Avalonia C# PointerEvents in
+// GameView.axaml.cs; no JS→C# interop bridge is needed for controls.
 const runPromise = dotnetRuntime.runMain(config.mainAssemblyName, [globalThis.location.href]);
 
-// Hide splash overlay once Avalonia has had time to render its first frame
+// Hide the splash screen once Avalonia has rendered its first frame.
 requestAnimationFrame(() => requestAnimationFrame(() => {
     const splash = document.querySelector('.avalonia-splash');
     if (splash) splash.classList.add('loaded');

@@ -3,14 +3,14 @@
 <head>
   <title>Iron Vault</title>
   <meta charset="UTF-8">
-  <!-- Fit the logical viewport to the device screen, no user scaling -->
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <!-- iOS: hide browser chrome when added to home screen -->
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Iron Vault">
-  <!-- Android Chrome: theme color for the address bar -->
+  <!-- Fit to device screen; disable pinch-zoom so the FIRE button never
+       triggers browser zoom (Avalonia owns all touch input). -->
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <!-- Android Chrome: colour the address bar to match the game background -->
   <meta name="theme-color" content="#0a0800">
+  <!-- Mobile web-app capable (standard, cross-browser) -->
+  <meta name="mobile-web-app-capable" content="yes">
   <link rel="icon" href="./favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="./app.css" />
 </head>
@@ -22,7 +22,7 @@
     </div>
   </div>
   <script src="./audio.js"></script>
-  <!-- Virtual joystick & touch controls (auto-hides on desktop) -->
+  <!-- Visual touch controls overlay (pointer-events:none; input via C# PointerEvents) -->
   <script src="./touch-controls.js"></script>
   <script type="module" src="./main.js"></script>
 </body>

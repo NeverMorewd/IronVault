@@ -1,6 +1,7 @@
 /* ── Reset & base ──────────────────────────────────────────────────────── */
 *, *::before, *::after {
   box-sizing: border-box;
+  /* Prevent tap highlights and callout menus on mobile */
   -webkit-tap-highlight-color: transparent;
   -webkit-touch-callout: none;
 }
@@ -10,37 +11,27 @@ html, body {
   padding: 0;
   width: 100%;
   height: 100%;
+  /* dvh accounts for iOS Safari / Android Chrome retractable browser chrome */
   height: 100dvh;
   overflow: hidden;
   background: #0a0800;
   color: #ffa500;
   font-family: Consolas, 'Courier New', monospace;
+  /* Disable page-level touch gestures (scroll, zoom, swipe-back).
+     Avalonia captures touches on the canvas; the JS overlay is pointer-
+     events:none, so no user gesture reaches the browser's default actions. */
   touch-action: none;
   overscroll-behavior: none;
 }
 
 /* ── Avalonia canvas container ─────────────────────────────────────────── */
-/*
- * In game mode (.iv-game), the bottom is pulled up by --ctrl-h so the
- * Avalonia canvas shrinks and leaves room for the touch controls.
- * Avalonia observes ResizeObserver on the canvas and scales content to fit.
- */
-:root {
-  /* 196px base + safe-area covers the tallest control (START button top edge)
-     even on notched iPhones with 34 px home-bar inset. */
-  --ctrl-h: 0px;
-}
-
-body.iv-game {
-  --ctrl-h: max(210px, calc(196px + env(safe-area-inset-bottom)));
-}
-
+/* Always fills the full visual viewport.
+   The Viewbox inside Avalonia (GameView.axaml) scales game content to fit
+   the upper portion; the lower ~220 px of the viewport is empty Avalonia
+   canvas that acts as the virtual-control touch zone (handled by C#). */
 #out {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: var(--ctrl-h);    /* shrinks in game mode, full-height in menus */
+  inset: 0;
 }
 
 /* ── Splash screen ─────────────────────────────────────────────────────── */
@@ -62,6 +53,7 @@ body.iv-game {
 }
 
 .splash-title {
+  /* Scales gracefully between tiny phones and large tablets */
   font-size: clamp(1.4rem, 6vw, 2.5rem);
   font-weight: bold;
   color: #ffa500;
