@@ -3,11 +3,18 @@
 <head>
   <title>Iron Vault</title>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Fit the logical viewport to the device screen, no user scaling -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <!-- iOS: hide browser chrome when added to home screen -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Iron Vault">
+  <!-- Android Chrome: theme color for the address bar -->
+  <meta name="theme-color" content="#0a0800">
   <link rel="icon" href="./favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="./app.css" />
 </head>
-<body style="margin: 0; overflow: hidden">
+<body>
   <div id="out">
     <div class="avalonia-splash">
       <div class="splash-title">IRON VAULT</div>
@@ -15,6 +22,8 @@
     </div>
   </div>
   <script src="./audio.js"></script>
+  <!-- Virtual joystick & touch controls (auto-hides on desktop) -->
+  <script src="./touch-controls.js"></script>
   <script type="module" src="./main.js"></script>
 </body>
 </html>

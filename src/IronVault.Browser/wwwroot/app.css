@@ -1,19 +1,40 @@
+/* ── Reset & base ──────────────────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+}
+
 html, body {
   margin: 0;
   padding: 0;
   width: 100%;
   height: 100%;
+  /* Use dvh so the game fills the visual viewport on mobile
+     (avoids the bottom-bar gap on iOS Safari / Chrome Android) */
+  height: 100dvh;
   overflow: hidden;
   background: #0a0800;
   color: #ffa500;
   font-family: Consolas, 'Courier New', monospace;
+  /* Prevent iOS rubber-band scroll, double-tap zoom, etc. */
+  touch-action: none;
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: auto;
 }
 
+/* ── Avalonia canvas container ─────────────────────────────────────────── */
 #out {
+  position: fixed;
+  inset: 0;
   width: 100%;
   height: 100%;
+  /* The Avalonia canvas fills this div; it scales itself to the viewport.
+     On mobile we leave the full viewport available — touch controls are
+     overlaid on top via the fixed #iv-overlay. */
 }
 
+/* ── Splash screen ─────────────────────────────────────────────────────── */
 .avalonia-splash {
   position: fixed;
   inset: 0;
@@ -32,7 +53,7 @@ html, body {
 }
 
 .splash-title {
-  font-size: 2.5rem;
+  font-size: clamp(1.4rem, 6vw, 2.5rem);
   font-weight: bold;
   color: #ffa500;
   letter-spacing: 0.4em;
@@ -40,7 +61,7 @@ html, body {
 }
 
 .splash-subtitle {
-  font-size: 0.85rem;
+  font-size: clamp(0.65rem, 2.5vw, 0.85rem);
   color: #aa6000;
   margin-top: 14px;
   letter-spacing: 0.25em;
