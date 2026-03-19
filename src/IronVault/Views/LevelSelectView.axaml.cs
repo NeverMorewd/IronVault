@@ -73,9 +73,9 @@ public partial class LevelSelectView : UserControl
             var btn = new Button
             {
                 Width   = 56,
-                Height  = 38,
+                Height  = 44,   // ≥44px touch target (Apple / Material guideline)
                 Margin  = new Avalonia.Thickness(2),
-                Padding = new Avalonia.Thickness(2, 4),
+                Padding = new Avalonia.Thickness(2, 0),
                 HorizontalContentAlignment = Avalonia.Layout.HorizontalAlignment.Center,
                 VerticalContentAlignment   = Avalonia.Layout.VerticalAlignment.Center,
                 FontSize = 11,

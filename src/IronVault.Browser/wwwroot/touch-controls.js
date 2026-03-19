@@ -241,6 +241,24 @@
     overlay.append(stickBase, fireBtn, startBtn, pauseBtn, escBtn);
     document.body.appendChild(overlay);
 
+    // ── Public API — hidden by default, shown only during gameplay ────────
+    // C# calls window.IronVaultControls.setScreen('game') via [JSImport]
+    // when navigation transitions to the Game screen, and 'menu' otherwise.
+    overlay.style.display = 'none';
+
+    window.IronVaultControls = {
+        setScreen(screen) {
+            overlay.style.display = screen === 'game' ? '' : 'none';
+            // Release any held inputs when leaving the game
+            if (screen !== 'game') {
+                setDirs([]);
+                _firePids.clear();
+                fireBtn.classList.remove('iv-active');
+                ku(...K.fire);
+            }
+        }
+    };
+
     // ── Joystick pointer handling ─────────────────────────────────────────
     const BASE_R  = 68;   // radius of stick base (136/2)
     const DEADZONE = 14;  // px before directions register

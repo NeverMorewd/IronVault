@@ -4,9 +4,12 @@
              x:Class="IronVault.Views.MenuView">
 
   <Grid Background="{DynamicResource PipboyBackgroundBrush}">
+    <ScrollViewer VerticalScrollBarVisibility="Auto"
+                  HorizontalScrollBarVisibility="Disabled">
     <StackPanel VerticalAlignment="Center"
                 HorizontalAlignment="Center"
-                Width="460"
+                MaxWidth="460"
+                Margin="12,16,12,16"
                 Spacing="0">
 
       <!-- ── Logo / Title ── -->
@@ -41,16 +44,18 @@
                      Text="GAME MODE"
                      Classes="h2"
                      HorizontalAlignment="Center" />
-          <StackPanel Orientation="Horizontal"
-                      HorizontalAlignment="Center"
-                      Spacing="8">
+          <Grid ColumnDefinitions="*,*" HorizontalAlignment="Stretch">
             <Button x:Name="ClassicBtn"
-                    Width="180"
+                    Grid.Column="0"
+                    Margin="0,0,4,0"
+                    HorizontalAlignment="Stretch"
                     HorizontalContentAlignment="Center" />
             <Button x:Name="DefenseBtn"
-                    Width="180"
+                    Grid.Column="1"
+                    Margin="4,0,0,0"
+                    HorizontalAlignment="Stretch"
                     HorizontalContentAlignment="Center" />
-          </StackPanel>
+          </Grid>
           <TextBlock x:Name="ModeDesc"
                      HorizontalAlignment="Center"
                      Classes="dim"
@@ -67,19 +72,23 @@
                      Text="TACTICAL RATING"
                      Classes="h2"
                      HorizontalAlignment="Center" />
-          <StackPanel Orientation="Horizontal"
-                      HorizontalAlignment="Center"
-                      Spacing="6">
+          <Grid ColumnDefinitions="*,*,*" HorizontalAlignment="Stretch">
             <Button x:Name="EasyBtn"
-                    Width="120"
+                    Grid.Column="0"
+                    Margin="0,0,3,0"
+                    HorizontalAlignment="Stretch"
                     HorizontalContentAlignment="Center" />
             <Button x:Name="NormalBtn"
-                    Width="120"
+                    Grid.Column="1"
+                    Margin="3,0,3,0"
+                    HorizontalAlignment="Stretch"
                     HorizontalContentAlignment="Center" />
             <Button x:Name="HardBtn"
-                    Width="120"
+                    Grid.Column="2"
+                    Margin="3,0,0,0"
+                    HorizontalAlignment="Stretch"
                     HorizontalContentAlignment="Center" />
-          </StackPanel>
+          </Grid>
           <TextBlock x:Name="DiffDesc"
                      HorizontalAlignment="Center"
                      Classes="dim"
@@ -131,8 +140,11 @@
                  Classes="dim"
                  FontSize="9"
                  HorizontalAlignment="Center"
+                 TextWrapping="Wrap"
+                 TextAlignment="Center"
                  Margin="0,18,0,0" />
     </StackPanel>
+    </ScrollViewer>
   </Grid>
 
 </UserControl>

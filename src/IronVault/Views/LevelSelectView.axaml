@@ -3,9 +3,12 @@
              x:Class="IronVault.Views.LevelSelectView">
 
   <Grid Background="{DynamicResource PipboyBackgroundBrush}">
+    <ScrollViewer VerticalScrollBarVisibility="Auto"
+                  HorizontalScrollBarVisibility="Disabled">
     <StackPanel VerticalAlignment="Center"
                 HorizontalAlignment="Center"
-                Width="620"
+                MaxWidth="640"
+                Margin="8,12,8,12"
                 Spacing="0">
 
       <!-- ── Header ── -->
@@ -63,6 +66,7 @@
       </Button>
 
     </StackPanel>
+    </ScrollViewer>
   </Grid>
 
 </UserControl>
