@@ -109,11 +109,10 @@ All graphics are drawn with Avalonia's `DrawingContext` API — no bitmaps, no h
 ## Run Locally
 
 ```bash
-# Pipboy.Avalonia must be cloned as a sibling to IronVault
 git clone https://github.com/NeverMorewd/IronVault
-git clone https://github.com/NeverMorewd/Pipboy.Avalonia
 
 cd IronVault
+
 dotnet run --project src/IronVault.Desktop
 ```
 
