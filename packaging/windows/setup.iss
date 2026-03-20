@@ -101,12 +101,38 @@ Filename: "{app}\{#AppExeName}"; \
 ;  (ERROR_SUCCESS_REBOOT_REQUIRED) so Microsoft can detect restart needs.
 ; ═══════════════════════════════════════════════════════════════════════════
 [Code]
-// Called by Inno Setup when the installer would exit with 0 (success).
-// Return 3010 if the OS needs a reboot to finish applying the installation.
+// ── Uninstall registry key written by Inno Setup (AppId + "_is1") ────────
+const
+  UNINST_KEY = 'Software\Microsoft\Windows\CurrentVersion\Uninstall\' +
+               '{7A1E3C4D-2B6F-4D8E-9A3C-5F71B0E2D8A9}_is1';
+
+var
+  GAlreadyInstalled: Boolean;
+
+// Detect whether the app is already installed (checks both HKLM and HKCU).
+// Must run before the wizard starts so GetCustomSetupExitCode can use the flag.
+function InitializeSetup(): Boolean;
+var
+  S: String;
+begin
+  Result := True;
+  GAlreadyInstalled :=
+    RegQueryStringValue(HKLM, UNINST_KEY, 'UninstallString', S) or
+    RegQueryStringValue(HKCU, UNINST_KEY, 'UninstallString', S);
+end;
+
+// Inno Setup calls this function when it would normally exit with 0.
+// We return distinct codes so Microsoft Store can tell each outcome apart:
+//
+//   0    – fresh install succeeded               (shown to MS as "success")
+//   1638 – app was already installed; reinstalled (ERROR_PRODUCT_VERSION)
+//   3010 – install OK but reboot required        (ERROR_SUCCESS_REBOOT_REQUIRED)
 function GetCustomSetupExitCode: Integer;
 begin
   if NeedRestart() then
-    Result := 3010   // ERROR_SUCCESS_REBOOT_REQUIRED — standard Win32 code
+    Result := 3010
+  else if GAlreadyInstalled then
+    Result := 1638
   else
     Result := 0;
 end;
