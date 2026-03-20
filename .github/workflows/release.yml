@@ -160,46 +160,14 @@ jobs:
           Write-Host "makeappx : $($tool.FullName)"
           Write-Host "signtool : $($tool.DirectoryName)\signtool.exe"
 
-      - name: Generate MSIX logo assets (placeholder — replace with your artwork)
+      - name: Copy MSIX logo assets from repository
         run: |
-          Add-Type -AssemblyName System.Drawing
-
-          function New-Logo([int]$W, [int]$H, [string]$Out) {
-            $bmp   = New-Object System.Drawing.Bitmap($W, $H)
-            $g     = [System.Drawing.Graphics]::FromImage($bmp)
-            $g.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::AntiAlias
-            $g.Clear([System.Drawing.Color]::FromArgb(10, 8, 0))
-
-            $amber = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb(255, 165,  0))
-            $green = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb( 46, 125, 50))
-            $dkgrn = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb( 21,  61, 21))
-
-            $cx = [float]($W / 2); $cy = [float]($H / 2)
-            # Left track
-            $g.FillRectangle($dkgrn, [float]($cx-$W*0.34f), [float]($cy-$H*0.25f), [float]($W*0.13f), [float]($H*0.50f))
-            # Right track
-            $g.FillRectangle($dkgrn, [float]($cx+$W*0.21f), [float]($cy-$H*0.25f), [float]($W*0.13f), [float]($H*0.50f))
-            # Body
-            $g.FillRectangle($green, [float]($cx-$W*0.22f), [float]($cy-$H*0.08f), [float]($W*0.44f), [float]($H*0.33f))
-            # Turret
-            $g.FillRectangle($amber, [float]($cx-$W*0.12f), [float]($cy-$H*0.28f), [float]($W*0.24f), [float]($H*0.22f))
-            # Barrel
-            $g.FillRectangle($amber, [float]($cx-$W*0.04f), [float]($cy-$H*0.48f), [float]($W*0.08f), [float]($H*0.24f))
-
-            $g.Dispose()
-            $amber.Dispose(); $green.Dispose(); $dkgrn.Dispose()
-            New-Item -ItemType Directory -Force (Split-Path $Out) | Out-Null
-            $bmp.Save($Out, [System.Drawing.Imaging.ImageFormat]::Png)
-            $bmp.Dispose()
-          }
-
-          New-Logo  44  44  msix_layout\Assets\Square44x44Logo.png
-          New-Logo 150 150  msix_layout\Assets\Square150x150Logo.png
-          New-Logo 310 150  msix_layout\Assets\Wide310x150Logo.png
-          New-Logo 310 310  msix_layout\Assets\Square310x310Logo.png
-          New-Logo  50  50  msix_layout\Assets\StoreLogo.png
-          New-Logo 620 300  msix_layout\Assets\SplashScreen.png
-          Write-Host "Logo assets generated."
+          # Assets are committed to packaging/windows/Assets/.
+          # To customise the Store icons, replace those PNG files and re-tag.
+          New-Item -ItemType Directory -Force msix_layout\Assets | Out-Null
+          Copy-Item packaging\windows\Assets\* msix_layout\Assets\
+          Write-Host "Assets copied:"
+          Get-ChildItem msix_layout\Assets | ForEach-Object { Write-Host "  $($_.Name)" }
 
       - name: Prepare MSIX layout
         run: |
