@@ -64,7 +64,6 @@ jobs:
 
     runs-on: ${{ matrix.os }}
 
-    # Use bash on all platforms — Git Bash is present on windows-latest.
     defaults:
       run:
         shell: bash
@@ -78,7 +77,6 @@ jobs:
         with:
           dotnet-version: '10.0.x'
 
-      # NativeAOT on Linux requires clang and zlib headers
       - name: Install native build tools (Linux)
         if: runner.os == 'Linux'
         run: sudo apt-get install -y clang zlib1g-dev
@@ -110,6 +108,165 @@ jobs:
           path: IronVault-*-${{ matrix.rid }}.zip
           retention-days: 1
 
+  # ── Windows installers: EXE (Inno Setup) + MSIX (Microsoft Store) ──────────
+  build-installer:
+    needs: build-desktop
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: pwsh
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download win-x64 artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: desktop-win-x64
+          path: dl/
+
+      - name: Extract win-x64 zip
+        run: |
+          $zip = Get-Item dl\*.zip | Select-Object -First 1
+          Expand-Archive -Path $zip.FullName -DestinationPath publish\win-x64
+
+      # ── EXE installer via Inno Setup ───────────────────────────────────────
+      - name: Install Inno Setup
+        run: choco install innosetup --no-progress -y
+
+      - name: Build EXE installer
+        run: |
+          $iscc = "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
+          $tag  = "${{ env.RELEASE_TAG }}"
+          $src  = (Resolve-Path publish\win-x64).Path
+          $out  = (Resolve-Path .).Path
+          & $iscc `
+            /DAppVersion="$tag" `
+            /DSourceDir="$src"  `
+            /DOutputDir="$out"  `
+            packaging\windows\setup.iss
+
+      # ── MSIX package for Microsoft Store ──────────────────────────────────
+      - name: Locate Windows SDK tools
+        id: sdk
+        run: |
+          $tool = Get-ChildItem "C:\Program Files (x86)\Windows Kits\10\bin" `
+                    -Recurse -Filter makeappx.exe |
+                    Where-Object { $_.FullName -like '*x64*' } |
+                    Sort-Object FullName | Select-Object -Last 1
+          "makeappx=$($tool.FullName)"                >> $env:GITHUB_OUTPUT
+          "signtool=$($tool.DirectoryName)\signtool.exe" >> $env:GITHUB_OUTPUT
+          Write-Host "makeappx : $($tool.FullName)"
+          Write-Host "signtool : $($tool.DirectoryName)\signtool.exe"
+
+      - name: Generate MSIX logo assets (placeholder — replace with your artwork)
+        run: |
+          Add-Type -AssemblyName System.Drawing
+
+          function New-Logo([int]$W, [int]$H, [string]$Out) {
+            $bmp   = New-Object System.Drawing.Bitmap($W, $H)
+            $g     = [System.Drawing.Graphics]::FromImage($bmp)
+            $g.SmoothingMode = [System.Drawing.Drawing2D.SmoothingMode]::AntiAlias
+            $g.Clear([System.Drawing.Color]::FromArgb(10, 8, 0))
+
+            $amber = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb(255, 165,  0))
+            $green = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb( 46, 125, 50))
+            $dkgrn = New-Object System.Drawing.SolidBrush([System.Drawing.Color]::FromArgb( 21,  61, 21))
+
+            $cx = [float]($W / 2); $cy = [float]($H / 2)
+            # Left track
+            $g.FillRectangle($dkgrn, [float]($cx-$W*0.34f), [float]($cy-$H*0.25f), [float]($W*0.13f), [float]($H*0.50f))
+            # Right track
+            $g.FillRectangle($dkgrn, [float]($cx+$W*0.21f), [float]($cy-$H*0.25f), [float]($W*0.13f), [float]($H*0.50f))
+            # Body
+            $g.FillRectangle($green, [float]($cx-$W*0.22f), [float]($cy-$H*0.08f), [float]($W*0.44f), [float]($H*0.33f))
+            # Turret
+            $g.FillRectangle($amber, [float]($cx-$W*0.12f), [float]($cy-$H*0.28f), [float]($W*0.24f), [float]($H*0.22f))
+            # Barrel
+            $g.FillRectangle($amber, [float]($cx-$W*0.04f), [float]($cy-$H*0.48f), [float]($W*0.08f), [float]($H*0.24f))
+
+            $g.Dispose()
+            $amber.Dispose(); $green.Dispose(); $dkgrn.Dispose()
+            New-Item -ItemType Directory -Force (Split-Path $Out) | Out-Null
+            $bmp.Save($Out, [System.Drawing.Imaging.ImageFormat]::Png)
+            $bmp.Dispose()
+          }
+
+          New-Logo  44  44  msix_layout\Assets\Square44x44Logo.png
+          New-Logo 150 150  msix_layout\Assets\Square150x150Logo.png
+          New-Logo 310 150  msix_layout\Assets\Wide310x150Logo.png
+          New-Logo 310 310  msix_layout\Assets\Square310x310Logo.png
+          New-Logo  50  50  msix_layout\Assets\StoreLogo.png
+          New-Logo 620 300  msix_layout\Assets\SplashScreen.png
+          Write-Host "Logo assets generated."
+
+      - name: Prepare MSIX layout
+        run: |
+          New-Item -ItemType Directory -Force msix_layout | Out-Null
+
+          # Copy all app binaries into the layout root
+          Copy-Item publish\win-x64\* msix_layout\ -Recurse -Force
+
+          # Inject the build version into the manifest (tag v1.2.3 → MSIX 1.2.3.0)
+          $tag   = "${{ env.RELEASE_TAG }}".TrimStart('v')
+          $parts = $tag -split '\.'
+          while ($parts.Count -lt 4) { $parts += '0' }
+          $ver   = ($parts[0..3] -join '.')
+          (Get-Content packaging\windows\AppxManifest.xml -Encoding UTF8) `
+            -replace 'Version="1\.0\.0\.0"', "Version=`"$ver`"" |
+            Set-Content msix_layout\AppxManifest.xml -Encoding UTF8
+
+          Write-Host "MSIX version: $ver"
+
+      - name: Pack MSIX
+        run: |
+          # /nv  = skip semantic validation (avoids false positives on CI)
+          # /o   = overwrite if exists
+          & "${{ steps.sdk.outputs.makeappx }}" pack `
+            /d msix_layout /p IronVault.msix /o /nv
+
+      - name: Sign MSIX with a temporary self-signed certificate
+        run: |
+          # The certificate Subject (CN=...) MUST match Identity/@Publisher in
+          # AppxManifest.xml. For production Store submission, update the manifest
+          # Publisher field to your Partner Center value and sign with your own cert.
+          # For a .msixupload Partner Center upload the Store will re-sign the package.
+          $cert = New-SelfSignedCertificate `
+            -Type Custom `
+            -Subject "CN=IronVaultDev" `
+            -KeyUsage DigitalSignature `
+            -FriendlyName "IronVault Dev" `
+            -CertStoreLocation "Cert:\CurrentUser\My" `
+            -TextExtension @(
+              "2.5.29.37={text}1.3.6.1.5.5.7.3.3",
+              "2.5.29.19={text}"
+            )
+          $pwd = ConvertTo-SecureString "IronVaultCI!" -Force -AsPlainText
+          Export-PfxCertificate -Cert $cert -FilePath cert.pfx -Password $pwd | Out-Null
+
+          & "${{ steps.sdk.outputs.signtool }}" sign `
+            /fd SHA256 /f cert.pfx /p "IronVaultCI!" IronVault.msix
+
+          Remove-Item cert.pfx
+
+      - name: Create .msixupload bundle for Partner Center
+        run: |
+          # .msixupload = zip archive containing one or more .msix files.
+          # Upload this file to Microsoft Partner Center → Packages.
+          $tag = "${{ env.RELEASE_TAG }}"
+          Compress-Archive -Path IronVault.msix `
+            -DestinationPath "IronVault-${tag}-x64.msixupload"
+
+      - name: Upload installer artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: installers
+          path: |
+            IronVault-*-setup.exe
+            IronVault-*.msixupload
+          retention-days: 1
+
   # ── Deploy to GitHub Pages ─────────────────────────────────────────────────
   deploy-pages:
     needs: build-wasm
@@ -133,21 +290,26 @@ jobs:
 
   # ── Create GitHub Release ──────────────────────────────────────────────────
   create-release:
-    needs: build-desktop
+    needs: [build-desktop, build-installer]
     runs-on: ubuntu-latest
     permissions:
       contents: write
 
     steps:
-      - name: Download Windows artifact
+      - name: Download Windows zip
         uses: actions/download-artifact@v4
         with:
           name: desktop-win-x64
 
-      - name: Download Linux artifact
+      - name: Download Linux zip
         uses: actions/download-artifact@v4
         with:
           name: desktop-linux-x64
+
+      - name: Download installers
+        uses: actions/download-artifact@v4
+        with:
+          name: installers
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
@@ -160,3 +322,5 @@ jobs:
           files: |
             IronVault-*-win-x64.zip
             IronVault-*-linux-x64.zip
+            IronVault-*-setup.exe
+            IronVault-*.msixupload
