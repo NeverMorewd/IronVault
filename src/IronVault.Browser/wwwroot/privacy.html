@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Privacy Policy — Iron Vault</title>
+  <style>
+    :root {
+      --amber:  #ffa500;
+      --dim:    #aa6000;
+      --bg:     #0a0800;
+      --surface:#111009;
+      --border: rgba(255,165,0,0.18);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--amber);
+      font-family: Consolas, 'Courier New', monospace;
+      font-size: 15px;
+      line-height: 1.75;
+      min-height: 100vh;
+      padding: 0 0 60px;
+    }
+
+    /* ── CRT scanline overlay ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: repeating-linear-gradient(
+        to bottom,
+        transparent 0px,
+        transparent 3px,
+        rgba(0,0,0,0.08) 3px,
+        rgba(0,0,0,0.08) 4px
+      );
+      pointer-events: none;
+      z-index: 1000;
+    }
+
+    /* ── Header ── */
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 28px 0 22px;
+      text-align: center;
+    }
+    .logo {
+      font-size: 1.6rem;
+      font-weight: bold;
+      letter-spacing: 0.35em;
+      text-shadow: 0 0 18px var(--amber);
+    }
+    .logo span { color: var(--dim); font-size: 0.9rem; letter-spacing: 0.15em; display: block; margin-top: 4px; }
+
+    /* ── Main content ── */
+    main {
+      max-width: 740px;
+      margin: 40px auto;
+      padding: 0 24px;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 32px 36px;
+      margin-bottom: 24px;
+    }
+
+    h1 {
+      font-size: 1.15rem;
+      letter-spacing: 0.2em;
+      color: var(--amber);
+      text-shadow: 0 0 10px rgba(255,165,0,0.4);
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    h2 {
+      font-size: 0.88rem;
+      letter-spacing: 0.15em;
+      color: var(--amber);
+      margin: 24px 0 10px;
+      text-transform: uppercase;
+    }
+
+    p, li {
+      color: #d4900a;
+      font-size: 0.93rem;
+    }
+
+    ul {
+      list-style: none;
+      padding-left: 0;
+    }
+    ul li::before {
+      content: '▸  ';
+      color: var(--dim);
+    }
+    ul li { margin-bottom: 6px; }
+
+    .highlight {
+      display: inline-block;
+      background: rgba(255,165,0,0.08);
+      border: 1px solid rgba(255,165,0,0.22);
+      border-radius: 3px;
+      padding: 12px 18px;
+      margin: 14px 0;
+      color: var(--amber);
+      font-size: 0.92rem;
+      line-height: 1.6;
+      width: 100%;
+    }
+
+    .meta {
+      font-size: 0.78rem;
+      color: var(--dim);
+      letter-spacing: 0.08em;
+    }
+
+    a {
+      color: var(--amber);
+      text-decoration: none;
+      border-bottom: 1px solid var(--dim);
+    }
+    a:hover { border-bottom-color: var(--amber); }
+
+    footer {
+      text-align: center;
+      font-size: 0.75rem;
+      color: var(--dim);
+      letter-spacing: 0.12em;
+      padding-top: 20px;
+    }
+
+    @media (max-width: 600px) {
+      .card { padding: 22px 18px; }
+      .logo { font-size: 1.2rem; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    IRON VAULT
+    <span>PRIVACY POLICY</span>
+  </div>
+</header>
+
+<main>
+
+  <div class="card">
+    <h1>PRIVACY POLICY</h1>
+
+    <p class="meta">Effective date: 2025-01-01 &nbsp;|&nbsp; Last updated: 2026-03-20</p>
+
+    <div class="highlight">
+      Iron Vault is a fully offline, single-player game.
+      It does <strong>not</strong> collect, store, transmit, or share
+      any personal information or usage data — ever.
+    </div>
+
+    <h2>1. Information We Collect</h2>
+    <p>
+      We collect <strong>no information whatsoever</strong>.
+      Iron Vault does not require an account, does not contact any server,
+      and does not use analytics, advertising SDKs, or any third-party services.
+    </p>
+
+    <h2>2. Data Storage</h2>
+    <p>
+      All game state (such as selected difficulty or level) exists only in local
+      application memory for the duration of a single session. No data is written
+      to disk, cloud storage, or any external service.
+    </p>
+
+    <h2>3. Network Access</h2>
+    <p>
+      The game operates entirely offline.
+      It makes <strong>zero network requests</strong> during gameplay.
+      The browser / WebAssembly version loads static files from the host server
+      once on startup; no further communication occurs after the page is loaded.
+    </p>
+
+    <h2>4. Permissions</h2>
+    <p>Iron Vault requests no sensitive device permissions. Specifically, it does <strong>not</strong> access:</p>
+    <ul>
+      <li>Camera or microphone</li>
+      <li>Location services</li>
+      <li>Contacts or calendar</li>
+      <li>Files or photos outside the application sandbox</li>
+      <li>Device identifiers (IMEI, advertising ID, etc.)</li>
+      <li>Biometric or health data</li>
+    </ul>
+
+    <h2>5. Children's Privacy</h2>
+    <p>
+      Because we collect no data at all, Iron Vault is safe for users of all ages,
+      including children under 13 (COPPA) and under 16 (GDPR).
+      No parental consent is required for data processing, as no processing takes place.
+    </p>
+
+    <h2>6. Third-Party Services</h2>
+    <p>
+      Iron Vault integrates no third-party SDKs, advertising networks, crash reporters,
+      or analytics services. No data is shared with any third party.
+    </p>
+
+    <h2>7. Your Rights</h2>
+    <p>
+      Since we hold no personal data, there is nothing to access, correct, export,
+      or delete. No data subject request is necessary or applicable.
+    </p>
+
+    <h2>8. Changes to This Policy</h2>
+    <p>
+      If this policy is ever updated, the revised version will be published at this URL
+      with an updated "Last updated" date. Given the nature of the application,
+      we do not anticipate material changes.
+    </p>
+
+    <h2>9. Contact</h2>
+    <p>
+      If you have any questions about this Privacy Policy, you are welcome to open an
+      issue on the project repository:<br>
+      <a href="https://github.com/nevermorewd/IronVault" target="_blank" rel="noopener">
+        github.com/nevermorewd/IronVault
+      </a>
+    </p>
+  </div>
+
+  <footer>
+    &copy; 2026 Iron Vault &nbsp;|&nbsp;
+    <a href="./">Play the Game</a> &nbsp;|&nbsp;
+    This game is open-source software
+  </footer>
+
+</main>
+
+</body>
+</html>
