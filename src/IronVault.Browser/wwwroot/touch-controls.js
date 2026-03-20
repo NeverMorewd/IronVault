@@ -128,6 +128,17 @@
         setScreen(screen) {
             overlay.style.display = (screen === 'game') ? '' : 'none';
         },
+
+        /**
+         * Move the joystick knob to reflect the current touch displacement.
+         * Called every PointerMoved event from GameView.axaml.cs.
+         * @param {number} dx  horizontal offset from centre in CSS px (clamped)
+         * @param {number} dy  vertical offset from centre in CSS px (clamped)
+         */
+        setKnob(dx, dy) {
+            stickKnob.style.transform =
+                `translate(calc(-50% + ${dx.toFixed(1)}px), calc(-50% + ${dy.toFixed(1)}px))`;
+        },
     };
 
 })();

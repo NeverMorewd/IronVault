@@ -318,8 +318,15 @@ public partial class GameView : UserControl
     // The HTML overlay (touch-controls.js) shows decorative visuals on top
     // with pointer-events:none so all touches fall through to this handler.
 
-    private const double TouchZoneHeight = 220.0; // bottom px that act as controls
-    private const double StickDeadzone   = 18.0;  // px before direction registers
+    // Bottom portion of the viewport is the virtual control zone:
+    //   Left  half → 8-way joystick  (angle-mapped to Up/Down/Left/Right)
+    //   Right half → FIRE button
+    // The HTML overlay (touch-controls.js) renders decorative visuals with
+    // pointer-events:none so every touch falls through to this Avalonia handler.
+
+    private const double TouchZoneHeight = 220.0; // px from bottom that act as controls
+    private const double StickDeadzone   = 16.0;  // px dead-zone before direction registers
+    private const double KnobMaxTravel   = 43.0;  // px max knob displacement in the visual
 
     private int?  _stickPid;
     private Point _stickOrigin;
@@ -336,20 +343,25 @@ public partial class GameView : UserControl
     private void OnTouchPressed(object? sender, PointerPressedEventArgs e)
     {
         var pos = e.GetPosition(this);
-        // Only react inside the bottom touch-zone
+
+        // Only react inside the bottom control zone
         if (pos.Y <= Bounds.Height - TouchZoneHeight) return;
 
         if (pos.X < Bounds.Width / 2.0 && _stickPid == null)
         {
+            // Joystick: origin = first touch point (relative / floating joystick)
             _stickPid    = e.Pointer.Id;
-            _stickOrigin = pos;        // relative joystick: centre = first touch point
-            e.Handled    = true;
+            _stickOrigin = pos;
+            // Capture so PointerMoved keeps routing here even if finger slides out
+            e.Pointer.Capture(this);
+            e.Handled = true;
         }
         else if (pos.X >= Bounds.Width / 2.0 && _firePid == null)
         {
             _firePid             = e.Pointer.Id;
             TouchInputState.Fire = true;
-            e.Handled            = true;
+            e.Pointer.Capture(this);
+            e.Handled = true;
         }
     }
 
@@ -364,18 +376,23 @@ public partial class GameView : UserControl
 
         if (dist < StickDeadzone)
         {
-            // Inside dead-zone: stop moving but keep tracking
             TouchInputState.Up = TouchInputState.Down =
             TouchInputState.Left = TouchInputState.Right = false;
+            TouchInputState.KnobUpdated?.Invoke(0, 0);
             return;
         }
 
-        // 8-way mapping: atan2 returns -180..180 (Y grows downward → down = positive)
+        // 8-way mapping via atan2 (-180..180°; Y grows downward so down = positive)
         var a = Math.Atan2(dy, dx) * (180.0 / Math.PI);
         TouchInputState.Up    = a < -22.5  && a > -157.5;
         TouchInputState.Down  = a >  22.5  && a <  157.5;
         TouchInputState.Left  = a >  112.5 || a < -112.5;
         TouchInputState.Right = a > -67.5  && a <  67.5;
+
+        // Push clamped knob displacement to the JS visual
+        var ratio = Math.Min(dist, KnobMaxTravel) / dist;
+        TouchInputState.KnobUpdated?.Invoke(dx * ratio, dy * ratio);
+
         e.Handled = true;
     }
 
@@ -386,11 +403,15 @@ public partial class GameView : UserControl
             _stickPid = null;
             TouchInputState.Up = TouchInputState.Down =
             TouchInputState.Left = TouchInputState.Right = false;
+            TouchInputState.KnobUpdated?.Invoke(0, 0);
+            e.Pointer.Capture(null);
         }
+
         if (e.Pointer.Id == _firePid)
         {
             _firePid             = null;
             TouchInputState.Fire = false;
+            e.Pointer.Capture(null);
         }
     }
 }

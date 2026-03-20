@@ -5,7 +5,9 @@
              x:Class="IronVault.Views.GameView">
 
   <!-- Root: single grid, fills window; overlays sit on top at ZIndex 100 -->
-  <Grid>
+  <!-- Background="Transparent" is REQUIRED so Avalonia hit-tests empty space
+       (below the Viewbox) and routes PointerPressed to the touch-zone handler. -->
+  <Grid Background="Transparent">
 
     <!-- ── Main game area: Viewbox scales content down on narrow screens ── -->
     <!-- StretchDirection="DownOnly" keeps 1:1 on desktop, shrinks on mobile  -->

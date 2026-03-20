@@ -10,6 +10,16 @@ public static class TouchInputState
 {
     public static bool Up, Down, Left, Right, Fire;
 
+    /// <summary>
+    /// Optional callback set by the browser project to push knob position
+    /// updates back to the JS visual overlay (dx, dy in CSS pixels, clamped).
+    /// Null on desktop — no-op.
+    /// </summary>
+    public static Action<double, double>? KnobUpdated;
+
     public static void Reset()
-        => Up = Down = Left = Right = Fire = false;
+    {
+        Up = Down = Left = Right = Fire = false;
+        KnobUpdated?.Invoke(0, 0);
+    }
 }
