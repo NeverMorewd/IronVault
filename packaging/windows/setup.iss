@@ -85,3 +85,28 @@ Name: "{autodesktop}\{#AppName}";                 Filename: "{app}\{#AppExeName}
 Filename: "{app}\{#AppExeName}"; \
   Description: "{cm:LaunchProgram,{#AppName}}"; \
   Flags: nowait postinstall skipifsilent
+
+; ═══════════════════════════════════════════════════════════════════════════
+;  Exit-code mapping for Microsoft Store "standard installer" requirements.
+;
+;  Inno Setup built-in codes (cannot be overridden by GetCustomSetupExitCode):
+;    0  – success (or app already installed and re-install succeeded)
+;    1  – setup initialisation failed / another instance already running
+;    2  – user cancelled wizard BEFORE installation started
+;    4  – fatal error during installation (e.g. disk full mid-copy)
+;    5  – user cancelled DURING actual file installation
+;
+;  GetCustomSetupExitCode() lets us return custom codes when Inno would
+;  otherwise return 0.  We use it to emit the Windows-standard 3010
+;  (ERROR_SUCCESS_REBOOT_REQUIRED) so Microsoft can detect restart needs.
+; ═══════════════════════════════════════════════════════════════════════════
+[Code]
+// Called by Inno Setup when the installer would exit with 0 (success).
+// Return 3010 if the OS needs a reboot to finish applying the installation.
+function GetCustomSetupExitCode: Integer;
+begin
+  if NeedRestart() then
+    Result := 3010   // ERROR_SUCCESS_REBOOT_REQUIRED — standard Win32 code
+  else
+    Result := 0;
+end;
