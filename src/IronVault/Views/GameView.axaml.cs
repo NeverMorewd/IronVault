@@ -40,7 +40,7 @@ public partial class GameView : UserControl
         vm.Engine.HitOccurred      += (_, _) => RetroSound.PlayExplosion();
         vm.Engine.EnemyDestroyed   += (_, _) => RetroSound.PlayEnemyDestroyed();
         vm.Engine.PlayerHurt       += (_, _) => RetroSound.PlayPlayerHurt();
-        vm.Engine.PowerUpCollected += (_, _) => RetroSound.PlayPowerUp();
+        vm.Engine.PowerUpCollected += (_, type) => RetroSound.PlayPowerUp(type);
         GameCanvas.Attach(vm.Engine);
 
         // Status-bar icon buttons
@@ -263,6 +263,7 @@ public partial class GameView : UserControl
 
     private void ShowStageAnnouncement(int level)
     {
+        RetroSound.PlayStageStart();
         StageNumberText.Text = $"{I18n.T("level.stage")} {level}";
         StageSubText.Text    = I18n.FormatLevel(level);
         StageOverlay.IsVisible = true;

@@ -10,16 +10,17 @@ namespace IronVault.Browser.Audio;
 /// </summary>
 internal sealed partial class BrowserAudio : IBrowserAudio
 {
-    public void PlayClick()          => JsPlayClick();
-    public void PlayShoot()          => JsPlayShoot();
-    public void PlayExplosion()      => JsPlayExplosion();
-    public void PlayEnemyDestroyed() => JsPlayEnemyDestroyed();
-    public void PlayPlayerHurt()     => JsPlayPlayerHurt();
-    public void PlayGameOver()       => JsPlayGameOver();
-    public void PlayVictory()        => JsPlayVictory();
-    public void PlayPowerUp()        => JsPlayPowerUp();
-    public void StartMovement()      => JsStartMovement();
-    public void StopMovement()       => JsStopMovement();
+    public void PlayClick()              => JsPlayClick();
+    public void PlayShoot()              => JsPlayShoot();
+    public void PlayExplosion()          => JsPlayExplosion();
+    public void PlayEnemyDestroyed()     => JsPlayEnemyDestroyed();
+    public void PlayPlayerHurt()         => JsPlayPlayerHurt();
+    public void PlayGameOver()           => JsPlayGameOver();
+    public void PlayVictory()            => JsPlayVictory();
+    public void PlayStageStart()         => JsPlayStageStart();
+    public void PlayPowerUp(int typeId)  => JsPlayPowerUp(typeId);
+    public void StartMovement()          => JsStartMovement();
+    public void StopMovement()           => JsStopMovement();
 
     [JSImport("globalThis.IronVaultAudio.playClick")]
     private static partial void JsPlayClick();
@@ -42,8 +43,11 @@ internal sealed partial class BrowserAudio : IBrowserAudio
     [JSImport("globalThis.IronVaultAudio.playVictory")]
     private static partial void JsPlayVictory();
 
+    [JSImport("globalThis.IronVaultAudio.playStageStart")]
+    private static partial void JsPlayStageStart();
+
     [JSImport("globalThis.IronVaultAudio.playPowerUp")]
-    private static partial void JsPlayPowerUp();
+    private static partial void JsPlayPowerUp(int typeId);
 
     [JSImport("globalThis.IronVaultAudio.startMovement")]
     private static partial void JsStartMovement();

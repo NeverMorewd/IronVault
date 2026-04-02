@@ -3,70 +3,100 @@
              x:Class="IronVault.Views.LevelSelectView">
 
   <Grid Background="{DynamicResource PipboyBackgroundBrush}">
-    <ScrollViewer VerticalScrollBarVisibility="Auto"
-                  HorizontalScrollBarVisibility="Disabled">
-    <StackPanel VerticalAlignment="Center"
-                HorizontalAlignment="Center"
-                MaxWidth="640"
-                Margin="8,12,8,12"
-                Spacing="0">
+  <StackPanel VerticalAlignment="Center"
+              HorizontalAlignment="Center"
+              MaxWidth="720"
+              Margin="14,12,14,12"
+              Spacing="10">
 
-      <!-- ── Header ── -->
-      <Border Classes="pipboy-panel" Margin="0,0,0,10">
-        <StackPanel Spacing="4" HorizontalAlignment="Center">
+    <!-- ══ HEADER ═══════════════════════════════════════════════════════════ -->
+    <Border Classes="pipboy-panel">
+      <Grid ColumnDefinitions="*,Auto">
+
+        <StackPanel Grid.Column="0" Spacing="4">
           <TextBlock x:Name="SelectLabel"
                      Classes="h1"
-                     FontSize="20"
-                     HorizontalAlignment="Center" />
-          <TextBlock Text="━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+                     FontSize="18"
+                     LetterSpacing="2" />
+          <TextBlock Text="▌ 10 OPERATIONAL ZONES  ·  100 COMBAT SECTORS"
                      Classes="dim"
-                     FontSize="7"
-                     HorizontalAlignment="Center" />
+                     FontSize="9" />
           <TextBlock x:Name="HintText"
                      Classes="dim"
-                     FontSize="10"
-                     HorizontalAlignment="Center" />
+                     FontSize="9" />
         </StackPanel>
+
+        <!-- Back button anchored top-right -->
+        <Button x:Name="BackBtn"
+                Grid.Column="1"
+                Classes="ghost"
+                Padding="16,10"
+                VerticalAlignment="Center"
+                Margin="12,0,0,0">
+          <TextBlock x:Name="BackText" Classes="dim" FontSize="11" />
+        </Button>
+
+      </Grid>
+    </Border>
+
+    <!-- ══ TACTICAL MAP GRID ═════════════════════════════════════════════════ -->
+    <!-- Wrapped in a horizontal ScrollViewer so it stays usable on narrow screens -->
+    <ScrollViewer HorizontalScrollBarVisibility="Auto"
+                  VerticalScrollBarVisibility="Disabled">
+      <Border Classes="pipboy-panel" Padding="10">
+        <!-- Grid is built entirely in code-behind (BuildGrid).
+             Row 0 = column-number labels (1-10).
+             Col 0 = zone-letter labels (A-J).
+             Rows 1-10 × Cols 1-10 = level buttons. -->
+        <Grid x:Name="LevelGrid" HorizontalAlignment="Left" />
       </Border>
-
-      <!-- ── Level grid — 10 × 10, each slot 60 px (56 btn + 2 margin each side) ── -->
-      <Border Classes="pipboy-panel" Margin="0,0,0,10" Padding="10">
-        <WrapPanel x:Name="LevelGrid" />
-      </Border>
-
-      <!-- ── Selected level info + Deploy button ── -->
-      <Border Classes="pipboy-panel" Margin="0,0,0,10" Padding="14,10">
-        <Grid ColumnDefinitions="*,Auto">
-
-          <StackPanel Grid.Column="0" Spacing="2" VerticalAlignment="Center">
-            <TextBlock x:Name="StageNameText"
-                       FontSize="13"
-                       FontWeight="Bold" />
-            <TextBlock x:Name="ThemeNameText"
-                       Classes="dim"
-                       FontSize="10" />
-          </StackPanel>
-
-          <Button x:Name="DeployBtn"
-                  Grid.Column="1"
-                  Classes="accent"
-                  Padding="22,10"
-                  FontSize="13"
-                  VerticalAlignment="Center" />
-
-        </Grid>
-      </Border>
-
-      <!-- ── Back button ── -->
-      <Button x:Name="BackBtn"
-              HorizontalAlignment="Stretch"
-              HorizontalContentAlignment="Center"
-              Padding="10,8">
-        <TextBlock x:Name="BackText" Classes="dim" FontSize="11" />
-      </Button>
-
-    </StackPanel>
     </ScrollViewer>
+
+    <!-- ══ MISSION BRIEFING / DEPLOY ════════════════════════════════════════ -->
+    <Border Classes="pipboy-panel" Padding="14,12">
+      <Grid ColumnDefinitions="Auto,*,Auto">
+
+        <!-- Grid coordinate badge -->
+        <Border Grid.Column="0"
+                BorderBrush="{DynamicResource PipboyBorderBrush}"
+                BorderThickness="1"
+                Padding="10,6"
+                Margin="0,0,16,0"
+                VerticalAlignment="Center">
+          <StackPanel HorizontalAlignment="Center" Spacing="1">
+            <TextBlock Text="GRID"
+                       Classes="dim"
+                       FontSize="8"
+                       HorizontalAlignment="Center" />
+            <TextBlock x:Name="CoordText"
+                       FontSize="22"
+                       FontWeight="Bold"
+                       HorizontalAlignment="Center" />
+          </StackPanel>
+        </Border>
+
+        <!-- Stage name + theme -->
+        <StackPanel Grid.Column="1" Spacing="4" VerticalAlignment="Center">
+          <TextBlock x:Name="StageNameText"
+                     FontSize="15"
+                     FontWeight="Bold" />
+          <TextBlock x:Name="ThemeNameText"
+                     Classes="dim"
+                     FontSize="11" />
+        </StackPanel>
+
+        <!-- Deploy button -->
+        <Button x:Name="DeployBtn"
+                Grid.Column="2"
+                Classes="accent"
+                Padding="24,12"
+                FontSize="14"
+                VerticalAlignment="Center" />
+
+      </Grid>
+    </Border>
+
+  </StackPanel>
   </Grid>
 
 </UserControl>
