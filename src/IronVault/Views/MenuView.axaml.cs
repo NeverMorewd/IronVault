@@ -9,7 +9,7 @@ namespace IronVault.Views;
 
 public partial class MenuView : UserControl
 {
-    private AIDifficulty _difficulty = AIDifficulty.Normal;
+    private AIDifficulty _difficulty = AIDifficulty.Easy;
     private GameMode     _mode       = GameMode.Classic;
 
     /// <summary>Raised when the player clicks DEPLOY.</summary>
@@ -52,7 +52,7 @@ public partial class MenuView : UserControl
         I18n.LanguageChanged += RefreshText;
 
         RefreshText();
-        SetDifficulty(AIDifficulty.Normal);
+        SetDifficulty(AIDifficulty.Easy);
         SetMode(GameMode.Classic);
     }
 

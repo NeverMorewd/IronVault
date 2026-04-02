@@ -1,4 +1,4 @@
-using IronVault.Core.Engine.Components;
+﻿using IronVault.Core.Engine.Components;
 
 namespace IronVault.Core.Engine.Entities;
 
@@ -70,7 +70,10 @@ public sealed class TankEntity : EntityBase
     /// </summary>
     public static TankEntity CreateEnemy(TankTier tier, float x, float y)
     {
-        var e = new TankEntity(TankTeam.Enemy, tier, x, y);
+        var e = new TankEntity(TankTeam.Enemy, tier, x, y)
+        {
+            SpawnInvincibleTimer = 0f
+        };
         switch (tier)
         {
             case TankTier.Tier2:
