@@ -14,8 +14,8 @@ html, body {
   /* dvh accounts for iOS Safari / Android Chrome retractable browser chrome */
   height: 100dvh;
   overflow: hidden;
-  background: #0a0800;
-  color: #ffa500;
+  background: #000800;
+  color: #39ff14;
   font-family: Consolas, 'Courier New', monospace;
   /* Disable page-level touch gestures (scroll, zoom, swipe-back).
      Avalonia captures touches on the canvas; the JS overlay is pointer-
@@ -42,7 +42,7 @@ html, body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: #0a0800;
+  background: #000800;
   z-index: 9999;
   transition: opacity 0.5s ease;
 }
@@ -56,14 +56,14 @@ html, body {
   /* Scales gracefully between tiny phones and large tablets */
   font-size: clamp(1.4rem, 6vw, 2.5rem);
   font-weight: bold;
-  color: #ffa500;
+  color: #39ff14;
   letter-spacing: 0.4em;
-  text-shadow: 0 0 24px #ffa500;
+  text-shadow: 0 0 24px #39ff14, 0 0 48px #39ff1480;
 }
 
 .splash-subtitle {
   font-size: clamp(0.65rem, 2.5vw, 0.85rem);
-  color: #aa6000;
+  color: #1a9000;
   margin-top: 14px;
   letter-spacing: 0.25em;
 }

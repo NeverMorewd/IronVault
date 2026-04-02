@@ -15,7 +15,7 @@ public partial class App : Application
     public override void Initialize()
     {
         AvaloniaXamlLoader.Load(this);
-        PipboyThemeManager.Instance.SetPrimaryColor(Color.Parse("#FFA500"));
+        PipboyThemeManager.Instance.SetPrimaryColor(Color.Parse("#39FF14"));  // Pipboy phosphor green
     }
 
     public override void OnFrameworkInitializationCompleted()

@@ -3,8 +3,8 @@
                     xmlns:pipboy="clr-namespace:Pipboy.Avalonia;assembly=Pipboy.Avalonia"
                     x:Class="IronVault.MainWindow"
                     Title="IRON VAULT"
-                    Width="960" Height="750"
-                    MinWidth="760" MinHeight="750"
+                    Width="1024" Height="800"
+                    MinWidth="710" MinHeight="740"
                     WindowStartupLocation="CenterScreen">
   <!-- Content is set in code-behind from the DI container -->
 </pipboy:PipboyWindow>

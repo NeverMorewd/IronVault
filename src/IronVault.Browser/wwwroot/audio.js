@@ -62,14 +62,14 @@ window.IronVaultAudio = (() => {
         osc.stop(startTime + durationSec + 0.05);
     }
 
-    /** White-noise burst via AudioBuffer. */
-    function playNoise(durationSec, peakGain, lowHz) {
-        const actx      = getCtx();
+    /** White-noise burst via AudioBuffer, starting at an optional scheduled time. */
+    function playNoiseAt(startTime, durationSec, peakGain, lowHz) {
+        const actx       = getCtx();
         const sampleRate = actx.sampleRate;
         const length     = Math.floor(sampleRate * durationSec);
         const buffer     = actx.createBuffer(1, length, sampleRate);
         const data       = buffer.getChannelData(0);
-        for (let i = 0; i < length; i++) data[i] = (Math.random() * 2 - 1);
+        for (let i = 0; i < length; i++) data[i] = Math.random() * 2 - 1;
 
         const src  = actx.createBufferSource();
         src.buffer = buffer;
@@ -78,20 +78,25 @@ window.IronVaultAudio = (() => {
         const osc  = actx.createOscillator();
         const mix  = actx.createGain();
         const gain = actx.createGain();
-        osc.type           = 'sine';
+        osc.type            = 'sine';
         osc.frequency.value = lowHz;
-        mix.gain.value     = 0.45;   // noise share
-        gain.gain.setValueAtTime(peakGain, actx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.0001, actx.currentTime + durationSec);
+        mix.gain.value      = 0.45;
+        gain.gain.setValueAtTime(peakGain, startTime);
+        gain.gain.exponentialRampToValueAtTime(0.0001, startTime + durationSec);
 
         src.connect(mix);
         mix.connect(gain);
         osc.connect(gain);
         gain.connect(actx.destination);
 
-        src.start(actx.currentTime);
-        osc.start(actx.currentTime);
-        osc.stop(actx.currentTime + durationSec);
+        src.start(startTime);
+        osc.start(startTime);
+        osc.stop(startTime + durationSec);
+    }
+
+    /** White-noise burst (immediate). */
+    function playNoise(durationSec, peakGain, lowHz) {
+        playNoiseAt(getCtx().currentTime, durationSec, peakGain, lowHz);
     }
 
     // ── Public API ────────────────────────────────────────────────────────────
@@ -111,9 +116,29 @@ window.IronVaultAudio = (() => {
         playNoise(0.28, 0.50, 52);
     }
 
-    /** Enemy tank destroyed: heavier noise + 40 Hz thud, 400 ms */
+    /** Enemy tank destroyed: metallic clang + deep 35 Hz thud + secondary debris boom, 580 ms. */
     function playEnemyDestroyed() {
-        playNoise(0.40, 0.65, 40);
+        const actx = getCtx();
+        const t    = actx.currentTime;
+
+        // Main explosion: longer, louder, deeper thud (35 Hz)
+        playNoiseAt(t, 0.58, 0.82, 35);
+
+        // Metallic clang: 820 Hz decaying ring
+        const clangOsc  = actx.createOscillator();
+        const clangGain = actx.createGain();
+        clangOsc.connect(clangGain);
+        clangGain.connect(actx.destination);
+        clangOsc.type = 'sine';
+        clangOsc.frequency.setValueAtTime(820, t);
+        clangOsc.frequency.exponentialRampToValueAtTime(280, t + 0.028);
+        clangGain.gain.setValueAtTime(0.30, t);
+        clangGain.gain.exponentialRampToValueAtTime(0.0001, t + 0.030);
+        clangOsc.start(t);
+        clangOsc.stop(t + 0.032);
+
+        // Secondary debris boom at 185 ms
+        playNoiseAt(t + 0.185, 0.08, 0.40, 45);
     }
 
     /** Player hurt: 700 → 100 Hz square sweep, 160 ms */

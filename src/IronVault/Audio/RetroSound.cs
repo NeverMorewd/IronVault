@@ -171,25 +171,52 @@ internal static class RetroSound
     }
 
     /// <summary>
-    /// Enemy tank destroyed: deep 40 Hz thud + sharp crack at front, 400 ms, sqrt-decay.
-    /// Heavier than the bullet-hit explosion to mark a full tank kill.
+    /// Enemy tank destroyed: metallic clang + deep 35 Hz thud + crack burst + secondary debris boom.
+    /// Significantly heavier than the bullet-hit explosion to mark a full tank kill.
+    /// Duration: 580 ms.
     /// </summary>
     private static byte[] SynthEnemyDestroyed()
     {
-        int n   = Rate * 400 / 1000;
-        var buf = new byte[n * 2];
-        var rng = new Random(42);
+        int n           = Rate * 580 / 1000;
+        var buf         = new byte[n * 2];
+        var rng         = new Random(42);
+        int crackEnd    = Rate * 18  / 1000;   // sharp crack: first 18 ms
+        int clangEnd    = Rate * 28  / 1000;   // metallic ring: first 28 ms
+        int boom2Start  = Rate * 185 / 1000;   // secondary debris thud: 185 ms
+        int boom2End    = Rate * 265 / 1000;
+
         for (int i = 0; i < n; i++)
         {
             double t     = (double)i / n;
-            double amp   = Math.Pow(1 - t, 0.35) * 0.95;
+            double amp   = Math.Pow(1 - t, 0.28) * 1.0;  // slow decay = long tail
+
             double noise = rng.NextDouble() * 2 - 1;
-            double thud  = Math.Sin(2 * Math.PI * 40 * i / Rate);
-            // Brief high crack in first 20 ms
-            double crack = i < Rate * 20 / 1000
-                           ? (rng.NextDouble() * 2 - 1) * 0.35
+            double thud  = Math.Sin(2 * Math.PI * 35 * i / Rate);   // deep 35 Hz (was 40 Hz)
+            double thud2 = Math.Sin(2 * Math.PI * 58 * i / Rate);   // harmonic overtone
+
+            // Initial crack: wide-band noise burst, louder than before
+            double crack = i < crackEnd
+                           ? (rng.NextDouble() * 2 - 1) * 0.60
                            : 0;
-            Write16(buf, i, (noise * 0.45 + thud * 0.55 + crack) * amp);
+
+            // Metallic clang: decaying high-freq ring (820 Hz → damps out)
+            double clang = i < clangEnd
+                           ? Math.Sin(2 * Math.PI * 820 * i / Rate)
+                             * (1.0 - (double)i / clangEnd) * 0.32
+                           : 0;
+
+            // Secondary debris boom: noise + lighter thud at 185 ms
+            double boom2 = 0;
+            if (i >= boom2Start && i < boom2End)
+            {
+                double rt = (double)(i - boom2Start) / (boom2End - boom2Start);
+                boom2 = ((rng.NextDouble() * 2 - 1) * Math.Pow(1 - rt, 0.5) * 0.38
+                        + Math.Sin(2 * Math.PI * 45 * i / Rate) * (1 - rt) * 0.28);
+            }
+
+            double sample = (noise * 0.32 + thud * 0.38 + thud2 * 0.12
+                             + crack + clang + boom2) * amp;
+            Write16(buf, i, sample);
         }
         return buf;
     }

@@ -121,13 +121,13 @@
                            ScanBeamSpeed="75"
                            EnableScanBeamGradient="True"
                            EnableNoise="True"
-                           NoiseDensity="0.006"
-                           NoiseOpacity="0.045"
+                           NoiseDensity="0.008"
+                           NoiseOpacity="0.055"
                            NoisePixelSize="1"
-                           NoiseRefreshIntervalMs="60"
+                           NoiseRefreshIntervalMs="55"
                            EnableVignette="True"
-                           VignetteIntensity="0.28"
-                           EnableFlicker="False">
+                           VignetteIntensity="0.32"
+                           EnableFlicker="True">
           <renderer:GameCanvas x:Name="GameCanvas" />
         </pipboy:CrtDisplay>
       </Border>
