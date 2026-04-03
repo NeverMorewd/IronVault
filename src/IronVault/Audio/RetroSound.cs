@@ -65,11 +65,12 @@ internal static class RetroSound
         if (BrowserBackend != null) { BrowserBackend.PlayPowerUp((int)type); return; }
         var buf = type switch
         {
-            PowerUpType.Star    => _powerUpStar,
-            PowerUpType.Life    => _powerUpLife,
-            PowerUpType.Clock   => _powerUpClock,
-            PowerUpType.Shield  => _powerUpShield,
-            _                   => _powerUpDefault,
+            PowerUpType.Star      => _powerUpStar,
+            PowerUpType.Life      => _powerUpLife,
+            PowerUpType.AllyTank  => _powerUpLife,  // warm ascending call
+            PowerUpType.Clock     => _powerUpClock,
+            PowerUpType.Shield    => _powerUpShield,
+            _                     => _powerUpDefault,
         };
         TryPlayWav(buf);
     }

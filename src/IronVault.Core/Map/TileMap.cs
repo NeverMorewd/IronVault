@@ -182,6 +182,112 @@ public sealed class TileMap
         return map;
     }
 
+    /// <summary>
+    /// Specially designed defense-mode map.
+    ///
+    /// Layout concept:
+    ///   • Upper zone (rows 1-10)  — enemy territory with brick cover
+    ///   • Castle wall  (rows 11-12) — double-height steel barrier spanning the full width,
+    ///     with three 2-tile chokepoints: LEFT (cols 5-6), CENTRE (cols 13-14), RIGHT (cols 22-23)
+    ///   • Lower zone (rows 13-27) — player manoeuvre space, open lanes and base protection
+    /// </summary>
+    public static TileMap CreateDefenseMap()
+    {
+        var map = new TileMap();
+
+        // ── Steel border ──────────────────────────────────────────────────────
+        for (int c = 0; c < DefaultCols; c++)
+        {
+            map[c, 0]               = TileType.Steel;
+            map[c, DefaultRows - 1] = TileType.Steel;
+        }
+        for (int r = 0; r < DefaultRows; r++)
+        {
+            map[0, r]               = TileType.Steel;
+            map[DefaultCols - 1, r] = TileType.Steel;
+        }
+
+        // ── Enemy spawn points (row 1, standard positions) ───────────────────
+        map[ 4, 1] = TileType.Spawn;
+        map[10, 1] = TileType.Spawn;
+        map[18, 1] = TileType.Spawn;
+        map[23, 1] = TileType.Spawn;
+        // Spawn zones clear (rows 2-3 must be passable for SpawnIsUsable)
+
+        // ── Upper zone brick cover (rows 4-10) ───────────────────────────────
+        // Rows 4-5: flanking blocks force enemies toward the three gates
+        FillRect(map,  2, 4, 2, 2, TileType.Brick);   // cols  2-3
+        FillRect(map,  8, 4, 2, 2, TileType.Brick);   // cols  8-9
+        FillRect(map, 15, 4, 2, 2, TileType.Brick);   // cols 15-16
+        FillRect(map, 20, 4, 2, 2, TileType.Brick);   // cols 20-21
+        FillRect(map, 25, 4, 1, 2, TileType.Brick);   // col  25
+
+        // Rows 6-7: forest ambush cover flanking the centre gate
+        FillRect(map,  9, 6, 2, 2, TileType.Forest);  // cols  9-10
+        FillRect(map, 16, 6, 2, 2, TileType.Forest);  // cols 16-17
+
+        // Rows 8-10: brick funnels leading enemies into the gate mouths
+        FillRect(map,  2, 8, 2, 3, TileType.Brick);   // cols  2-3
+        FillRect(map,  7, 8, 2, 2, TileType.Brick);   // cols  7-8
+        FillRect(map, 11, 9, 2, 2, TileType.Brick);   // cols 11-12  (centre-left approach)
+        FillRect(map, 15, 9, 2, 2, TileType.Brick);   // cols 15-16  (centre-right approach)
+        FillRect(map, 19, 8, 2, 2, TileType.Brick);   // cols 19-20
+        FillRect(map, 24, 8, 2, 3, TileType.Brick);   // cols 24-25
+
+        // ── CASTLE WALL (rows 11-12) ──────────────────────────────────────────
+        // Full-width steel, three 2-tile chokepoints: cols 5-6, 13-14, 22-23
+        for (int c = 1; c < DefaultCols - 1; c++)
+        {
+            bool isGap = (c == 5 || c == 6)    // left gate
+                      || (c == 13 || c == 14)  // centre gate
+                      || (c == 22 || c == 23); // right gate
+            if (!isGap)
+            {
+                map[c, 11] = TileType.Steel;
+                map[c, 12] = TileType.Steel;
+            }
+        }
+
+        // ── Lower zone — player defence area (rows 13-20) ────────────────────
+        // Side cover blocks near the left/right gates
+        FillRect(map,  2, 14, 2, 3, TileType.Brick);  // cols  2-3
+        FillRect(map,  7, 15, 2, 2, TileType.Brick);  // cols  7-8
+        FillRect(map, 19, 15, 2, 2, TileType.Brick);  // cols 19-20
+        FillRect(map, 24, 14, 2, 3, TileType.Brick);  // cols 24-25
+
+        // Ice corridors near the three gate exits — enemies slide through faster,
+        // forcing the player to anticipate rather than camp the chokepoints
+        FillRect(map,  4, 13, 3, 2, TileType.Ice);    // cols  4-6  rows 13-14
+        FillRect(map, 12, 13, 4, 3, TileType.Ice);    // cols 12-15 rows 13-15 (centre)
+        FillRect(map, 21, 13, 3, 2, TileType.Ice);    // cols 21-23 rows 13-14
+
+        // ── Channel walls flanking the base approach ──────────────────────────
+        for (int r = 17; r <= 20; r++)
+        {
+            map[11, r] = TileType.Brick;
+            map[16, r] = TileType.Brick;
+        }
+        for (int r = 21; r <= 24; r++)
+        {
+            map[12, r] = TileType.Brick;
+            map[16, r] = TileType.Brick;
+        }
+
+        // ── Base protection and Eagle ─────────────────────────────────────────
+        int mid = DefaultCols / 2;  // 14
+        map[mid - 1, DefaultRows - 4] = TileType.Brick; // col 13, row 24
+        map[mid,     DefaultRows - 4] = TileType.Brick; // col 14, row 24
+        map[mid + 1, DefaultRows - 4] = TileType.Brick; // col 15, row 24
+        map[mid - 1, DefaultRows - 3] = TileType.Brick; // col 13, row 25
+        map[mid + 1, DefaultRows - 3] = TileType.Brick; // col 15, row 25
+        map[mid,     DefaultRows - 3] = TileType.Base;  // col 14, row 25 ← Eagle
+        map[mid - 1, DefaultRows - 2] = TileType.Brick; // col 13, row 26
+        map[mid,     DefaultRows - 2] = TileType.Brick; // col 14, row 26
+        map[mid + 1, DefaultRows - 2] = TileType.Brick; // col 15, row 26
+
+        return map;
+    }
+
     private static void FillRect(TileMap map, int col, int row, int w, int h, TileType type)
     {
         for (int r = row; r < row + h && r < map.Rows; r++)

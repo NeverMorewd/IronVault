@@ -3,6 +3,8 @@
              x:Class="IronVault.Views.LevelSelectView">
 
   <Grid Background="{DynamicResource PipboyBackgroundBrush}">
+  <ScrollViewer VerticalScrollBarVisibility="Auto"
+                HorizontalScrollBarVisibility="Disabled">
   <StackPanel VerticalAlignment="Center"
               HorizontalAlignment="Center"
               MaxWidth="720"
@@ -23,7 +25,8 @@
                      FontSize="9" />
           <TextBlock x:Name="HintText"
                      Classes="dim"
-                     FontSize="9" />
+                     FontSize="9"
+                     TextWrapping="Wrap" />
         </StackPanel>
 
         <!-- Back button anchored top-right -->
@@ -88,7 +91,7 @@
         <!-- Deploy button -->
         <Button x:Name="DeployBtn"
                 Grid.Column="2"
-                Classes="accent"
+                Classes="deploy"
                 Padding="24,12"
                 FontSize="14"
                 VerticalAlignment="Center" />
@@ -97,6 +100,7 @@
     </Border>
 
   </StackPanel>
+  </ScrollViewer>
   </Grid>
 
 </UserControl>

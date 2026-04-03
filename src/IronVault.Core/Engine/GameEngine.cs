@@ -77,6 +77,8 @@ public sealed class GameEngine
     public event EventHandler?              PlayerHurt;
     /// <summary>Fired when the player picks up a power-up. Parameter = the type collected.</summary>
     public event EventHandler<PowerUpType>? PowerUpCollected;
+    /// <summary>Fired when an ally tank is successfully spawned on the map.</summary>
+    public event EventHandler? AllySpawned;
 
     // ── Player ───────────────────────────────────────────────────────────────
     public TankEntity? Player { get; private set; }
@@ -123,9 +125,8 @@ public sealed class GameEngine
         _maxSimultaneousEnemies = _currentScript.MaxSimultaneous;
         _spawnTimer             = 0;
 
-        // Reward: grant an ally tank if the script asks for it
-        if (_currentScript.GrantsAlly)
-            SpawnAllyReward();
+        // Reward: drop an ally power-up on the map for the player to collect
+        SpawnAllyPowerUp();
 
         State = GameState.Playing;
         StateChanged?.Invoke(this, State);
@@ -205,7 +206,9 @@ public sealed class GameEngine
 
     private void Reset()
     {
-        Map                     = MapLibrary.CreateLevel(Level);
+        Map                     = Mode == GameMode.Defense
+                                    ? TileMap.CreateDefenseMap()
+                                    : MapLibrary.CreateLevel(Level);
         Tanks.Clear();
         Bullets.Clear();
         Explosions.Clear();
@@ -244,13 +247,45 @@ public sealed class GameEngine
 
     private void SpawnAllyReward()
     {
-        // Ally at col 10, row 21 — left of the inner channel walls (col 12 wall starts at row 21)
-        int   midCol = Map.Cols / 2;
-        float ax     = (midCol - 4) * TileMap.TileSize;  // col 10 → 240 px
-        float ay     = 21 * TileMap.TileSize;
-        var   ally   = TankEntity.CreateAlly(ax, ay);
+        // Search for a clear tile in the lower-left quadrant near the player base.
+        // Priority: columns 6-12, rows 18-23 (left of the player spawn channel).
+        int midCol = Map.Cols / 2;  // 14 for a 28-col map
+        int[] searchCols = [midCol - 4, midCol - 3, midCol - 5, midCol - 6, midCol - 7, midCol - 2];
+        int[] searchRows = [21, 20, 22, 19, 23, 18];
+
+        foreach (int r in searchRows)
+        foreach (int c in searchCols)
+        {
+            if (c < 0 || c >= Map.Cols || r < 0 || r >= Map.Rows) continue;
+            float ax = c * TileMap.TileSize;
+            float ay = r * TileMap.TileSize;
+            if (!TankFootprintClear(ax, ay)) continue;
+
+            float minDist = TankEntity.Size * 2f;
+            bool blocked = false;
+            foreach (var t in Tanks)
+            {
+                if (!t.IsAlive) continue;
+                if (MathF.Abs(ax - t.Position.X) < minDist &&
+                    MathF.Abs(ay - t.Position.Y) < minDist)
+                { blocked = true; break; }
+            }
+            if (blocked) continue;
+
+            SpawnAllyAt(ax, ay);
+            return;
+        }
+
+        // Fallback: spawn at default position if nothing else is clear
+        SpawnAllyAt((midCol - 4) * TileMap.TileSize, 21 * TileMap.TileSize);
+    }
+
+    private void SpawnAllyAt(float ax, float ay)
+    {
+        var ally = TankEntity.CreateAlly(ax, ay);
         ally.Position.Facing = Components.Direction.Up;
         Tanks.Add(ally);
+        AllySpawned?.Invoke(this, EventArgs.Empty);
     }
 
     private void UpdateWaveSpawn(float dt)
@@ -397,11 +432,54 @@ public sealed class GameEngine
 
     // ── Power-up spawning ─────────────────────────────────────────────────────
 
+    // AllyTank is never a random drop — it is only awarded as a wave reward.
+    private static readonly PowerUpType[] RandomPowerUpPool =
+        Enum.GetValues<PowerUpType>().Where(t => t != PowerUpType.AllyTank).ToArray();
+
     private void SpawnPowerUp(float x, float y)
     {
-        var types = Enum.GetValues<PowerUpType>();
-        var type  = types[_rng.Next(types.Length)];
+        var type = RandomPowerUpPool[_rng.Next(RandomPowerUpPool.Length)];
         PowerUps.Add(new PowerUpEntity { X = x, Y = y, Type = type });
+    }
+
+    /// <summary>
+    /// Spawns an AllyTank power-up on a random passable tile in the player's half
+    /// of the map so the player can drive over it to summon a wingman.
+    /// </summary>
+    private void SpawnAllyPowerUp()
+    {
+        int halfRow = Map.Rows / 2;  // row 14 for a 28-row map
+
+        for (int attempt = 0; attempt < 80; attempt++)
+        {
+            int c = 2 + _rng.Next(Map.Cols - 4);      // cols 2..Cols-3
+            int r = halfRow + _rng.Next(Map.Rows - halfRow - 5); // lower half, avoid base
+            if (!Map.IsPassable(c, r)) continue;
+
+            // Keep clear of player and existing power-ups
+            float px = c * TileMap.TileSize;
+            float py = r * TileMap.TileSize;
+            bool blocked = false;
+            foreach (var t in Tanks)
+            {
+                if (!t.IsAlive) continue;
+                if (MathF.Abs(px - t.Position.X) < TankEntity.Size * 2 &&
+                    MathF.Abs(py - t.Position.Y) < TankEntity.Size * 2)
+                { blocked = true; break; }
+            }
+            if (blocked) continue;
+
+            PowerUps.Add(new PowerUpEntity { X = px, Y = py, Type = PowerUpType.AllyTank });
+            return;
+        }
+
+        // Fallback: left side of player spawn row
+        PowerUps.Add(new PowerUpEntity
+        {
+            X = 8 * TileMap.TileSize,
+            Y = 19 * TileMap.TileSize,
+            Type = PowerUpType.AllyTank,
+        });
     }
 
     // ── Power-up effect application ───────────────────────────────────────────
@@ -459,6 +537,11 @@ public sealed class GameEngine
             case PowerUpType.Life:
                 // Extra life (capped at 5)
                 Lives = Math.Min(5, Lives + 1);
+                break;
+
+            case PowerUpType.AllyTank:
+                // Summon an ally tank immediately at the best available position
+                SpawnAllyReward();
                 break;
         }
     }

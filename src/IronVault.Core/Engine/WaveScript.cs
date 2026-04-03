@@ -24,7 +24,7 @@ public sealed class WaveScript
 
     public static WaveScript ForWave(int wave) => wave switch
     {
-        1 => new() { Wave = 1,  TotalEnemies = 20, MaxSimultaneous = 4, GrantsAlly = false, TierWeights = [70, 30,  0,  0] },
+        1 => new() { Wave = 1,  TotalEnemies = 20, MaxSimultaneous = 4, GrantsAlly = true,  TierWeights = [70, 30,  0,  0] },
         2 => new() { Wave = 2,  TotalEnemies = 22, MaxSimultaneous = 4, GrantsAlly = false, TierWeights = [50, 40, 10,  0] },
         3 => new() { Wave = 3,  TotalEnemies = 24, MaxSimultaneous = 5, GrantsAlly = true,  TierWeights = [30, 40, 20, 10] },
         4 => new() { Wave = 4,  TotalEnemies = 26, MaxSimultaneous = 5, GrantsAlly = false, TierWeights = [20, 30, 30, 20] },

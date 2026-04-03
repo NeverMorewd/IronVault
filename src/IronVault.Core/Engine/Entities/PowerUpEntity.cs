@@ -9,6 +9,7 @@ public enum PowerUpType : byte
     Clock,      // Freeze all enemies
     Shovel,     // Temporarily upgrade base walls to steel
     Life,       // Extra life
+    AllyTank,   // Summon an ally tank — not a random drop, awarded after each wave
 }
 
 public sealed class PowerUpEntity : EntityBase

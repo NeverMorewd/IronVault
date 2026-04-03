@@ -213,6 +213,12 @@ window.IronVaultAudio = (() => {
                 scheduleNote(196.0, t + 0.00, 0.13, 0.44);
                 scheduleNote(261.6, t + 0.14, 0.18, 0.50);
                 break;
+            case 7: // AllyTank — warm ascending call (same feel as Life)
+                scheduleNote(261.6, t + 0.00, 0.10, 0.40);  // C4
+                scheduleNote(329.6, t + 0.12, 0.10, 0.44);  // E4
+                scheduleNote(392.0, t + 0.24, 0.10, 0.48);  // G4
+                scheduleNote(523.3, t + 0.36, 0.20, 0.56);  // C5
+                break;
             default: // BulletSpeed / ExtraBullet / Shovel — default chime
                 scheduleNote(523.3, t + 0.00, 0.08, 0.40);  // C5
                 scheduleNote(659.3, t + 0.10, 0.10, 0.46);  // E5

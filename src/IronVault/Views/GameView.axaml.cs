@@ -20,8 +20,14 @@ public partial class GameView : UserControl
     // Tracks whether an overlay auto-paused the game so we can resume on close.
     private bool _pausedByOverlay;
 
+    // Track previous engine state to guard against false stage-announcement triggers.
+    private GameState _prevEngineState = GameState.NotStarted;
+
     // Stage announcement timer
     private DispatcherTimer? _stageTimer;
+
+    // Ally announcement timer
+    private DispatcherTimer? _allyTimer;
 
     /// <summary>Raised when the player confirms returning to the main menu.</summary>
     public event EventHandler? MenuRequested;
@@ -41,6 +47,7 @@ public partial class GameView : UserControl
         vm.Engine.EnemyDestroyed   += (_, _) => RetroSound.PlayEnemyDestroyed();
         vm.Engine.PlayerHurt       += (_, _) => RetroSound.PlayPlayerHurt();
         vm.Engine.PowerUpCollected += (_, type) => RetroSound.PlayPowerUp(type);
+        vm.Engine.AllySpawned      += (_, _) => ShowAllyAnnouncement();
         GameCanvas.Attach(vm.Engine);
 
         // Status-bar icon buttons
@@ -143,6 +150,7 @@ public partial class GameView : UserControl
         ScoreLabel.Text        = I18n.T("hud.score");
         LivesLabel.Text        = I18n.T("hud.lives");
         EnemiesLabel.Text      = I18n.T("hud.enemies");
+        AllyLabel.Text         = I18n.T("hud.ally");
         ArmorLabel.Text        = I18n.T("hud.armor");
         EffectsLabel.Text      = I18n.T("hud.effects");
         ControlsLabel.Text     = I18n.T("hud.controls");
@@ -160,6 +168,9 @@ public partial class GameView : UserControl
         StartButton.Content = _vm.Engine.State != GameState.NotStarted
             ? I18n.T("btn.redeploy")
             : I18n.T("btn.deploy");
+
+        AllyTitleText.Text = I18n.T("ally.title");
+        AllySubText.Text   = I18n.T("ally.sub");
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────
@@ -168,6 +179,8 @@ public partial class GameView : UserControl
     {
         RetroSound.StopMovement();
         _vm.Stop();
+        // Reset prev-state so stage announcement fires correctly on the new game.
+        _prevEngineState = GameState.NotStarted;
         _vm.StartGame();
         _pausedByOverlay          = false;
         SettingsOverlay.IsVisible = false;
@@ -219,6 +232,11 @@ public partial class GameView : UserControl
         LivesText.Text   = new string('I', Math.Max(0, eng.Lives));
         EnemiesText.Text = eng.EnemiesLeft.ToString("D2");
 
+        int allies = 0;
+        foreach (var t in eng.Tanks)
+            if (t.Team == TankTeam.Ally && t.IsAlive) allies++;
+        AllyText.Text = allies > 0 ? allies.ToString() : "-";
+
         if (eng.Player is { } p && p.Health is { } hp)
         {
             HpBar.Maximum      = hp.Max;
@@ -246,17 +264,23 @@ public partial class GameView : UserControl
 
     private void OnStateChanged(object? sender, GameState state)
     {
-        if (state is GameState.GameOver or GameState.Victory or GameState.WaveComplete)
+        // Once the game has ever started, the button is always "REDEPLOY / 再战".
+        if (state != GameState.NotStarted)
             StartButton.Content = I18n.T("btn.redeploy");
 
         if (state != GameState.Playing)
             RetroSound.StopMovement();
 
-        if (state == GameState.Playing && _vm.Engine.Wave == 1)
+        // Show stage announcement only on true wave-1 starts, never on resume-from-pause.
+        if (state == GameState.Playing
+            && _prevEngineState != GameState.Paused
+            && _vm.Engine.Wave == 1)
             ShowStageAnnouncement(_vm.Engine.Level);
 
         if (state == GameState.GameOver) RetroSound.PlayGameOver();
         if (state == GameState.Victory)  RetroSound.PlayVictory();
+
+        _prevEngineState = state;
     }
 
     // ── Stage announcement ────────────────────────────────────────────────────
@@ -276,6 +300,23 @@ public partial class GameView : UserControl
                 _stageTimer?.Stop();
             });
         _stageTimer.Start();
+    }
+
+    private void ShowAllyAnnouncement()
+    {
+        RetroSound.PlayPowerUp(PowerUpType.Life);
+        AllyTitleText.Text = I18n.T("ally.title");
+        AllySubText.Text   = I18n.T("ally.sub");
+        AllyOverlay.IsVisible = true;
+
+        _allyTimer?.Stop();
+        _allyTimer = new DispatcherTimer(TimeSpan.FromSeconds(2.0), DispatcherPriority.Normal,
+            (_, _) =>
+            {
+                AllyOverlay.IsVisible = false;
+                _allyTimer?.Stop();
+            });
+        _allyTimer.Start();
     }
 
     private void OnScoreChanged(object? sender, int score)
