@@ -1,4 +1,5 @@
 using System.Runtime.InteropServices;
+using IronVault.Core.Engine.Entities;
 
 namespace IronVault.Audio;
 
@@ -20,16 +21,22 @@ internal static class RetroSound
 
     // ── Pre-built buffers (synthesised once at class load) ────────────────────
     // One-shots are wrapped in a WAV container so PlaySound can consume them.
-    private static readonly byte[] _click           = WrapWav(SynthClick());
-    private static readonly byte[] _shoot           = WrapWav(SynthShoot());
-    private static readonly byte[] _explosion       = WrapWav(SynthExplosion());
-    private static readonly byte[] _enemyDestroyed  = WrapWav(SynthEnemyDestroyed());
-    private static readonly byte[] _playerHurt      = WrapWav(SynthPlayerHurt());
-    private static readonly byte[] _gameOver        = WrapWav(SynthGameOver());
-    private static readonly byte[] _victory         = WrapWav(SynthVictory());
-    private static readonly byte[] _powerUp         = WrapWav(SynthPowerUp());
+    private static readonly byte[] _click              = WrapWav(SynthClick());
+    private static readonly byte[] _shoot              = WrapWav(SynthShoot());
+    private static readonly byte[] _explosion          = WrapWav(SynthExplosion());
+    private static readonly byte[] _enemyDestroyed     = WrapWav(SynthEnemyDestroyed());
+    private static readonly byte[] _playerHurt         = WrapWav(SynthPlayerHurt());
+    private static readonly byte[] _gameOver           = WrapWav(SynthGameOver());
+    private static readonly byte[] _victory            = WrapWav(SynthVictory());
+    private static readonly byte[] _stageStart         = WrapWav(SynthStageStart());
+    // Per-type power-up sounds
+    private static readonly byte[] _powerUpDefault     = WrapWav(SynthPowerUpDefault());
+    private static readonly byte[] _powerUpStar        = WrapWav(SynthPowerUpStar());
+    private static readonly byte[] _powerUpLife        = WrapWav(SynthPowerUpLife());
+    private static readonly byte[] _powerUpClock       = WrapWav(SynthPowerUpClock());
+    private static readonly byte[] _powerUpShield      = WrapWav(SynthPowerUpShield());
     // Movement is raw PCM fed directly to waveOut (no WAV header needed).
-    private static readonly byte[] _movement        = SynthMovement();
+    private static readonly byte[] _movement           = SynthMovement();
 
     // ── Browser audio backend (injected by IronVault.Browser at startup) ───────
     internal static IBrowserAudio? BrowserBackend;
@@ -52,10 +59,27 @@ internal static class RetroSound
         TryPlayWav(_explosion);
     }
 
-    public static void PlayPowerUp()
+    /// <summary>Play a sound matched to the collected power-up type.</summary>
+    public static void PlayPowerUp(PowerUpType type = PowerUpType.BulletSpeed)
     {
-        if (BrowserBackend != null) { BrowserBackend.PlayPowerUp(); return; }
-        TryPlayWav(_powerUp);
+        if (BrowserBackend != null) { BrowserBackend.PlayPowerUp((int)type); return; }
+        var buf = type switch
+        {
+            PowerUpType.Star      => _powerUpStar,
+            PowerUpType.Life      => _powerUpLife,
+            PowerUpType.AllyTank  => _powerUpLife,  // warm ascending call
+            PowerUpType.Clock     => _powerUpClock,
+            PowerUpType.Shield    => _powerUpShield,
+            _                     => _powerUpDefault,
+        };
+        TryPlayWav(buf);
+    }
+
+    /// <summary>Battle-City-inspired stage intro jingle.</summary>
+    public static void PlayStageStart()
+    {
+        if (BrowserBackend != null) { BrowserBackend.PlayStageStart(); return; }
+        TryPlayWav(_stageStart);
     }
 
     public static void PlayEnemyDestroyed()
@@ -171,25 +195,52 @@ internal static class RetroSound
     }
 
     /// <summary>
-    /// Enemy tank destroyed: deep 40 Hz thud + sharp crack at front, 400 ms, sqrt-decay.
-    /// Heavier than the bullet-hit explosion to mark a full tank kill.
+    /// Enemy tank destroyed: metallic clang + deep 35 Hz thud + crack burst + secondary debris boom.
+    /// Significantly heavier than the bullet-hit explosion to mark a full tank kill.
+    /// Duration: 580 ms.
     /// </summary>
     private static byte[] SynthEnemyDestroyed()
     {
-        int n   = Rate * 400 / 1000;
-        var buf = new byte[n * 2];
-        var rng = new Random(42);
+        int n           = Rate * 580 / 1000;
+        var buf         = new byte[n * 2];
+        var rng         = new Random(42);
+        int crackEnd    = Rate * 18  / 1000;   // sharp crack: first 18 ms
+        int clangEnd    = Rate * 28  / 1000;   // metallic ring: first 28 ms
+        int boom2Start  = Rate * 185 / 1000;   // secondary debris thud: 185 ms
+        int boom2End    = Rate * 265 / 1000;
+
         for (int i = 0; i < n; i++)
         {
             double t     = (double)i / n;
-            double amp   = Math.Pow(1 - t, 0.35) * 0.95;
+            double amp   = Math.Pow(1 - t, 0.28) * 1.0;  // slow decay = long tail
+
             double noise = rng.NextDouble() * 2 - 1;
-            double thud  = Math.Sin(2 * Math.PI * 40 * i / Rate);
-            // Brief high crack in first 20 ms
-            double crack = i < Rate * 20 / 1000
-                           ? (rng.NextDouble() * 2 - 1) * 0.35
+            double thud  = Math.Sin(2 * Math.PI * 35 * i / Rate);   // deep 35 Hz (was 40 Hz)
+            double thud2 = Math.Sin(2 * Math.PI * 58 * i / Rate);   // harmonic overtone
+
+            // Initial crack: wide-band noise burst, louder than before
+            double crack = i < crackEnd
+                           ? (rng.NextDouble() * 2 - 1) * 0.60
                            : 0;
-            Write16(buf, i, (noise * 0.45 + thud * 0.55 + crack) * amp);
+
+            // Metallic clang: decaying high-freq ring (820 Hz → damps out)
+            double clang = i < clangEnd
+                           ? Math.Sin(2 * Math.PI * 820 * i / Rate)
+                             * (1.0 - (double)i / clangEnd) * 0.32
+                           : 0;
+
+            // Secondary debris boom: noise + lighter thud at 185 ms
+            double boom2 = 0;
+            if (i >= boom2Start && i < boom2End)
+            {
+                double rt = (double)(i - boom2Start) / (boom2End - boom2Start);
+                boom2 = ((rng.NextDouble() * 2 - 1) * Math.Pow(1 - rt, 0.5) * 0.38
+                        + Math.Sin(2 * Math.PI * 45 * i / Rate) * (1 - rt) * 0.28);
+            }
+
+            double sample = (noise * 0.32 + thud * 0.38 + thud2 * 0.12
+                             + crack + clang + boom2) * amp;
+            Write16(buf, i, sample);
         }
         return buf;
     }
@@ -215,36 +266,45 @@ internal static class RetroSound
     }
 
     /// <summary>
-    /// Game-over: descending three-note dirge G4 → E4 → C4 → G3 (~900 ms total).
+    /// Game-over: deep opening hit + descending minor dirge (~1 200 ms total).
     /// </summary>
     private static byte[] SynthGameOver()
     {
-        // note durations and frequencies
         var pcm = Concat(
-            SynthNote(392.0, 200, 0.70),   // G4
+            SynthNote(130.8, 90,  0.55),   // C3 — deep opening boom
+            Silence(20),
+            SynthNote(392.0, 230, 0.72),   // G4
             Silence(40),
-            SynthNote(329.6, 200, 0.65),   // E4
+            SynthNote(329.6, 230, 0.67),   // E4
             Silence(40),
-            SynthNote(261.6, 220, 0.60),   // C4
+            SynthNote(261.6, 250, 0.62),   // C4
             Silence(40),
-            SynthNote(196.0, 300, 0.55)    // G3 — long final note
+            SynthNote(196.0, 400, 0.56),   // G3 — long final note
+            Silence(60),
+            SynthNote(130.8, 210, 0.36)    // C3 — low echo fade
         );
         return pcm;
     }
 
     /// <summary>
-    /// Victory fanfare: ascending C4 → E4 → G4 → C5 (~700 ms total).
+    /// Victory fanfare: 7-note ascending run to triumphant peak (~1 100 ms total).
     /// </summary>
     private static byte[] SynthVictory()
     {
         var pcm = Concat(
-            SynthNote(261.6, 140, 0.68),   // C4
-            Silence(30),
-            SynthNote(329.6, 140, 0.72),   // E4
-            Silence(30),
-            SynthNote(392.0, 140, 0.76),   // G4
-            Silence(30),
-            SynthNote(523.3, 280, 0.82)    // C5 — long final note
+            SynthNote(261.6, 130, 0.68),   // C4
+            Silence(20),
+            SynthNote(329.6, 130, 0.72),   // E4
+            Silence(20),
+            SynthNote(392.0, 130, 0.76),   // G4
+            Silence(20),
+            SynthNote(523.3, 130, 0.82),   // C5
+            Silence(20),
+            SynthNote(659.3, 130, 0.86),   // E5
+            Silence(20),
+            SynthNote(784.0, 310, 0.92),   // G5 — triumphant peak
+            Silence(40),
+            SynthNote(523.3, 200, 0.78)    // C5 — resolution
         );
         return pcm;
     }
@@ -280,18 +340,90 @@ internal static class RetroSound
         return result;
     }
 
+    // ── Stage start ───────────────────────────────────────────────────────────
+
     /// <summary>
-    /// Power-up collected: bright ascending two-tone chime, 180 ms.
-    /// Two quick square notes (C5 → E5) with sharp attack and fast decay.
+    /// Battle-City-inspired stage intro: rapid ascending arpeggio + resolution.
+    /// E4 → G4 → B4 → E5 (held) → D5 → C5 (~680 ms total).
     /// </summary>
-    private static byte[] SynthPowerUp()
+    private static byte[] SynthStageStart()
     {
         var pcm = Concat(
+            SynthNote(329.6, 75,  0.72),   // E4
+            Silence(15),
+            SynthNote(392.0, 75,  0.76),   // G4
+            Silence(15),
+            SynthNote(493.9, 75,  0.80),   // B4
+            Silence(15),
+            SynthNote(659.3, 155, 0.88),   // E5 (held)
+            Silence(40),
+            SynthNote(587.3, 80,  0.74),   // D5
+            Silence(15),
+            SynthNote(523.3, 125, 0.82)    // C5 (resolution)
+        );
+        return pcm;
+    }
+
+    // ── Per-type power-up sounds ──────────────────────────────────────────────
+
+    /// <summary>Default: bright C5 → E5 chime (BulletSpeed / ExtraBullet / Shovel).</summary>
+    private static byte[] SynthPowerUpDefault()
+    {
+        return Concat(
             SynthNote(523.3, 75, 0.75),   // C5
             Silence(15),
             SynthNote(659.3, 90, 0.80)    // E5
         );
-        return pcm;
+    }
+
+    /// <summary>Star: rapid sparkle E5 → G5 → B5 → E6.</summary>
+    private static byte[] SynthPowerUpStar()
+    {
+        return Concat(
+            SynthNote( 659.3,  50, 0.70),  // E5
+            Silence(10),
+            SynthNote( 784.0,  50, 0.75),  // G5
+            Silence(10),
+            SynthNote( 987.8,  50, 0.80),  // B5
+            Silence(10),
+            SynthNote(1318.5, 100, 0.85)   // E6 — bright sparkle peak
+        );
+    }
+
+    /// <summary>Life: warm ascending C4 → E4 → G4 → C5.</summary>
+    private static byte[] SynthPowerUpLife()
+    {
+        return Concat(
+            SynthNote(261.6,  90, 0.68),   // C4
+            Silence(20),
+            SynthNote(329.6,  90, 0.72),   // E4
+            Silence(20),
+            SynthNote(392.0,  90, 0.76),   // G4
+            Silence(20),
+            SynthNote(523.3, 180, 0.82)    // C5 (long)
+        );
+    }
+
+    /// <summary>Clock: cool descending freeze chime C5 → A4 → F4.</summary>
+    private static byte[] SynthPowerUpClock()
+    {
+        return Concat(
+            SynthNote(523.3, 80, 0.65),    // C5
+            Silence(15),
+            SynthNote(440.0, 80, 0.60),    // A4
+            Silence(15),
+            SynthNote(349.2, 110, 0.55)    // F4
+        );
+    }
+
+    /// <summary>Shield: deep resonant G3 → C4 armour tone.</summary>
+    private static byte[] SynthPowerUpShield()
+    {
+        return Concat(
+            SynthNote(196.0, 110, 0.72),   // G3
+            Silence(20),
+            SynthNote(261.6, 160, 0.78)    // C4
+        );
     }
 
     /// <summary>

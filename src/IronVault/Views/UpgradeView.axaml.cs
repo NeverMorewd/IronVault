@@ -58,7 +58,10 @@ public partial class UpgradeView : UserControl
         ScoreText.Text       = _engine.Score.ToString("D5");
         NextWaveText.Text    = $"{clearedWave + 1:D2}";
 
-        AllyRewardBanner.IsVisible = WaveScript.ForWave(clearedWave + 1).GrantsAlly;
+        var nextScript = _engine.Mode == GameMode.Defense
+            ? DefenseWaveScript.ForWave(clearedWave + 1)
+            : WaveScript.ForWave(clearedWave + 1);
+        AllyRewardBanner.IsVisible = nextScript.GrantsAlly;
 
         _choices = GenerateChoices(_engine);
         PopulateCards();

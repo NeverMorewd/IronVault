@@ -63,10 +63,10 @@ public static class I18n
         ["menu.mode"]         = ("GAME MODE",                               "游戏模式"),
         ["menu.classic"]      = ("CLASSIC",                                 "经典模式"),
         ["menu.defense"]      = ("DEFENSE",                                 "防守模式"),
-        ["menu.classic.desc"] = ("Survive infinite waves — no victory, only glory",
-                                 "无限波次 — 没有胜利，只有荣耀"),
-        ["menu.defense.desc"] = ("Survive 10 scripted waves to achieve victory",
-                                 "坚守10波进攻 — 全部击退即为胜利"),
+        ["menu.classic.desc"] = ("Choose a level and survive endless waves",
+                                 "选择关卡，坚守无限波次"),
+        ["menu.defense.desc"] = ("Fixed map · Defeat 10 waves to achieve victory",
+                                 "固定地图 · 击退10波敌军即为胜利"),
         ["menu.difficulty"]   = ("TACTICAL RATING",                         "战术等级"),
         ["menu.deploy"]       = ("▶  DEPLOY FORCES  ◀",                    "▶  出击  ◀"),
         ["menu.abort"]        = ("ABORT MISSION",                           "放弃任务"),
@@ -92,6 +92,7 @@ public static class I18n
         ["hud.lives"]         = ("LIVES",                                   "生命"),
         ["hud.enemies"]       = ("ENEMIES",                                 "剩余"),
         ["hud.armor"]         = ("ARMOR",                                   "装甲"),
+        ["hud.ally"]          = ("ALLY",                                    "友军"),
         ["hud.controls"]      = ("CONTROLS",                                "操作"),
         ["hud.ctrl.move"]     = ("[W/A/S/D]  MOVE",                        "[W/A/S/D]  移动"),
         ["hud.ctrl.fire"]     = ("[SPACE]    FIRE",                        "[空格]     开火"),
@@ -147,6 +148,10 @@ public static class I18n
         ["overlay.exit.menu"]    = ("RETURN TO MENU",                       "返回菜单"),
         ["overlay.exit.quit"]    = ("QUIT GAME",                            "退出游戏"),
         ["overlay.exit.cancel"]  = ("CANCEL",                               "取消"),
+
+        // ── Ally deployment ──────────────────────────────────────────────────
+        ["ally.title"]        = ("ALLY DEPLOYED",                             "友军抵达"),
+        ["ally.sub"]          = ("An ally tank has joined your position",      "友军坦克已加入战场"),
 
         // ── Level selection ───────────────────────────────────────────────────
         ["level.stage"]       = ("STAGE",                                   "第"),

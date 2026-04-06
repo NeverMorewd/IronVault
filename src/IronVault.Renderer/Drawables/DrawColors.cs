@@ -2,15 +2,15 @@ using Avalonia.Media;
 
 namespace IronVault.Renderer.Drawables;
 
-/// <summary>Centralized color palette — amber/phosphor CRT aesthetic.</summary>
+/// <summary>Centralized color palette — Pipboy phosphor green CRT aesthetic.</summary>
 internal static class DrawColors
 {
-    // Primary palette — amber CRT
-    public static readonly Color Amber      = Color.FromRgb(0xFF, 0xA5, 0x00);
-    public static readonly Color AmberDim   = Color.FromRgb(0xAA, 0x60, 0x00);
-    public static readonly Color AmberDark  = Color.FromRgb(0x55, 0x30, 0x00);
-    public static readonly Color Background = Color.FromRgb(0x0A, 0x08, 0x00);
-    public static readonly Color GridLine   = Color.FromRgb(0x1A, 0x14, 0x00);
+    // Primary palette — phosphor green CRT
+    public static readonly Color Amber      = Color.FromRgb(0x39, 0xFF, 0x14);  // bright phosphor green
+    public static readonly Color AmberDim   = Color.FromRgb(0x1A, 0x90, 0x00);  // dim green
+    public static readonly Color AmberDark  = Color.FromRgb(0x0A, 0x3D, 0x00);  // dark green
+    public static readonly Color Background = Color.FromRgb(0x00, 0x08, 0x00);  // near-black green
+    public static readonly Color GridLine   = Color.FromRgb(0x00, 0x18, 0x00);  // subtle dark green
 
     // Tile colors
     public static readonly Color Brick      = Color.FromRgb(0xCC, 0x44, 0x00);
@@ -37,8 +37,8 @@ internal static class DrawColors
 
     // Brushes (frequently used)
     public static readonly SolidColorBrush BackgroundBrush   = new(Background);
-    public static readonly SolidColorBrush AmberBrush        = new(Amber);
-    public static readonly SolidColorBrush AmberDimBrush     = new(AmberDim);
+    public static readonly SolidColorBrush AmberBrush        = new(Amber);        // phosphor green
+    public static readonly SolidColorBrush AmberDimBrush     = new(AmberDim);     // dim green
     public static readonly SolidColorBrush GridLineBrush     = new(GridLine);
     public static readonly SolidColorBrush BulletBrush       = new(BulletColor);
     public static readonly SolidColorBrush PlayerBrush       = new(PlayerColor);

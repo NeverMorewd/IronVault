@@ -4,147 +4,185 @@
              x:Class="IronVault.Views.MenuView">
 
   <Grid Background="{DynamicResource PipboyBackgroundBrush}">
-    <ScrollViewer VerticalScrollBarVisibility="Auto"
-                  HorizontalScrollBarVisibility="Disabled">
-    <StackPanel VerticalAlignment="Center"
-                HorizontalAlignment="Center"
-                MaxWidth="460"
-                Margin="12,16,12,16"
-                Spacing="0">
+  <ScrollViewer VerticalScrollBarVisibility="Auto"
+                HorizontalScrollBarVisibility="Disabled">
+  <StackPanel VerticalAlignment="Center"
+              HorizontalAlignment="Stretch"
+              Margin="16,14,16,14"
+              Spacing="10">
 
-      <!-- ── Logo / Title ── -->
-      <Border Classes="pipboy-panel" Margin="0,0,0,14">
-        <StackPanel Spacing="6" HorizontalAlignment="Center">
-          <TextBlock x:Name="TitleText"
-                     Text="IRON VAULT"
-                     Classes="h1"
-                     FontSize="34"
-                     HorizontalAlignment="Center" />
-          <TextBlock x:Name="SubtitleText"
-                     Text="铁  窖  计  划"
-                     HorizontalAlignment="Center"
-                     Opacity="0.6"
-                     FontSize="15" />
-          <TextBlock Text="━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-                     Classes="dim"
-                     HorizontalAlignment="Center"
-                     FontSize="10" />
-          <TextBlock x:Name="TaglineText"
-                     Text="ARMOURED COMBAT SIMULATION  ·  VECTOR ENGINE"
-                     Classes="dim"
+    <!-- ══ HEADER ══════════════════════════════════════════════════════════ -->
+    <Border Classes="pipboy-panel">
+      <StackPanel Spacing="6">
+
+        <!-- Title row with bracket decorations -->
+        <Grid ColumnDefinitions="Auto,*,Auto">
+          <TextBlock Grid.Column="0"
+                     Text="▌"
+                     FontSize="26"
+                     Opacity="0.55"
+                     VerticalAlignment="Center"
+                     Margin="0,0,8,0" />
+          <StackPanel Grid.Column="1" HorizontalAlignment="Center" Spacing="3">
+            <TextBlock x:Name="TitleText"
+                       Text="IRON VAULT"
+                       Classes="h1"
+                       FontSize="30"
+                       HorizontalAlignment="Center"
+                       LetterSpacing="4" />
+            <TextBlock x:Name="SubtitleText"
+                       Text="铁  窖  计  划"
+                       HorizontalAlignment="Center"
+                       Opacity="0.65"
+                       FontSize="14" />
+          </StackPanel>
+          <TextBlock Grid.Column="2"
+                     Text="▌"
+                     FontSize="26"
+                     Opacity="0.55"
+                     VerticalAlignment="Center"
+                     Margin="8,0,0,0" />
+        </Grid>
+
+        <Separator />
+
+        <TextBlock x:Name="TaglineText"
+                   Classes="dim"
+                   HorizontalAlignment="Center"
+                   FontSize="10"
+                   LetterSpacing="1" />
+
+      </StackPanel>
+    </Border>
+
+    <!-- ══ MODE  +  DIFFICULTY (side by side) ══════════════════════════════ -->
+    <Grid ColumnDefinitions="*,12,*">
+
+      <!-- LEFT: Operation Mode -->
+      <Border Classes="pipboy-panel" Grid.Column="0">
+        <StackPanel Spacing="8">
+          <TextBlock x:Name="ModeLabel"
+                     Classes="h2"
                      HorizontalAlignment="Center"
                      FontSize="11" />
-        </StackPanel>
-      </Border>
-
-      <!-- ── Game Mode selection ── -->
-      <Border Classes="pipboy-panel" Margin="0,0,0,14">
-        <StackPanel Spacing="10">
-          <TextBlock x:Name="ModeLabel"
-                     Text="GAME MODE"
-                     Classes="h2"
-                     HorizontalAlignment="Center" />
-          <Grid ColumnDefinitions="*,*" HorizontalAlignment="Stretch">
+          <StackPanel Spacing="5">
             <Button x:Name="ClassicBtn"
-                    Grid.Column="0"
-                    Margin="0,0,4,0"
                     HorizontalAlignment="Stretch"
-                    HorizontalContentAlignment="Center" />
+                    HorizontalContentAlignment="Center"
+                    FontSize="12" />
             <Button x:Name="DefenseBtn"
-                    Grid.Column="1"
-                    Margin="4,0,0,0"
                     HorizontalAlignment="Stretch"
-                    HorizontalContentAlignment="Center" />
-          </Grid>
+                    HorizontalContentAlignment="Center"
+                    FontSize="12" />
+          </StackPanel>
           <TextBlock x:Name="ModeDesc"
-                     HorizontalAlignment="Center"
                      Classes="dim"
-                     FontSize="11"
+                     FontSize="10"
                      TextWrapping="Wrap"
-                     TextAlignment="Center" />
+                     TextAlignment="Center"
+                     Height="32" />
         </StackPanel>
       </Border>
 
-      <!-- ── Difficulty selection ── -->
-      <Border Classes="pipboy-panel" Margin="0,0,0,14">
-        <StackPanel Spacing="10">
+      <!-- RIGHT: Tactical Rating -->
+      <Border Classes="pipboy-panel" Grid.Column="2">
+        <StackPanel Spacing="8">
           <TextBlock x:Name="DifficultyLabel"
-                     Text="TACTICAL RATING"
                      Classes="h2"
-                     HorizontalAlignment="Center" />
-          <Grid ColumnDefinitions="*,*,*" HorizontalAlignment="Stretch">
-            <Button x:Name="EasyBtn"
-                    Grid.Column="0"
-                    Margin="0,0,3,0"
-                    HorizontalAlignment="Stretch"
-                    HorizontalContentAlignment="Center" />
-            <Button x:Name="NormalBtn"
-                    Grid.Column="1"
-                    Margin="3,0,3,0"
-                    HorizontalAlignment="Stretch"
-                    HorizontalContentAlignment="Center" />
-            <Button x:Name="HardBtn"
-                    Grid.Column="2"
-                    Margin="3,0,0,0"
-                    HorizontalAlignment="Stretch"
-                    HorizontalContentAlignment="Center" />
-          </Grid>
-          <TextBlock x:Name="DiffDesc"
                      HorizontalAlignment="Center"
+                     FontSize="11" />
+          <StackPanel Spacing="5">
+            <Button x:Name="EasyBtn"
+                    HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="Center"
+                    FontSize="12" />
+            <Button x:Name="NormalBtn"
+                    HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="Center"
+                    FontSize="12" />
+            <Button x:Name="HardBtn"
+                    HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="Center"
+                    FontSize="12" />
+          </StackPanel>
+          <TextBlock x:Name="DiffDesc"
                      Classes="dim"
-                     FontSize="11"
+                     FontSize="10"
                      TextWrapping="Wrap"
-                     TextAlignment="Center" />
+                     TextAlignment="Center"
+                     Height="32" />
         </StackPanel>
       </Border>
 
-      <!-- ── Language toggle ── -->
-      <Border Classes="pipboy-panel" Margin="0,0,0,14">
-        <StackPanel Orientation="Horizontal"
-                    HorizontalAlignment="Center"
-                    Spacing="10">
-          <TextBlock x:Name="LangLabel"
-                     Text="LANGUAGE"
-                     Classes="dim"
-                     VerticalAlignment="Center"
-                     FontSize="12" />
-          <Button x:Name="LangEnBtn"
-                  Width="70"
-                  HorizontalContentAlignment="Center" />
-          <Button x:Name="LangZhBtn"
-                  Width="70"
-                  HorizontalContentAlignment="Center" />
-        </StackPanel>
-      </Border>
+    </Grid>
 
-      <!-- ── Action buttons ── -->
-      <Button x:Name="StartBtn"
-              HorizontalAlignment="Stretch"
-              HorizontalContentAlignment="Center"
-              FontSize="15"
-              Padding="12,10"
-              Margin="0,0,0,8">
-        <TextBlock x:Name="DeployText" Text="▶  DEPLOY FORCES  ◀" />
-      </Button>
+    <!-- ══ SYSTEM STATUS STRIP ══════════════════════════════════════════════ -->
+    <Border Classes="pipboy-panel" Padding="12,7">
+      <Grid ColumnDefinitions="*,*">
+        <StackPanel Grid.Column="0" Spacing="3">
+          <TextBlock Text="● VECTOR ENGINE    ONLINE" Classes="dim" FontSize="9" />
+          <TextBlock Text="● AUDIO SYNTH      READY"  Classes="dim" FontSize="9" />
+        </StackPanel>
+        <StackPanel Grid.Column="1" Spacing="3" HorizontalAlignment="Right">
+          <TextBlock Text="TACTICAL AI    STANDBY ●" Classes="dim" FontSize="9" />
+          <TextBlock Text="MAP LIBRARY   100 LVL  ●" Classes="dim" FontSize="9" />
+        </StackPanel>
+      </Grid>
+    </Border>
+
+    <!-- ══ DEPLOY BUTTON ════════════════════════════════════════════════════ -->
+    <Button x:Name="StartBtn"
+            HorizontalAlignment="Stretch"
+            HorizontalContentAlignment="Center"
+            FontSize="16"
+            Padding="12,14"
+            Classes="deploy">
+      <TextBlock x:Name="DeployText"
+                 FontWeight="Bold"
+                 LetterSpacing="2" />
+    </Button>
+
+    <!-- ══ ABORT  +  LANGUAGE ═══════════════════════════════════════════════ -->
+    <Grid ColumnDefinitions="*,Auto">
 
       <Button x:Name="ExitBtn"
+              Grid.Column="0"
               HorizontalAlignment="Stretch"
               HorizontalContentAlignment="Center"
-              Padding="10,8">
-        <TextBlock x:Name="AbortText" Text="ABORT MISSION" Classes="dim" />
+              Padding="10,8"
+              Margin="0,0,8,0">
+        <TextBlock x:Name="AbortText" Classes="dim" />
       </Button>
 
-      <!-- Footer -->
-      <TextBlock x:Name="FooterText"
-                 Text="© IRON VAULT SIM  ·  PURE VECTOR RENDERING  ·  AOT-COMPATIBLE"
-                 Classes="dim"
-                 FontSize="9"
-                 HorizontalAlignment="Center"
-                 TextWrapping="Wrap"
-                 TextAlignment="Center"
-                 Margin="0,18,0,0" />
-    </StackPanel>
-    </ScrollViewer>
+      <StackPanel Grid.Column="1"
+                  Orientation="Horizontal"
+                  Spacing="6"
+                  VerticalAlignment="Center">
+        <TextBlock x:Name="LangLabel"
+                   Classes="dim"
+                   FontSize="11"
+                   VerticalAlignment="Center" />
+        <Button x:Name="LangEnBtn"
+                Width="80"
+                HorizontalContentAlignment="Center" />
+        <Button x:Name="LangZhBtn"
+                Width="80"
+                HorizontalContentAlignment="Center" />
+      </StackPanel>
+
+    </Grid>
+
+    <!-- ══ FOOTER ═══════════════════════════════════════════════════════════ -->
+    <TextBlock x:Name="FooterText"
+               Classes="dim"
+               FontSize="8"
+               HorizontalAlignment="Center"
+               TextWrapping="Wrap"
+               TextAlignment="Center"
+               Opacity="0.55" />
+
+  </StackPanel>
+  </ScrollViewer>
   </Grid>
 
 </UserControl>

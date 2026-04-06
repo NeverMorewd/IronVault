@@ -15,5 +15,19 @@
         <Style Selector="Button">
             <Setter Property="FontFamily" Value="Inter, fonts:IronVault#Noto Sans SC" />
         </Style>
+
+        <!-- Deploy button: dark green background, bright green border/text (less blinding than accent) -->
+        <Style Selector="Button.deploy">
+            <Setter Property="Background"       Value="#0D3D00" />
+            <Setter Property="Foreground"       Value="#39FF14" />
+            <Setter Property="BorderBrush"      Value="#39FF14" />
+            <Setter Property="BorderThickness"  Value="1" />
+        </Style>
+        <Style Selector="Button.deploy:pointerover /template/ ContentPresenter">
+            <Setter Property="Background" Value="#163D00" />
+        </Style>
+        <Style Selector="Button.deploy:pressed /template/ ContentPresenter">
+            <Setter Property="Background" Value="#0A2800" />
+        </Style>
     </Application.Styles>
 </Application>

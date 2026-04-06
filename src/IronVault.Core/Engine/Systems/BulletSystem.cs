@@ -233,10 +233,14 @@ public static class BulletSystem
             if (!tank.Health.IsAlive)
             {
                 tank.IsAlive = false;
-                SpawnExplosion(explosions,
-                               tank.Position.X + TankEntity.Size / 2f - 16,
-                               tank.Position.Y + TankEntity.Size / 2f - 16,
-                               2, ExplosionType.Normal);
+                float cx = tank.Position.X + TankEntity.Size / 2f;
+                float cy = tank.Position.Y + TankEntity.Size / 2f;
+                // Central large explosion (baseSize=64 → offset by 32 to center)
+                SpawnExplosion(explosions, cx - 32, cy - 32, 2, ExplosionType.Normal);
+                // Scattered secondary blasts for cluster impact
+                SpawnExplosion(explosions, cx - 28, cy - 12, 1, ExplosionType.Normal);
+                SpawnExplosion(explosions, cx + 8,  cy - 24, 1, ExplosionType.Normal);
+                SpawnExplosion(explosions, cx - 6,  cy + 14, 1, ExplosionType.Normal);
             }
             else
             {

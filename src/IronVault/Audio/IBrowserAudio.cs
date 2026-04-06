@@ -14,7 +14,8 @@ internal interface IBrowserAudio
     void PlayPlayerHurt();
     void PlayGameOver();
     void PlayVictory();
-    void PlayPowerUp();
+    void PlayStageStart();
+    void PlayPowerUp(int typeId);
     void StartMovement();
     void StopMovement();
 }

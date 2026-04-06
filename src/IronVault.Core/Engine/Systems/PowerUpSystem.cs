@@ -10,8 +10,9 @@ namespace IronVault.Core.Engine.Systems;
 /// </summary>
 public static class PowerUpSystem
 {
-    private const float BlinkPeriod  = 0.22f;   // seconds per blink half-cycle
-    private const float LifeSpan     = 18f;      // seconds before a power-up despawns
+    private const float BlinkPeriod      = 0.22f;  // seconds per blink half-cycle
+    private const float LifeSpan         = 18f;   // seconds before a normal power-up despawns
+    private const float AllyTankLifeSpan = 50f;   // ally reward lasts longer — gives player time to collect
 
     public static void Update(
         List<PowerUpEntity> powerUps,
@@ -29,9 +30,10 @@ public static class PowerUpSystem
             var pu = powerUps[i];
             if (!pu.IsAlive) { powerUps.RemoveAt(i); continue; }
 
-            // Lifespan countdown — despawn after 18 s
+            // Lifespan countdown — AllyTank lasts longer so player has time to collect
             pu.LifeTimer += dt;
-            if (pu.LifeTimer >= LifeSpan)
+            float lifeSpan = pu.Type == PowerUpType.AllyTank ? AllyTankLifeSpan : LifeSpan;
+            if (pu.LifeTimer >= lifeSpan)
             {
                 pu.IsAlive = false;
                 powerUps.RemoveAt(i);
@@ -39,7 +41,7 @@ public static class PowerUpSystem
             }
 
             // Blink faster in the last 4 seconds
-            float period = pu.LifeTimer >= LifeSpan - 4f ? BlinkPeriod * 0.4f : BlinkPeriod;
+            float period = pu.LifeTimer >= lifeSpan - 4f ? BlinkPeriod * 0.4f : BlinkPeriod;
             pu.BlinkTimer += dt;
             if (pu.BlinkTimer >= period)
             {

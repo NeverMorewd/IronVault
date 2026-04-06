@@ -58,8 +58,19 @@ public partial class MainView : UserControl
         {
             _pendingDifficulty = args.Difficulty;
             _pendingMode       = args.Mode;
-            _pendingLevel      = 1;
-            nav.NavigateTo(AppScreen.LevelSelect);
+
+            if (args.Mode == GameMode.Defense)
+            {
+                // 防守模式使用固定默认地图，不需要关卡选择
+                _pendingLevel = 1;
+                vm.StartGame(_pendingDifficulty, _pendingMode, _pendingLevel);
+                nav.NavigateTo(AppScreen.Game);
+            }
+            else
+            {
+                _pendingLevel = 1;
+                nav.NavigateTo(AppScreen.LevelSelect);
+            }
         };
 
         levelSelectView.LevelSelected += (_, level) =>

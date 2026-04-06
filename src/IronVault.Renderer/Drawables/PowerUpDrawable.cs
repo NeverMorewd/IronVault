@@ -80,6 +80,20 @@ public sealed class PowerUpDrawable : IDrawable
                 ctx.FillRectangle(DrawColors.AmberBrush, new Rect(cx - 7, cy - 5, 5, 5));
                 ctx.FillRectangle(DrawColors.AmberBrush, new Rect(cx + 2, cy - 5, 5, 5));
                 break;
+
+            case PowerUpType.AllyTank:
+                // Mini tank body
+                ctx.FillRectangle(DrawColors.AmberBrush, new Rect(cx - 6, cy - 2, 12, 7));
+                // Turret
+                ctx.FillRectangle(DrawColors.AmberBrush, new Rect(cx - 2, cy - 6, 4, 5));
+                // Barrel
+                ctx.DrawLine(pen, new Point(cx, cy - 6), new Point(cx, y + 2));
+                // "+" ally emblem on hull
+                ctx.DrawLine(new Pen(DrawColors.AmberDimBrush, 1.5),
+                    new Point(cx - 3, cy + 1), new Point(cx + 3, cy + 1));
+                ctx.DrawLine(new Pen(DrawColors.AmberDimBrush, 1.5),
+                    new Point(cx, cy - 1),     new Point(cx, cy + 3));
+                break;
         }
     }
 

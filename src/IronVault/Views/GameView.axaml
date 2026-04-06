@@ -11,8 +11,8 @@
 
     <!-- ── Main game area: Viewbox scales content down on narrow screens ── -->
     <!-- StretchDirection="DownOnly" keeps 1:1 on desktop, shrinks on mobile  -->
-    <Viewbox Stretch="Uniform" StretchDirection="DownOnly"
-             HorizontalAlignment="Center" VerticalAlignment="Top">
+    <Viewbox Stretch="Uniform" StretchDirection="Both"
+             HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
     <StackPanel Spacing="0">
 
       <!-- Compact status bar -->
@@ -66,6 +66,12 @@
             <StackPanel Orientation="Horizontal" Spacing="3" VerticalAlignment="Center">
               <TextBlock x:Name="EnemiesLabel" Classes="dim" FontSize="9" VerticalAlignment="Center" />
               <TextBlock x:Name="EnemiesText"  FontSize="9"  VerticalAlignment="Center" />
+            </StackPanel>
+            <TextBlock Text="|" Classes="dim" FontSize="9" VerticalAlignment="Center" />
+
+            <StackPanel Orientation="Horizontal" Spacing="3" VerticalAlignment="Center">
+              <TextBlock x:Name="AllyLabel" Classes="dim" FontSize="9" VerticalAlignment="Center" />
+              <TextBlock x:Name="AllyText"  FontSize="9"  VerticalAlignment="Center" />
             </StackPanel>
           </StackPanel>
 
@@ -121,13 +127,13 @@
                            ScanBeamSpeed="75"
                            EnableScanBeamGradient="True"
                            EnableNoise="True"
-                           NoiseDensity="0.006"
-                           NoiseOpacity="0.045"
+                           NoiseDensity="0.008"
+                           NoiseOpacity="0.055"
                            NoisePixelSize="1"
-                           NoiseRefreshIntervalMs="60"
+                           NoiseRefreshIntervalMs="55"
                            EnableVignette="True"
-                           VignetteIntensity="0.28"
-                           EnableFlicker="False">
+                           VignetteIntensity="0.32"
+                           EnableFlicker="True">
           <renderer:GameCanvas x:Name="GameCanvas" />
         </pipboy:CrtDisplay>
       </Border>
@@ -231,6 +237,34 @@
                   HorizontalAlignment="Stretch"
                   HorizontalContentAlignment="Center" />
 
+        </StackPanel>
+      </Border>
+    </Grid>
+
+    <!-- ══════════════════════════════════════════════════════════════════════ -->
+    <!-- Ally Deployed Overlay — shown briefly when an ally tank joins         -->
+    <!-- ══════════════════════════════════════════════════════════════════════ -->
+    <Grid x:Name="AllyOverlay"
+          IsVisible="False"
+          ZIndex="150"
+          Background="#AA000000">
+      <Border Classes="pipboy-panel"
+              Width="340"
+              Padding="24,18"
+              HorizontalAlignment="Center"
+              VerticalAlignment="Center">
+        <StackPanel Spacing="6" HorizontalAlignment="Center">
+          <TextBlock Text="◈"
+                     FontSize="26"
+                     HorizontalAlignment="Center" />
+          <TextBlock x:Name="AllyTitleText"
+                     Classes="h1"
+                     FontSize="20"
+                     HorizontalAlignment="Center" />
+          <TextBlock x:Name="AllySubText"
+                     Classes="dim"
+                     FontSize="11"
+                     HorizontalAlignment="Center" />
         </StackPanel>
       </Border>
     </Grid>
