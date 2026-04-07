@@ -1,4 +1,4 @@
-using Avalonia.Controls;
+﻿using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Layout;
 using Pipboy.Avalonia;
@@ -22,8 +22,7 @@ public partial class MainWindow : PipboyWindow
     public MainWindow(MainView mainView)
     {
         InitializeComponent();
-
-        Content         = mainView;
+        Content = mainView;
         TitleBarContent = _titleBarText;
 
         // F11 full-screen toggle — Windows desktop only.

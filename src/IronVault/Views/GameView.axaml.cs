@@ -1,4 +1,4 @@
-using Avalonia;
+﻿using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Input;
@@ -9,6 +9,7 @@ using IronVault.ViewModels;
 using IronVault.Core.Engine;
 using IronVault.Core.Engine.Entities;
 using IronVault.Core.Localization;
+using Avalonia.Interactivity;
 
 namespace IronVault.Views;
 
@@ -150,7 +151,7 @@ public partial class GameView : UserControl
         ScoreLabel.Text        = I18n.T("hud.score");
         LivesLabel.Text        = I18n.T("hud.lives");
         EnemiesLabel.Text      = I18n.T("hud.enemies");
-        AllyLabel.Text         = I18n.T("hud.ally");
+        //AllyLabel.Text         = I18n.T("hud.ally");
         ArmorLabel.Text        = I18n.T("hud.armor");
         EffectsLabel.Text      = I18n.T("hud.effects");
         ControlsLabel.Text     = I18n.T("hud.controls");
@@ -235,7 +236,7 @@ public partial class GameView : UserControl
         int allies = 0;
         foreach (var t in eng.Tanks)
             if (t.Team == TankTeam.Ally && t.IsAlive) allies++;
-        AllyText.Text = allies > 0 ? allies.ToString() : "-";
+        //AllyText.Text = allies > 0 ? allies.ToString() : "-";
 
         if (eng.Player is { } p && p.Health is { } hp)
         {

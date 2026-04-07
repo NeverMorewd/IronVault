@@ -1,4 +1,4 @@
-using Avalonia;
+﻿using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Avalonia.Media;
@@ -15,7 +15,11 @@ public partial class App : Application
     public override void Initialize()
     {
         AvaloniaXamlLoader.Load(this);
-        PipboyThemeManager.Instance.SetPrimaryColor(Color.Parse("#39FF14"));  // Pipboy phosphor green
+        PipboyThemeManager.Instance.SetPrimaryColor(Color.Parse("#39FF14"));
+
+#if DEBUG
+        this.AttachDeveloperTools();
+#endif
     }
 
     public override void OnFrameworkInitializationCompleted()

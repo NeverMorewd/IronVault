@@ -1,8 +1,7 @@
-using Avalonia;
+﻿using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
 using IronVault.Core.Engine;
-using IronVault.Core.Engine.Entities;
 using IronVault.Core.Localization;
 using IronVault.Core.Map;
 using IronVault.Renderer.Drawables;
@@ -22,7 +21,7 @@ public sealed class GameCanvas : Control
     // Track the map object we built the drawable from.
     // GameEngine.Reset() creates a brand-new TileMap instance, so we must
     // detect the reference change and rebuild the drawable accordingly.
-    private IronVault.Core.Map.TileMap? _trackedMap;
+    private TileMap? _trackedMap;
 
     // ── Public API ───────────────────────────────────────────────────────────
     public void Attach(GameEngine engine)

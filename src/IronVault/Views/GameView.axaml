@@ -1,300 +1,472 @@
-<UserControl xmlns="https://github.com/avaloniaui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:renderer="clr-namespace:IronVault.Renderer.Controls;assembly=IronVault.Renderer"
-             xmlns:pipboy="clr-namespace:Pipboy.Avalonia;assembly=Pipboy.Avalonia"
-             x:Class="IronVault.Views.GameView">
+﻿<UserControl
+    x:Class="IronVault.Views.GameView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:pipboy="clr-namespace:Pipboy.Avalonia;assembly=Pipboy.Avalonia"
+    xmlns:renderer="clr-namespace:IronVault.Renderer.Controls;assembly=IronVault.Renderer"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
-  <!-- Root: single grid, fills window; overlays sit on top at ZIndex 100 -->
-  <!-- Background="Transparent" is REQUIRED so Avalonia hit-tests empty space
-       (below the Viewbox) and routes PointerPressed to the touch-zone handler. -->
-  <Grid Background="Transparent">
+    <!--  Root: single grid, fills window; overlays sit on top at ZIndex 100  -->
+    <!--
+        Background="Transparent" is REQUIRED so Avalonia hit-tests empty space
+        (below the Viewbox) and routes PointerPressed to the touch-zone handler.
+    -->
+    <Grid Background="Transparent">
 
-    <!-- ── Main game area: Viewbox scales content down on narrow screens ── -->
-    <!-- StretchDirection="DownOnly" keeps 1:1 on desktop, shrinks on mobile  -->
-    <Viewbox Stretch="Uniform" StretchDirection="Both"
-             HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-    <StackPanel Spacing="0">
+        <!--  ── Main game area: Viewbox scales content down on narrow screens ──  -->
+        <!--  StretchDirection="DownOnly" keeps 1:1 on desktop, shrinks on mobile  -->
+        <Viewbox
+            HorizontalAlignment="Stretch"
+            Stretch="Uniform"
+            StretchDirection="Both"
+            VerticalAlignment="Stretch">
+            <!--  Game Canvas (CRT display)  -->
+            <Border
+                BorderBrush="{DynamicResource PipboyBorderBrush}"
+                BorderThickness="2"
+                Margin="2">
 
-      <!-- Compact status bar -->
-      <Border Classes="pipboy-panel"
-              HorizontalAlignment="Stretch"
-              Margin="8,8,8,0"
-              Padding="7,5">
-        <Grid ColumnDefinitions="*,Auto">
+                <pipboy:CrtDisplay
+                    EnableFlicker="True"
+                    EnableNoise="True"
+                    EnableScanBeam="True"
+                    EnableScanBeamGradient="True"
+                    EnableScanlineAnimation="True"
+                    EnableScanlines="True"
+                    EnableVignette="True"
+                    NoiseDensity="0.008"
+                    NoiseOpacity="0.055"
+                    NoisePixelSize="1"
+                    NoiseRefreshIntervalMs="55"
+                    ScanBeamHeight="55"
+                    ScanBeamSpeed="75"
+                    ScanlineAnimSpeed="28"
+                    ScanlineHeight="1"
+                    ScanlineOpacity="0.18"
+                    ScanlineSpacing="3"
+                    VignetteIntensity="0.32">
+                    <StackPanel Spacing="0">
 
-          <!-- Left: title + status items -->
-          <StackPanel Grid.Column="0"
-                      Orientation="Horizontal"
-                      Spacing="10"
-                      VerticalAlignment="Center">
-            <TextBlock x:Name="TitleText"
-                       Text="IRON VAULT"
-                       Classes="h2"
-                       FontSize="12"
-                       VerticalAlignment="Center" />
-            <TextBlock Text="|" Classes="dim" FontSize="9" VerticalAlignment="Center" />
+                        <!--  Compact status bar  -->
+                        <Border Classes="pipboy-panel" HorizontalAlignment="Stretch">
+                            <Grid ColumnDefinitions="*,Auto">
 
-            <TextBlock x:Name="LevelText"
-                       FontSize="9" FontWeight="Bold"
-                       VerticalAlignment="Center" />
-            <TextBlock Text="|" Classes="dim" FontSize="9" VerticalAlignment="Center" />
+                                <!--  Left: title + status items  -->
+                                <StackPanel
+                                    Grid.Column="0"
+                                    Orientation="Horizontal"
+                                    Spacing="10"
+                                    VerticalAlignment="Center">
+                                    <TextBlock
+                                        Classes="h2"
+                                        FontSize="12"
+                                        Text="IRON VAULT"
+                                        VerticalAlignment="Center"
+                                        x:Name="TitleText" />
+                                    <TextBlock
+                                        Classes="dim"
+                                        FontSize="9"
+                                        Text="|"
+                                        VerticalAlignment="Center" />
 
-            <StackPanel Orientation="Horizontal" Spacing="3" VerticalAlignment="Center">
-              <TextBlock x:Name="ModeLabel"  Classes="dim" FontSize="9" VerticalAlignment="Center" />
-              <TextBlock x:Name="ModeText"   FontSize="9"  VerticalAlignment="Center" />
-            </StackPanel>
-            <TextBlock Text="|" Classes="dim" FontSize="9" VerticalAlignment="Center" />
+                                    <TextBlock
+                                        FontSize="9"
+                                        FontWeight="Bold"
+                                        VerticalAlignment="Center"
+                                        x:Name="LevelText" />
+                                    <TextBlock
+                                        Classes="dim"
+                                        FontSize="9"
+                                        Text="|"
+                                        VerticalAlignment="Center" />
 
-            <StackPanel Orientation="Horizontal" Spacing="3" VerticalAlignment="Center">
-              <TextBlock x:Name="WaveLabel"  Classes="dim" FontSize="9" VerticalAlignment="Center" />
-              <TextBlock x:Name="WaveText"   FontSize="9"  VerticalAlignment="Center" />
-            </StackPanel>
-            <TextBlock Text="|" Classes="dim" FontSize="9" VerticalAlignment="Center" />
+                                    <StackPanel
+                                        Orientation="Horizontal"
+                                        Spacing="3"
+                                        VerticalAlignment="Center">
+                                        <TextBlock
+                                            Classes="dim"
+                                            FontSize="9"
+                                            VerticalAlignment="Center"
+                                            x:Name="ModeLabel" />
+                                        <TextBlock
+                                            FontSize="9"
+                                            VerticalAlignment="Center"
+                                            x:Name="ModeText" />
+                                    </StackPanel>
+                                    <TextBlock
+                                        Classes="dim"
+                                        FontSize="9"
+                                        Text="|"
+                                        VerticalAlignment="Center" />
 
-            <StackPanel Orientation="Horizontal" Spacing="3" VerticalAlignment="Center">
-              <TextBlock x:Name="ScoreLabel" Classes="dim" FontSize="9" VerticalAlignment="Center" />
-              <TextBlock x:Name="ScoreText"  FontSize="9"  VerticalAlignment="Center" />
-            </StackPanel>
-            <TextBlock Text="|" Classes="dim" FontSize="9" VerticalAlignment="Center" />
+                                    <StackPanel
+                                        Orientation="Horizontal"
+                                        Spacing="3"
+                                        VerticalAlignment="Center">
+                                        <TextBlock
+                                            Classes="dim"
+                                            FontSize="9"
+                                            VerticalAlignment="Center"
+                                            x:Name="WaveLabel" />
+                                        <TextBlock
+                                            FontSize="9"
+                                            VerticalAlignment="Center"
+                                            x:Name="WaveText" />
+                                    </StackPanel>
+                                    <TextBlock
+                                        Classes="dim"
+                                        FontSize="9"
+                                        Text="|"
+                                        VerticalAlignment="Center" />
 
-            <StackPanel Orientation="Horizontal" Spacing="3" VerticalAlignment="Center">
-              <TextBlock x:Name="LivesLabel" Classes="dim" FontSize="9" VerticalAlignment="Center" />
-              <TextBlock x:Name="LivesText"  FontSize="9"  VerticalAlignment="Center" />
-            </StackPanel>
-            <TextBlock Text="|" Classes="dim" FontSize="9" VerticalAlignment="Center" />
+                                    <StackPanel
+                                        Orientation="Horizontal"
+                                        Spacing="3"
+                                        VerticalAlignment="Center">
+                                        <TextBlock
+                                            Classes="dim"
+                                            FontSize="9"
+                                            VerticalAlignment="Center"
+                                            x:Name="ScoreLabel" />
+                                        <TextBlock
+                                            FontSize="9"
+                                            VerticalAlignment="Center"
+                                            x:Name="ScoreText" />
+                                    </StackPanel>
+                                    <TextBlock
+                                        Classes="dim"
+                                        FontSize="9"
+                                        Text="|"
+                                        VerticalAlignment="Center" />
 
-            <StackPanel Orientation="Horizontal" Spacing="3" VerticalAlignment="Center">
-              <TextBlock x:Name="EnemiesLabel" Classes="dim" FontSize="9" VerticalAlignment="Center" />
-              <TextBlock x:Name="EnemiesText"  FontSize="9"  VerticalAlignment="Center" />
-            </StackPanel>
-            <TextBlock Text="|" Classes="dim" FontSize="9" VerticalAlignment="Center" />
+                                    <StackPanel
+                                        Orientation="Horizontal"
+                                        Spacing="3"
+                                        VerticalAlignment="Center">
+                                        <TextBlock
+                                            Classes="dim"
+                                            FontSize="9"
+                                            VerticalAlignment="Center"
+                                            x:Name="LivesLabel" />
+                                        <TextBlock
+                                            FontSize="9"
+                                            VerticalAlignment="Center"
+                                            x:Name="LivesText" />
+                                    </StackPanel>
+                                    <TextBlock
+                                        Classes="dim"
+                                        FontSize="9"
+                                        Text="|"
+                                        VerticalAlignment="Center" />
 
-            <StackPanel Orientation="Horizontal" Spacing="3" VerticalAlignment="Center">
-              <TextBlock x:Name="AllyLabel" Classes="dim" FontSize="9" VerticalAlignment="Center" />
-              <TextBlock x:Name="AllyText"  FontSize="9"  VerticalAlignment="Center" />
-            </StackPanel>
-          </StackPanel>
+                                    <StackPanel
+                                        Orientation="Horizontal"
+                                        Spacing="3"
+                                        VerticalAlignment="Center">
+                                        <TextBlock
+                                            Classes="dim"
+                                            FontSize="9"
+                                            VerticalAlignment="Center"
+                                            x:Name="EnemiesLabel" />
+                                        <TextBlock
+                                            FontSize="9"
+                                            VerticalAlignment="Center"
+                                            x:Name="EnemiesText" />
+                                    </StackPanel>
+                                    <!--                        <TextBlock
+                                VerticalAlignment="Center"
+                                Classes="dim"
+                                FontSize="9"
+                                Text="|" />
 
-          <!-- Right: armor bar + settings/exit icon buttons -->
-          <StackPanel Grid.Column="1"
-                      Orientation="Horizontal"
-                      Spacing="8"
-                      VerticalAlignment="Center">
+                            <StackPanel
+                                VerticalAlignment="Center"
+                                Orientation="Horizontal"
+                                Spacing="3">
+                                <TextBlock
+                                    x:Name="AllyLabel"
+                                    VerticalAlignment="Center"
+                                    Classes="dim"
+                                    FontSize="9" />
+                                <TextBlock
+                                    x:Name="AllyText"
+                                    VerticalAlignment="Center"
+                                    FontSize="9" />
+                            </StackPanel>-->
+                                </StackPanel>
 
-            <StackPanel Orientation="Horizontal" Spacing="4" VerticalAlignment="Center">
-              <TextBlock x:Name="ArmorLabel" Classes="dim" FontSize="9" VerticalAlignment="Center" />
-              <pipboy:SegmentedBar x:Name="HpBar"
-                                   Maximum="3" Value="3" SegmentCount="3"
-                                   Width="54" Height="11" />
-            </StackPanel>
+                                <!--  Right: armor bar + settings/exit icon buttons  -->
+                                <StackPanel
+                                    Grid.Column="1"
+                                    Orientation="Horizontal"
+                                    Spacing="8"
+                                    VerticalAlignment="Center">
 
-            <!-- Settings button — gear vector icon -->
-            <Button x:Name="SettingsBtn"
-                    Width="28" Height="26"
-                    Padding="3"
-                    Classes="ghost">
-              <Path Fill="{DynamicResource PipboyPrimaryBrush}"
-                    Stretch="Uniform"
-                    Data="M12,15.5A3.5,3.5 0 0,1 8.5,12A3.5,3.5 0 0,1 12,8.5A3.5,3.5 0 0,1 15.5,12A3.5,3.5 0 0,1 12,15.5M19.43,12.97C19.47,12.65 19.5,12.33 19.5,12C19.5,11.67 19.47,11.34 19.43,11L21.54,9.37C21.73,9.22 21.78,8.95 21.66,8.73L19.66,5.27C19.54,5.05 19.27,4.96 19.05,5.05L16.56,6.05C16.04,5.66 15.5,5.32 14.87,5.07L14.5,2.42C14.46,2.18 14.25,2 14,2H10C9.75,2 9.54,2.18 9.5,2.42L9.13,5.07C8.5,5.32 7.96,5.66 7.44,6.05L4.95,5.05C4.73,4.96 4.46,5.05 4.34,5.27L2.34,8.73C2.21,8.95 2.27,9.22 2.46,9.37L4.57,11C4.53,11.34 4.5,11.67 4.5,12C4.5,12.33 4.53,12.65 4.57,12.97L2.46,14.63C2.27,14.78 2.21,15.05 2.34,15.27L4.34,18.73C4.46,18.95 4.73,19.03 4.95,18.95L7.44,17.94C7.96,18.34 8.5,18.68 9.13,18.93L9.5,21.58C9.54,21.82 9.75,22 10,22H14C14.25,22 14.46,21.82 14.5,21.58L14.87,18.93C15.5,18.68 16.04,18.34 16.56,17.94L19.05,18.95C19.27,19.03 19.54,18.95 19.66,18.73L21.66,15.27C21.78,15.05 21.73,14.78 21.54,14.63L19.43,12.97Z" />
-            </Button>
+                                    <StackPanel
+                                        Orientation="Horizontal"
+                                        Spacing="4"
+                                        VerticalAlignment="Center">
+                                        <TextBlock
+                                            Classes="dim"
+                                            FontSize="9"
+                                            VerticalAlignment="Center"
+                                            x:Name="ArmorLabel" />
+                                        <pipboy:SegmentedBar
+                                            Height="11"
+                                            Maximum="3"
+                                            SegmentCount="3"
+                                            ShowProgressBar="True"
+                                            Value="3"
+                                            Width="54"
+                                            x:Name="HpBar" />
+                                    </StackPanel>
 
-            <!-- Exit button — X vector icon -->
-            <Button x:Name="CloseBtn"
-                    Width="28" Height="26"
-                    Padding="4"
-                    Classes="ghost">
-              <Path Fill="{DynamicResource PipboyPrimaryBrush}"
-                    Stretch="Uniform"
-                    Data="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z" />
-            </Button>
+                                    <!--  Settings button — gear vector icon  -->
+                                    <Button
+                                        Classes="ghost"
+                                        Height="26"
+                                        Padding="3"
+                                        Width="28"
+                                        x:Name="SettingsBtn">
+                                        <Path
+                                            Data="M12,15.5A3.5,3.5 0 0,1 8.5,12A3.5,3.5 0 0,1 12,8.5A3.5,3.5 0 0,1 15.5,12A3.5,3.5 0 0,1 12,15.5M19.43,12.97C19.47,12.65 19.5,12.33 19.5,12C19.5,11.67 19.47,11.34 19.43,11L21.54,9.37C21.73,9.22 21.78,8.95 21.66,8.73L19.66,5.27C19.54,5.05 19.27,4.96 19.05,5.05L16.56,6.05C16.04,5.66 15.5,5.32 14.87,5.07L14.5,2.42C14.46,2.18 14.25,2 14,2H10C9.75,2 9.54,2.18 9.5,2.42L9.13,5.07C8.5,5.32 7.96,5.66 7.44,6.05L4.95,5.05C4.73,4.96 4.46,5.05 4.34,5.27L2.34,8.73C2.21,8.95 2.27,9.22 2.46,9.37L4.57,11C4.53,11.34 4.5,11.67 4.5,12C4.5,12.33 4.53,12.65 4.57,12.97L2.46,14.63C2.27,14.78 2.21,15.05 2.34,15.27L4.34,18.73C4.46,18.95 4.73,19.03 4.95,18.95L7.44,17.94C7.96,18.34 8.5,18.68 9.13,18.93L9.5,21.58C9.54,21.82 9.75,22 10,22H14C14.25,22 14.46,21.82 14.5,21.58L14.87,18.93C15.5,18.68 16.04,18.34 16.56,17.94L19.05,18.95C19.27,19.03 19.54,18.95 19.66,18.73L21.66,15.27C21.78,15.05 21.73,14.78 21.54,14.63L19.43,12.97Z"
+                                            Fill="{DynamicResource PipboyPrimaryBrush}"
+                                            Stretch="Uniform" />
+                                    </Button>
 
-          </StackPanel>
+                                    <!--  Exit button — X vector icon  -->
+                                    <Button
+                                        Classes="ghost"
+                                        Height="26"
+                                        Padding="4"
+                                        Width="28"
+                                        x:Name="CloseBtn">
+                                        <Path
+                                            Data="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z"
+                                            Fill="{DynamicResource PipboyPrimaryBrush}"
+                                            Stretch="Uniform" />
+                                    </Button>
+
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+                        <renderer:GameCanvas x:Name="GameCanvas" />
+                    </StackPanel>
+                </pipboy:CrtDisplay>
+            </Border>
+        </Viewbox>
+
+        <!--  ══════════════════════════════════════════════════════════════════════  -->
+        <!--  Settings Overlay — pause + controls reference + action buttons  -->
+        <!--  ══════════════════════════════════════════════════════════════════════  -->
+        <Grid
+            Background="#BB000000"
+            IsVisible="False"
+            ZIndex="100"
+            x:Name="SettingsOverlay">
+            <Border
+                Classes="pipboy-panel"
+                HorizontalAlignment="Center"
+                Padding="22"
+                VerticalAlignment="Center"
+                Width="400">
+                <StackPanel Spacing="10">
+
+                    <TextBlock
+                        Classes="h1"
+                        HorizontalAlignment="Center"
+                        Text="SETTINGS"
+                        x:Name="SettingsTitleText" />
+                    <Separator />
+
+                    <!--  Controls reference  -->
+                    <Border Classes="pipboy-panel">
+                        <StackPanel Spacing="4">
+                            <TextBlock
+                                Classes="h2"
+                                Text="CONTROLS"
+                                x:Name="ControlsLabel" />
+                            <TextBlock
+                                Classes="dim"
+                                FontSize="11"
+                                x:Name="CtrlMove" />
+                            <TextBlock
+                                Classes="dim"
+                                FontSize="11"
+                                x:Name="CtrlFire" />
+                            <TextBlock
+                                Classes="dim"
+                                FontSize="11"
+                                x:Name="CtrlPause" />
+                            <TextBlock
+                                Classes="dim"
+                                FontSize="11"
+                                x:Name="CtrlStart" />
+                        </StackPanel>
+                    </Border>
+
+                    <!--  Active power-up effects (hidden when none active)  -->
+                    <Border
+                        Classes="pipboy-panel"
+                        IsVisible="False"
+                        x:Name="EffectsPanel">
+                        <StackPanel Spacing="4">
+                            <TextBlock
+                                Classes="h2"
+                                Text="EFFECTS"
+                                x:Name="EffectsLabel" />
+                            <TextBlock
+                                Classes="dim"
+                                FontSize="11"
+                                IsVisible="False"
+                                x:Name="StarEffectText" />
+                            <TextBlock
+                                Classes="dim"
+                                FontSize="11"
+                                IsVisible="False"
+                                x:Name="ClockEffectText" />
+                            <TextBlock
+                                Classes="dim"
+                                FontSize="11"
+                                IsVisible="False"
+                                x:Name="ShovelEffectText" />
+                            <TextBlock
+                                Classes="dim"
+                                FontSize="11"
+                                IsVisible="False"
+                                x:Name="BoostEffectText" />
+                        </StackPanel>
+                    </Border>
+
+                    <!--  Deploy / Resume  -->
+                    <Grid ColumnDefinitions="*,*" Margin="0,4,0,0">
+                        <Button
+                            Grid.Column="0"
+                            HorizontalAlignment="Stretch"
+                            HorizontalContentAlignment="Center"
+                            Margin="0,0,5,0"
+                            x:Name="StartButton" />
+                        <Button
+                            Classes="accent"
+                            Grid.Column="1"
+                            HorizontalAlignment="Stretch"
+                            HorizontalContentAlignment="Center"
+                            Margin="5,0,0,0"
+                            x:Name="ResumeBtn" />
+                    </Grid>
+
+                </StackPanel>
+            </Border>
         </Grid>
-      </Border>
 
-      <!-- Game Canvas (CRT display) -->
-      <Border BorderBrush="{DynamicResource PipboyBorderBrush}"
-              BorderThickness="2"
-              Margin="8,2,8,8">
-        <pipboy:CrtDisplay EnableScanlines="True"
-                           ScanlineSpacing="3"
-                           ScanlineHeight="1"
-                           ScanlineOpacity="0.18"
-                           EnableScanlineAnimation="True"
-                           ScanlineAnimSpeed="28"
-                           EnableScanBeam="True"
-                           ScanBeamHeight="55"
-                           ScanBeamSpeed="75"
-                           EnableScanBeamGradient="True"
-                           EnableNoise="True"
-                           NoiseDensity="0.008"
-                           NoiseOpacity="0.055"
-                           NoisePixelSize="1"
-                           NoiseRefreshIntervalMs="55"
-                           EnableVignette="True"
-                           VignetteIntensity="0.32"
-                           EnableFlicker="True">
-          <renderer:GameCanvas x:Name="GameCanvas" />
-        </pipboy:CrtDisplay>
-      </Border>
+        <!--  ══════════════════════════════════════════════════════════════════════  -->
+        <!--  Exit Confirmation Overlay  -->
+        <!--  ══════════════════════════════════════════════════════════════════════  -->
+        <Grid
+            Background="#BB000000"
+            IsVisible="False"
+            ZIndex="100"
+            x:Name="ExitOverlay">
+            <Border
+                Classes="pipboy-panel"
+                HorizontalAlignment="Center"
+                Padding="24"
+                VerticalAlignment="Center"
+                Width="320">
+                <StackPanel Spacing="10">
 
-    </StackPanel>
-    </Viewbox>
+                    <TextBlock
+                        Classes="h1"
+                        HorizontalAlignment="Center"
+                        x:Name="ExitTitleText" />
+                    <Separator />
 
-    <!-- ══════════════════════════════════════════════════════════════════════ -->
-    <!-- Settings Overlay — pause + controls reference + action buttons        -->
-    <!-- ══════════════════════════════════════════════════════════════════════ -->
-    <Grid x:Name="SettingsOverlay"
-          IsVisible="False"
-          ZIndex="100"
-          Background="#BB000000">
-      <Border Classes="pipboy-panel"
-              Width="400"
-              Padding="22"
-              HorizontalAlignment="Center"
-              VerticalAlignment="Center">
-        <StackPanel Spacing="10">
+                    <Button
+                        HorizontalAlignment="Stretch"
+                        HorizontalContentAlignment="Center"
+                        x:Name="ExitToMenuBtn" />
 
-          <TextBlock x:Name="SettingsTitleText"
-                     Text="SETTINGS"
-                     Classes="h1"
-                     HorizontalAlignment="Center" />
-          <Separator />
+                    <!--  Hidden on Browser / Android / iOS  -->
+                    <Button
+                        Classes="danger"
+                        HorizontalAlignment="Stretch"
+                        HorizontalContentAlignment="Center"
+                        IsVisible="False"
+                        x:Name="ExitQuitBtn" />
 
-          <!-- Controls reference -->
-          <Border Classes="pipboy-panel">
-            <StackPanel Spacing="4">
-              <TextBlock x:Name="ControlsLabel" Text="CONTROLS" Classes="h2" />
-              <TextBlock x:Name="CtrlMove"  Classes="dim" FontSize="11" />
-              <TextBlock x:Name="CtrlFire"  Classes="dim" FontSize="11" />
-              <TextBlock x:Name="CtrlPause" Classes="dim" FontSize="11" />
-              <TextBlock x:Name="CtrlStart" Classes="dim" FontSize="11" />
-            </StackPanel>
-          </Border>
+                    <Button
+                        Classes="ghost"
+                        HorizontalAlignment="Stretch"
+                        HorizontalContentAlignment="Center"
+                        x:Name="ExitCancelBtn" />
 
-          <!-- Active power-up effects (hidden when none active) -->
-          <Border x:Name="EffectsPanel" Classes="pipboy-panel" IsVisible="False">
-            <StackPanel Spacing="4">
-              <TextBlock x:Name="EffectsLabel" Text="EFFECTS" Classes="h2" />
-              <TextBlock x:Name="StarEffectText"   Classes="dim" FontSize="11" IsVisible="False" />
-              <TextBlock x:Name="ClockEffectText"  Classes="dim" FontSize="11" IsVisible="False" />
-              <TextBlock x:Name="ShovelEffectText" Classes="dim" FontSize="11" IsVisible="False" />
-              <TextBlock x:Name="BoostEffectText"  Classes="dim" FontSize="11" IsVisible="False" />
-            </StackPanel>
-          </Border>
+                </StackPanel>
+            </Border>
+        </Grid>
 
-          <!-- Deploy / Resume -->
-          <Grid ColumnDefinitions="*,*" Margin="0,4,0,0">
-            <Button x:Name="StartButton"
-                    Grid.Column="0"
-                    HorizontalAlignment="Stretch"
-                    HorizontalContentAlignment="Center"
-                    Margin="0,0,5,0" />
-            <Button x:Name="ResumeBtn"
-                    Grid.Column="1"
-                    Classes="accent"
-                    HorizontalAlignment="Stretch"
-                    HorizontalContentAlignment="Center"
-                    Margin="5,0,0,0" />
-          </Grid>
+        <!--  ══════════════════════════════════════════════════════════════════════  -->
+        <!--  Ally Deployed Overlay — shown briefly when an ally tank joins  -->
+        <!--  ══════════════════════════════════════════════════════════════════════  -->
+        <Grid
+            Background="#AA000000"
+            IsVisible="False"
+            ZIndex="150"
+            x:Name="AllyOverlay">
+            <Border
+                Classes="pipboy-panel"
+                HorizontalAlignment="Center"
+                Padding="24,18"
+                VerticalAlignment="Center"
+                Width="340">
+                <StackPanel HorizontalAlignment="Center" Spacing="6">
+                    <TextBlock
+                        FontSize="26"
+                        HorizontalAlignment="Center"
+                        Text="◈" />
+                    <TextBlock
+                        Classes="h1"
+                        FontSize="20"
+                        HorizontalAlignment="Center"
+                        x:Name="AllyTitleText" />
+                    <TextBlock
+                        Classes="dim"
+                        FontSize="11"
+                        HorizontalAlignment="Center"
+                        x:Name="AllySubText" />
+                </StackPanel>
+            </Border>
+        </Grid>
 
-        </StackPanel>
-      </Border>
+        <!--  ══════════════════════════════════════════════════════════════════════  -->
+        <!--  Stage Announcement Overlay — shown briefly when a level starts  -->
+        <!--  ══════════════════════════════════════════════════════════════════════  -->
+        <Grid
+            Background="#CC000000"
+            IsVisible="False"
+            ZIndex="200"
+            x:Name="StageOverlay">
+            <Border
+                Classes="pipboy-panel"
+                HorizontalAlignment="Center"
+                Padding="32,24"
+                VerticalAlignment="Center"
+                Width="360">
+                <StackPanel HorizontalAlignment="Center" Spacing="8">
+                    <TextBlock
+                        Classes="h1"
+                        FontSize="36"
+                        HorizontalAlignment="Center"
+                        Text="STAGE 1"
+                        x:Name="StageNumberText" />
+                    <TextBlock
+                        Classes="dim"
+                        FontSize="18"
+                        HorizontalAlignment="Center"
+                        Text="第一关"
+                        x:Name="StageSubText" />
+                </StackPanel>
+            </Border>
+        </Grid>
+
     </Grid>
-
-    <!-- ══════════════════════════════════════════════════════════════════════ -->
-    <!-- Exit Confirmation Overlay                                              -->
-    <!-- ══════════════════════════════════════════════════════════════════════ -->
-    <Grid x:Name="ExitOverlay"
-          IsVisible="False"
-          ZIndex="100"
-          Background="#BB000000">
-      <Border Classes="pipboy-panel"
-              Width="320"
-              Padding="24"
-              HorizontalAlignment="Center"
-              VerticalAlignment="Center">
-        <StackPanel Spacing="10">
-
-          <TextBlock x:Name="ExitTitleText"
-                     Classes="h1"
-                     HorizontalAlignment="Center" />
-          <Separator />
-
-          <Button x:Name="ExitToMenuBtn"
-                  HorizontalAlignment="Stretch"
-                  HorizontalContentAlignment="Center" />
-
-          <!-- Hidden on Browser / Android / iOS -->
-          <Button x:Name="ExitQuitBtn"
-                  Classes="danger"
-                  HorizontalAlignment="Stretch"
-                  HorizontalContentAlignment="Center"
-                  IsVisible="False" />
-
-          <Button x:Name="ExitCancelBtn"
-                  Classes="ghost"
-                  HorizontalAlignment="Stretch"
-                  HorizontalContentAlignment="Center" />
-
-        </StackPanel>
-      </Border>
-    </Grid>
-
-    <!-- ══════════════════════════════════════════════════════════════════════ -->
-    <!-- Ally Deployed Overlay — shown briefly when an ally tank joins         -->
-    <!-- ══════════════════════════════════════════════════════════════════════ -->
-    <Grid x:Name="AllyOverlay"
-          IsVisible="False"
-          ZIndex="150"
-          Background="#AA000000">
-      <Border Classes="pipboy-panel"
-              Width="340"
-              Padding="24,18"
-              HorizontalAlignment="Center"
-              VerticalAlignment="Center">
-        <StackPanel Spacing="6" HorizontalAlignment="Center">
-          <TextBlock Text="◈"
-                     FontSize="26"
-                     HorizontalAlignment="Center" />
-          <TextBlock x:Name="AllyTitleText"
-                     Classes="h1"
-                     FontSize="20"
-                     HorizontalAlignment="Center" />
-          <TextBlock x:Name="AllySubText"
-                     Classes="dim"
-                     FontSize="11"
-                     HorizontalAlignment="Center" />
-        </StackPanel>
-      </Border>
-    </Grid>
-
-    <!-- ══════════════════════════════════════════════════════════════════════ -->
-    <!-- Stage Announcement Overlay — shown briefly when a level starts        -->
-    <!-- ══════════════════════════════════════════════════════════════════════ -->
-    <Grid x:Name="StageOverlay"
-          IsVisible="False"
-          ZIndex="200"
-          Background="#CC000000">
-      <Border Classes="pipboy-panel"
-              Width="360"
-              Padding="32,24"
-              HorizontalAlignment="Center"
-              VerticalAlignment="Center">
-        <StackPanel Spacing="8" HorizontalAlignment="Center">
-          <TextBlock x:Name="StageNumberText"
-                     Text="STAGE 1"
-                     Classes="h1"
-                     FontSize="36"
-                     HorizontalAlignment="Center" />
-          <TextBlock x:Name="StageSubText"
-                     Text="第一关"
-                     Classes="dim"
-                     FontSize="18"
-                     HorizontalAlignment="Center" />
-        </StackPanel>
-      </Border>
-    </Grid>
-
-  </Grid>
 </UserControl>

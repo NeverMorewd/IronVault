@@ -1,117 +1,211 @@
-<UserControl xmlns="https://github.com/avaloniaui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:pipboy="clr-namespace:Pipboy.Avalonia;assembly=Pipboy.Avalonia"
-             x:Class="IronVault.Views.UpgradeView">
+<UserControl
+    x:Class="IronVault.Views.UpgradeView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:pipboy="clr-namespace:Pipboy.Avalonia;assembly=Pipboy.Avalonia"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
-  <Grid Background="{DynamicResource PipboyBackgroundBrush}">
-    <StackPanel VerticalAlignment="Center"
+    <Grid Background="{DynamicResource PipboyBackgroundBrush}">
+        <StackPanel
+            HorizontalAlignment="Center"
+            MaxWidth="600"
+            MinWidth="520"
+            Spacing="0"
+            VerticalAlignment="Center">
+
+            <!--  ── Wave cleared header ──  -->
+            <Border Classes="pipboy-panel" Margin="0,0,0,18">
+                <StackPanel HorizontalAlignment="Center" Spacing="8">
+                    <TextBlock
+                        Classes="h1"
+                        FontSize="26"
+                        HorizontalAlignment="Center"
+                        x:Name="WaveClearedText" />
+                    <TextBlock
+                        Classes="dim"
+                        HorizontalAlignment="Center"
+                        Text="——  TACTICAL DEBRIEF  ——"
+                        x:Name="DebriefLabel" />
+                    <Grid ColumnDefinitions="*,Auto,*" Margin="0,6,0,0">
+                        <StackPanel
+                            Grid.Column="0"
+                            HorizontalAlignment="Center"
+                            Spacing="3">
+                            <TextBlock
+                                Classes="dim"
+                                FontSize="11"
+                                HorizontalAlignment="Center"
+                                Text="SCORE"
+                                x:Name="ScoreLabel" />
+                            <TextBlock
+                                FontSize="22"
+                                HorizontalAlignment="Center"
+                                x:Name="ScoreText" />
+                        </StackPanel>
+                        <Border
+                            Background="{DynamicResource PipboyBorderBrush}"
+                            Grid.Column="1"
+                            Margin="16,0"
+                            Width="1" />
+                        <StackPanel
+                            Grid.Column="2"
+                            HorizontalAlignment="Center"
+                            Spacing="3">
+                            <TextBlock
+                                Classes="dim"
+                                FontSize="11"
+                                HorizontalAlignment="Center"
+                                Text="NEXT WAVE"
+                                x:Name="NextWaveLabel" />
+                            <TextBlock
+                                FontSize="22"
+                                HorizontalAlignment="Center"
+                                x:Name="NextWaveText" />
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <!--  ── Upgrade section header ──  -->
+            <TextBlock
+                Classes="h2"
                 HorizontalAlignment="Center"
-                MinWidth="520"
-                MaxWidth="600"
-                Spacing="0">
+                Margin="0,0,0,12"
+                Text="◆  SELECT FIELD UPGRADE  ◆"
+                x:Name="SelectHeader" />
 
-      <!-- ── Wave cleared header ── -->
-      <Border Classes="pipboy-panel" Margin="0,0,0,18">
-        <StackPanel Spacing="8" HorizontalAlignment="Center">
-          <TextBlock x:Name="WaveClearedText"
-                     Classes="h1"
-                     FontSize="26"
-                     HorizontalAlignment="Center" />
-          <TextBlock x:Name="DebriefLabel"
-                     Text="——  TACTICAL DEBRIEF  ——"
-                     Classes="dim"
-                     HorizontalAlignment="Center" />
-          <Grid ColumnDefinitions="*,Auto,*" Margin="0,6,0,0">
-            <StackPanel Grid.Column="0" HorizontalAlignment="Center" Spacing="3">
-              <TextBlock x:Name="ScoreLabel"  Text="SCORE"     Classes="dim" FontSize="11" HorizontalAlignment="Center" />
-              <TextBlock x:Name="ScoreText"   FontSize="22"    HorizontalAlignment="Center" />
-            </StackPanel>
-            <Border Grid.Column="1"
-                    Width="1"
-                    Background="{DynamicResource PipboyBorderBrush}"
-                    Margin="16,0" />
-            <StackPanel Grid.Column="2" HorizontalAlignment="Center" Spacing="3">
-              <TextBlock x:Name="NextWaveLabel" Text="NEXT WAVE" Classes="dim" FontSize="11" HorizontalAlignment="Center" />
-              <TextBlock x:Name="NextWaveText"  FontSize="22"    HorizontalAlignment="Center" />
-            </StackPanel>
-          </Grid>
+            <!--  ── Upgrade card 0 ──  -->
+            <Button
+                HorizontalAlignment="Stretch"
+                HorizontalContentAlignment="Left"
+                Margin="0,0,0,7"
+                Padding="16,12"
+                x:Name="UpBtn0">
+                <Grid ColumnDefinitions="44,*,Auto">
+                    <TextBlock
+                        FontSize="22"
+                        Grid.Column="0"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        x:Name="UpIcon0" />
+                    <StackPanel
+                        Grid.Column="1"
+                        Margin="10,0,0,0"
+                        Spacing="3"
+                        VerticalAlignment="Center">
+                        <TextBlock FontWeight="Bold" x:Name="UpName0" />
+                        <TextBlock
+                            Classes="dim"
+                            FontSize="11"
+                            x:Name="UpDesc0" />
+                    </StackPanel>
+                    <TextBlock
+                        Classes="dim"
+                        FontSize="11"
+                        Grid.Column="2"
+                        Text="[ SELECT ]"
+                        VerticalAlignment="Center"
+                        x:Name="SelectHint0" />
+                </Grid>
+            </Button>
+
+            <!--  ── Upgrade card 1 ──  -->
+            <Button
+                HorizontalAlignment="Stretch"
+                HorizontalContentAlignment="Left"
+                Margin="0,0,0,7"
+                Padding="16,12"
+                x:Name="UpBtn1">
+                <Grid ColumnDefinitions="44,*,Auto">
+                    <TextBlock
+                        FontSize="22"
+                        Grid.Column="0"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        x:Name="UpIcon1" />
+                    <StackPanel
+                        Grid.Column="1"
+                        Margin="10,0,0,0"
+                        Spacing="3"
+                        VerticalAlignment="Center">
+                        <TextBlock FontWeight="Bold" x:Name="UpName1" />
+                        <TextBlock
+                            Classes="dim"
+                            FontSize="11"
+                            x:Name="UpDesc1" />
+                    </StackPanel>
+                    <TextBlock
+                        Classes="dim"
+                        FontSize="11"
+                        Grid.Column="2"
+                        Text="[ SELECT ]"
+                        VerticalAlignment="Center"
+                        x:Name="SelectHint1" />
+                </Grid>
+            </Button>
+
+            <!--  ── Upgrade card 2 ──  -->
+            <Button
+                HorizontalAlignment="Stretch"
+                HorizontalContentAlignment="Left"
+                Margin="0,0,0,7"
+                Padding="16,12"
+                x:Name="UpBtn2">
+                <Grid ColumnDefinitions="44,*,Auto">
+                    <TextBlock
+                        FontSize="22"
+                        Grid.Column="0"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        x:Name="UpIcon2" />
+                    <StackPanel
+                        Grid.Column="1"
+                        Margin="10,0,0,0"
+                        Spacing="3"
+                        VerticalAlignment="Center">
+                        <TextBlock FontWeight="Bold" x:Name="UpName2" />
+                        <TextBlock
+                            Classes="dim"
+                            FontSize="11"
+                            x:Name="UpDesc2" />
+                    </StackPanel>
+                    <TextBlock
+                        Classes="dim"
+                        FontSize="11"
+                        Grid.Column="2"
+                        Text="[ SELECT ]"
+                        VerticalAlignment="Center"
+                        x:Name="SelectHint2" />
+                </Grid>
+            </Button>
+
+            <!--  ── Ally reward notice ──  -->
+            <Border
+                Classes="pipboy-panel"
+                IsVisible="False"
+                Margin="0,8,0,0"
+                x:Name="AllyRewardBanner">
+                <TextBlock
+                    Classes="accent"
+                    FontSize="12"
+                    HorizontalAlignment="Center"
+                    Text="◈  ALLY TANK DEPLOYED TO YOUR POSITION"
+                    x:Name="AllyRewardText" />
+            </Border>
+
+            <!--  ── Skip ──  -->
+            <Button
+                HorizontalAlignment="Stretch"
+                HorizontalContentAlignment="Center"
+                Margin="0,14,0,0"
+                Padding="10,8"
+                x:Name="SkipBtn">
+                <TextBlock
+                    Classes="dim"
+                    Text="▷  SKIP — DEPLOY NEXT WAVE  ◁"
+                    x:Name="SkipText" />
+            </Button>
+
         </StackPanel>
-      </Border>
-
-      <!-- ── Upgrade section header ── -->
-      <TextBlock x:Name="SelectHeader"
-                 Text="◆  SELECT FIELD UPGRADE  ◆"
-                 Classes="h2"
-                 HorizontalAlignment="Center"
-                 Margin="0,0,0,12" />
-
-      <!-- ── Upgrade card 0 ── -->
-      <Button x:Name="UpBtn0"
-              HorizontalAlignment="Stretch"
-              HorizontalContentAlignment="Left"
-              Padding="16,12"
-              Margin="0,0,0,7">
-        <Grid ColumnDefinitions="44,*,Auto">
-          <TextBlock x:Name="UpIcon0" Grid.Column="0" FontSize="22" VerticalAlignment="Center" HorizontalAlignment="Center" />
-          <StackPanel Grid.Column="1" Spacing="3" Margin="10,0,0,0" VerticalAlignment="Center">
-            <TextBlock x:Name="UpName0" FontWeight="Bold" />
-            <TextBlock x:Name="UpDesc0" Classes="dim" FontSize="11" />
-          </StackPanel>
-          <TextBlock x:Name="SelectHint0" Grid.Column="2" Text="[ SELECT ]" Classes="dim" FontSize="11" VerticalAlignment="Center" />
-        </Grid>
-      </Button>
-
-      <!-- ── Upgrade card 1 ── -->
-      <Button x:Name="UpBtn1"
-              HorizontalAlignment="Stretch"
-              HorizontalContentAlignment="Left"
-              Padding="16,12"
-              Margin="0,0,0,7">
-        <Grid ColumnDefinitions="44,*,Auto">
-          <TextBlock x:Name="UpIcon1" Grid.Column="0" FontSize="22" VerticalAlignment="Center" HorizontalAlignment="Center" />
-          <StackPanel Grid.Column="1" Spacing="3" Margin="10,0,0,0" VerticalAlignment="Center">
-            <TextBlock x:Name="UpName1" FontWeight="Bold" />
-            <TextBlock x:Name="UpDesc1" Classes="dim" FontSize="11" />
-          </StackPanel>
-          <TextBlock x:Name="SelectHint1" Grid.Column="2" Text="[ SELECT ]" Classes="dim" FontSize="11" VerticalAlignment="Center" />
-        </Grid>
-      </Button>
-
-      <!-- ── Upgrade card 2 ── -->
-      <Button x:Name="UpBtn2"
-              HorizontalAlignment="Stretch"
-              HorizontalContentAlignment="Left"
-              Padding="16,12"
-              Margin="0,0,0,7">
-        <Grid ColumnDefinitions="44,*,Auto">
-          <TextBlock x:Name="UpIcon2" Grid.Column="0" FontSize="22" VerticalAlignment="Center" HorizontalAlignment="Center" />
-          <StackPanel Grid.Column="1" Spacing="3" Margin="10,0,0,0" VerticalAlignment="Center">
-            <TextBlock x:Name="UpName2" FontWeight="Bold" />
-            <TextBlock x:Name="UpDesc2" Classes="dim" FontSize="11" />
-          </StackPanel>
-          <TextBlock x:Name="SelectHint2" Grid.Column="2" Text="[ SELECT ]" Classes="dim" FontSize="11" VerticalAlignment="Center" />
-        </Grid>
-      </Button>
-
-      <!-- ── Ally reward notice ── -->
-      <Border x:Name="AllyRewardBanner" Classes="pipboy-panel" IsVisible="False" Margin="0,8,0,0">
-        <TextBlock x:Name="AllyRewardText"
-                   Text="◈  ALLY TANK DEPLOYED TO YOUR POSITION"
-                   Classes="accent"
-                   HorizontalAlignment="Center"
-                   FontSize="12" />
-      </Border>
-
-      <!-- ── Skip ── -->
-      <Button x:Name="SkipBtn"
-              HorizontalAlignment="Stretch"
-              HorizontalContentAlignment="Center"
-              Margin="0,14,0,0"
-              Padding="10,8">
-        <TextBlock x:Name="SkipText" Text="▷  SKIP — DEPLOY NEXT WAVE  ◁" Classes="dim" />
-      </Button>
-
-    </StackPanel>
-  </Grid>
+    </Grid>
 
 </UserControl>

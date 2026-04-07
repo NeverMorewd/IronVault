@@ -1,188 +1,229 @@
-<UserControl xmlns="https://github.com/avaloniaui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:pipboy="clr-namespace:Pipboy.Avalonia;assembly=Pipboy.Avalonia"
-             x:Class="IronVault.Views.MenuView">
+<UserControl
+    x:Class="IronVault.Views.MenuView"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:pipboy="clr-namespace:Pipboy.Avalonia;assembly=Pipboy.Avalonia"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
 
-  <Grid Background="{DynamicResource PipboyBackgroundBrush}">
-  <ScrollViewer VerticalScrollBarVisibility="Auto"
-                HorizontalScrollBarVisibility="Disabled">
-  <StackPanel VerticalAlignment="Center"
-              HorizontalAlignment="Stretch"
-              Margin="16,14,16,14"
-              Spacing="10">
+    <Grid Background="{DynamicResource PipboyBackgroundBrush}">
+        <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+            <StackPanel
+                HorizontalAlignment="Stretch"
+                Margin="16,14,16,14"
+                Spacing="10"
+                VerticalAlignment="Center">
 
-    <!-- ══ HEADER ══════════════════════════════════════════════════════════ -->
-    <Border Classes="pipboy-panel">
-      <StackPanel Spacing="6">
+                <!--  ══ HEADER ══════════════════════════════════════════════════════════  -->
+                <Border Classes="pipboy-panel">
+                    <StackPanel Spacing="6">
 
-        <!-- Title row with bracket decorations -->
-        <Grid ColumnDefinitions="Auto,*,Auto">
-          <TextBlock Grid.Column="0"
-                     Text="▌"
-                     FontSize="26"
-                     Opacity="0.55"
-                     VerticalAlignment="Center"
-                     Margin="0,0,8,0" />
-          <StackPanel Grid.Column="1" HorizontalAlignment="Center" Spacing="3">
-            <TextBlock x:Name="TitleText"
-                       Text="IRON VAULT"
-                       Classes="h1"
-                       FontSize="30"
-                       HorizontalAlignment="Center"
-                       LetterSpacing="4" />
-            <TextBlock x:Name="SubtitleText"
-                       Text="铁  窖  计  划"
-                       HorizontalAlignment="Center"
-                       Opacity="0.65"
-                       FontSize="14" />
-          </StackPanel>
-          <TextBlock Grid.Column="2"
-                     Text="▌"
-                     FontSize="26"
-                     Opacity="0.55"
-                     VerticalAlignment="Center"
-                     Margin="8,0,0,0" />
-        </Grid>
+                        <!--  Title row with bracket decorations  -->
+                        <Grid ColumnDefinitions="Auto,*,Auto">
+                            <TextBlock
+                                FontSize="26"
+                                Grid.Column="0"
+                                Margin="0,0,8,0"
+                                Opacity="0.55"
+                                Text="▌"
+                                VerticalAlignment="Center" />
+                            <StackPanel
+                                Grid.Column="1"
+                                HorizontalAlignment="Center"
+                                Spacing="3">
+                                <TextBlock
+                                    Classes="h1"
+                                    FontSize="30"
+                                    HorizontalAlignment="Center"
+                                    LetterSpacing="4"
+                                    Text="IRON VAULT"
+                                    x:Name="TitleText" />
+                                <TextBlock
+                                    FontSize="14"
+                                    HorizontalAlignment="Center"
+                                    Opacity="0.65"
+                                    Text="铁  窖  计  划"
+                                    x:Name="SubtitleText" />
+                            </StackPanel>
+                            <TextBlock
+                                FontSize="26"
+                                Grid.Column="2"
+                                Margin="8,0,0,0"
+                                Opacity="0.55"
+                                Text="▌"
+                                VerticalAlignment="Center" />
+                        </Grid>
 
-        <Separator />
+                        <Separator />
 
-        <TextBlock x:Name="TaglineText"
-                   Classes="dim"
-                   HorizontalAlignment="Center"
-                   FontSize="10"
-                   LetterSpacing="1" />
+                        <TextBlock
+                            Classes="dim"
+                            FontSize="10"
+                            HorizontalAlignment="Center"
+                            LetterSpacing="1"
+                            x:Name="TaglineText" />
 
-      </StackPanel>
-    </Border>
+                    </StackPanel>
+                </Border>
 
-    <!-- ══ MODE  +  DIFFICULTY (side by side) ══════════════════════════════ -->
-    <Grid ColumnDefinitions="*,12,*">
+                <!--  ══ MODE  +  DIFFICULTY (side by side) ══════════════════════════════  -->
+                <Grid ColumnDefinitions="*,12,*">
 
-      <!-- LEFT: Operation Mode -->
-      <Border Classes="pipboy-panel" Grid.Column="0">
-        <StackPanel Spacing="8">
-          <TextBlock x:Name="ModeLabel"
-                     Classes="h2"
-                     HorizontalAlignment="Center"
-                     FontSize="11" />
-          <StackPanel Spacing="5">
-            <Button x:Name="ClassicBtn"
+                    <!--  LEFT: Operation Mode  -->
+                    <Border Classes="pipboy-panel" Grid.Column="0">
+                        <StackPanel Spacing="8">
+                            <TextBlock
+                                Classes="h2"
+                                FontSize="11"
+                                HorizontalAlignment="Center"
+                                x:Name="ModeLabel" />
+                            <StackPanel Spacing="5">
+                                <Button
+                                    FontSize="12"
+                                    HorizontalAlignment="Stretch"
+                                    HorizontalContentAlignment="Center"
+                                    x:Name="ClassicBtn" />
+                                <Button
+                                    FontSize="12"
+                                    HorizontalAlignment="Stretch"
+                                    HorizontalContentAlignment="Center"
+                                    x:Name="DefenseBtn" />
+                            </StackPanel>
+                            <TextBlock
+                                Classes="dim"
+                                FontSize="10"
+                                Height="32"
+                                TextAlignment="Center"
+                                TextWrapping="Wrap"
+                                x:Name="ModeDesc" />
+                        </StackPanel>
+                    </Border>
+
+                    <!--  RIGHT: Tactical Rating  -->
+                    <Border Classes="pipboy-panel" Grid.Column="2">
+                        <StackPanel Spacing="8">
+                            <TextBlock
+                                Classes="h2"
+                                FontSize="11"
+                                HorizontalAlignment="Center"
+                                x:Name="DifficultyLabel" />
+                            <StackPanel Spacing="5">
+                                <Button
+                                    FontSize="12"
+                                    HorizontalAlignment="Stretch"
+                                    HorizontalContentAlignment="Center"
+                                    x:Name="EasyBtn" />
+                                <Button
+                                    FontSize="12"
+                                    HorizontalAlignment="Stretch"
+                                    HorizontalContentAlignment="Center"
+                                    x:Name="NormalBtn" />
+                                <Button
+                                    FontSize="12"
+                                    HorizontalAlignment="Stretch"
+                                    HorizontalContentAlignment="Center"
+                                    x:Name="HardBtn" />
+                            </StackPanel>
+                            <TextBlock
+                                Classes="dim"
+                                FontSize="10"
+                                Height="32"
+                                TextAlignment="Center"
+                                TextWrapping="Wrap"
+                                x:Name="DiffDesc" />
+                        </StackPanel>
+                    </Border>
+
+                </Grid>
+
+                <!--  ══ SYSTEM STATUS STRIP ══════════════════════════════════════════════  -->
+                <Border Classes="pipboy-panel" Padding="12,7">
+                    <Grid ColumnDefinitions="*,*">
+                        <StackPanel Grid.Column="0" Spacing="3">
+                            <TextBlock
+                                Classes="dim"
+                                FontSize="9"
+                                Text="● VECTOR ENGINE    ONLINE" />
+                            <TextBlock
+                                Classes="dim"
+                                FontSize="9"
+                                Text="● AUDIO SYNTH      READY" />
+                        </StackPanel>
+                        <StackPanel
+                            Grid.Column="1"
+                            HorizontalAlignment="Right"
+                            Spacing="3">
+                            <TextBlock
+                                Classes="dim"
+                                FontSize="9"
+                                Text="TACTICAL AI    STANDBY ●" />
+                            <TextBlock
+                                Classes="dim"
+                                FontSize="9"
+                                Text="MAP LIBRARY   100 LVL  ●" />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <!--  ══ DEPLOY BUTTON ════════════════════════════════════════════════════  -->
+                <Button
+                    Classes="deploy"
+                    FontSize="16"
                     HorizontalAlignment="Stretch"
                     HorizontalContentAlignment="Center"
-                    FontSize="12" />
-            <Button x:Name="DefenseBtn"
-                    HorizontalAlignment="Stretch"
-                    HorizontalContentAlignment="Center"
-                    FontSize="12" />
-          </StackPanel>
-          <TextBlock x:Name="ModeDesc"
-                     Classes="dim"
-                     FontSize="10"
-                     TextWrapping="Wrap"
-                     TextAlignment="Center"
-                     Height="32" />
-        </StackPanel>
-      </Border>
+                    Padding="12,14"
+                    x:Name="StartBtn">
+                    <TextBlock
+                        FontWeight="Bold"
+                        LetterSpacing="2"
+                        x:Name="DeployText" />
+                </Button>
 
-      <!-- RIGHT: Tactical Rating -->
-      <Border Classes="pipboy-panel" Grid.Column="2">
-        <StackPanel Spacing="8">
-          <TextBlock x:Name="DifficultyLabel"
-                     Classes="h2"
-                     HorizontalAlignment="Center"
-                     FontSize="11" />
-          <StackPanel Spacing="5">
-            <Button x:Name="EasyBtn"
-                    HorizontalAlignment="Stretch"
-                    HorizontalContentAlignment="Center"
-                    FontSize="12" />
-            <Button x:Name="NormalBtn"
-                    HorizontalAlignment="Stretch"
-                    HorizontalContentAlignment="Center"
-                    FontSize="12" />
-            <Button x:Name="HardBtn"
-                    HorizontalAlignment="Stretch"
-                    HorizontalContentAlignment="Center"
-                    FontSize="12" />
-          </StackPanel>
-          <TextBlock x:Name="DiffDesc"
-                     Classes="dim"
-                     FontSize="10"
-                     TextWrapping="Wrap"
-                     TextAlignment="Center"
-                     Height="32" />
-        </StackPanel>
-      </Border>
+                <!--  ══ ABORT  +  LANGUAGE ═══════════════════════════════════════════════  -->
+                <Grid ColumnDefinitions="*,Auto">
 
+                    <Button
+                        Grid.Column="0"
+                        HorizontalAlignment="Stretch"
+                        HorizontalContentAlignment="Center"
+                        Margin="0,0,8,0"
+                        Padding="10,8"
+                        x:Name="ExitBtn">
+                        <TextBlock Classes="dim" x:Name="AbortText" />
+                    </Button>
+
+                    <StackPanel
+                        Grid.Column="1"
+                        Orientation="Horizontal"
+                        Spacing="6"
+                        VerticalAlignment="Center">
+                        <TextBlock
+                            Classes="dim"
+                            FontSize="11"
+                            VerticalAlignment="Center"
+                            x:Name="LangLabel" />
+                        <Button
+                            HorizontalContentAlignment="Center"
+                            Width="80"
+                            x:Name="LangEnBtn" />
+                        <Button
+                            HorizontalContentAlignment="Center"
+                            Width="80"
+                            x:Name="LangZhBtn" />
+                    </StackPanel>
+
+                </Grid>
+
+                <!--  ══ FOOTER ═══════════════════════════════════════════════════════════  -->
+                <TextBlock
+                    Classes="dim"
+                    FontSize="8"
+                    HorizontalAlignment="Center"
+                    Opacity="0.55"
+                    TextAlignment="Center"
+                    TextWrapping="Wrap"
+                    x:Name="FooterText" />
+
+            </StackPanel>
+        </ScrollViewer>
     </Grid>
-
-    <!-- ══ SYSTEM STATUS STRIP ══════════════════════════════════════════════ -->
-    <Border Classes="pipboy-panel" Padding="12,7">
-      <Grid ColumnDefinitions="*,*">
-        <StackPanel Grid.Column="0" Spacing="3">
-          <TextBlock Text="● VECTOR ENGINE    ONLINE" Classes="dim" FontSize="9" />
-          <TextBlock Text="● AUDIO SYNTH      READY"  Classes="dim" FontSize="9" />
-        </StackPanel>
-        <StackPanel Grid.Column="1" Spacing="3" HorizontalAlignment="Right">
-          <TextBlock Text="TACTICAL AI    STANDBY ●" Classes="dim" FontSize="9" />
-          <TextBlock Text="MAP LIBRARY   100 LVL  ●" Classes="dim" FontSize="9" />
-        </StackPanel>
-      </Grid>
-    </Border>
-
-    <!-- ══ DEPLOY BUTTON ════════════════════════════════════════════════════ -->
-    <Button x:Name="StartBtn"
-            HorizontalAlignment="Stretch"
-            HorizontalContentAlignment="Center"
-            FontSize="16"
-            Padding="12,14"
-            Classes="deploy">
-      <TextBlock x:Name="DeployText"
-                 FontWeight="Bold"
-                 LetterSpacing="2" />
-    </Button>
-
-    <!-- ══ ABORT  +  LANGUAGE ═══════════════════════════════════════════════ -->
-    <Grid ColumnDefinitions="*,Auto">
-
-      <Button x:Name="ExitBtn"
-              Grid.Column="0"
-              HorizontalAlignment="Stretch"
-              HorizontalContentAlignment="Center"
-              Padding="10,8"
-              Margin="0,0,8,0">
-        <TextBlock x:Name="AbortText" Classes="dim" />
-      </Button>
-
-      <StackPanel Grid.Column="1"
-                  Orientation="Horizontal"
-                  Spacing="6"
-                  VerticalAlignment="Center">
-        <TextBlock x:Name="LangLabel"
-                   Classes="dim"
-                   FontSize="11"
-                   VerticalAlignment="Center" />
-        <Button x:Name="LangEnBtn"
-                Width="80"
-                HorizontalContentAlignment="Center" />
-        <Button x:Name="LangZhBtn"
-                Width="80"
-                HorizontalContentAlignment="Center" />
-      </StackPanel>
-
-    </Grid>
-
-    <!-- ══ FOOTER ═══════════════════════════════════════════════════════════ -->
-    <TextBlock x:Name="FooterText"
-               Classes="dim"
-               FontSize="8"
-               HorizontalAlignment="Center"
-               TextWrapping="Wrap"
-               TextAlignment="Center"
-               Opacity="0.55" />
-
-  </StackPanel>
-  </ScrollViewer>
-  </Grid>
 
 </UserControl>

@@ -1,10 +1,12 @@
-﻿<pipboy:PipboyWindow xmlns="https://github.com/avaloniaui"
-                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                    xmlns:pipboy="clr-namespace:Pipboy.Avalonia;assembly=Pipboy.Avalonia"
-                    x:Class="IronVault.MainWindow"
-                    Title="IRON VAULT"
-                    Width="858" Height="940"
-                    MinWidth="560" MinHeight="600"
-                    WindowStartupLocation="CenterScreen">
-  <!-- Content is set in code-behind from the DI container -->
+﻿<pipboy:PipboyWindow
+    x:Class="IronVault.MainWindow"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:pipboy="clr-namespace:Pipboy.Avalonia;assembly=Pipboy.Avalonia"
+    Title="IRON VAULT"
+    SizeToContent="WidthAndHeight"
+    MinWidth="160"
+    MinHeight="100"
+    WindowStartupLocation="Manual">
+    <!--  Content is set in code-behind from the DI container  -->
 </pipboy:PipboyWindow>

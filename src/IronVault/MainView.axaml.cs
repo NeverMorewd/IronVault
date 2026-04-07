@@ -1,6 +1,7 @@
-using Avalonia;
+﻿using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Threading;
 using IronVault.Core.Engine;
 using IronVault.Core.Engine.Systems;
 using IronVault.Navigation;
@@ -51,6 +52,7 @@ public partial class MainView : UserControl
                 case AppScreen.Game:        gameView.Focus();        break;
                 case AppScreen.Upgrade:     upgradeView.Focus();     break;
             }
+            SetPosition();
         };
 
         // ── Game-flow events ─────────────────────────────────────────────────
@@ -61,7 +63,6 @@ public partial class MainView : UserControl
 
             if (args.Mode == GameMode.Defense)
             {
-                // 防守模式使用固定默认地图，不需要关卡选择
                 _pendingLevel = 1;
                 vm.StartGame(_pendingDifficulty, _pendingMode, _pendingLevel);
                 nav.NavigateTo(AppScreen.Game);
@@ -109,5 +110,27 @@ public partial class MainView : UserControl
 
         // ── Initial screen ───────────────────────────────────────────────────
         nav.NavigateTo(AppScreen.Menu);
+    }
+
+    private void SetPosition()
+    {
+        _ = Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            if (Application.Current!.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime)
+            {
+                if (this.VisualRoot is Window window)
+                {
+                    var screen = window.Screens.Primary;
+                    if (screen == null) return;
+                    var workingArea = screen.WorkingArea;
+
+                    window.Position = new PixelPoint(
+                        workingArea.X + (int)((workingArea.Width - window.Width) / 2),
+                        workingArea.Y + (int)((workingArea.Height - window.Height) / 2)
+                    );
+                }
+            }
+        }, DispatcherPriority.Loaded);
+
     }
 }
