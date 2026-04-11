@@ -30,7 +30,7 @@
        Version is replaced at build time by the CI workflow.           -->
   <Identity
     Name="IronVault"
-    Publisher="CN=IronVaultDev"
+    Publisher="CN=68653AD0-385D-4B73-A7F9-5D186EB5B86A"
     Version="1.0.0.0"
     ProcessorArchitecture="x64" />
 
