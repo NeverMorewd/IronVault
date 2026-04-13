@@ -202,7 +202,7 @@ jobs:
           # For a .msixupload Partner Center upload the Store will re-sign the package.
           $cert = New-SelfSignedCertificate `
             -Type Custom `
-            -Subject "CN=IronVaultDev" `
+            -Subject "CN=68653AD0-385D-4B73-A7F9-5D186EB5B86A" `
             -KeyUsage DigitalSignature `
             -FriendlyName "IronVault Dev" `
             -CertStoreLocation "Cert:\CurrentUser\My" `

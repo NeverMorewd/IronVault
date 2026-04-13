@@ -73,14 +73,15 @@ Filename: "{app}\{#AppExeName}"; \
 ; ¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T¨T
 
 [Code]
-
 const
   UNINST_KEY = 'Software\Microsoft\Windows\CurrentVersion\Uninstall\' +
                '{7A1E3C4D-2B6F-4D8E-9A3C-5F71B0E2D8A9}_is1';
 
 var
   GAlreadyInstalled: Boolean;
+  GNeedsRestart: Boolean;   // Captured in NeedRestart() for use in exit-code mapping
 
+// ©¤©¤ Called once at startup: detect whether an existing installation is present ©¤©¤
 function InitializeSetup(): Boolean;
 var
   S: String;
@@ -89,11 +90,25 @@ begin
   GAlreadyInstalled :=
     RegQueryStringValue(HKLM, UNINST_KEY, 'UninstallString', S) or
     RegQueryStringValue(HKCU, UNINST_KEY, 'UninstallString', S);
+  GNeedsRestart := False;
 end;
 
+// ©¤©¤ Called by the wizard after files are installed ©¤©¤
+// Returning True here triggers the "Restart now?" prompt.
+// We also cache the result so GetCustomSetupExitCode can read it safely.
+function NeedRestart(): Boolean;
+begin
+  Result := False;          // Change to True if your app ever requires a reboot
+  GNeedsRestart := Result;
+end;
+
+// ©¤©¤ CI / Microsoft Store compatible exit codes ©¤©¤
+//   0    = clean first-time install
+//   1638 = product already installed (another version present)
+//   3010 = success, but a reboot is required
 function GetCustomSetupExitCode: Integer;
 begin
-  if WizardNeedRestart then
+  if GNeedsRestart then
     Result := 3010
   else if GAlreadyInstalled then
     Result := 1638
