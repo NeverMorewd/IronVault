@@ -1,16 +1,16 @@
-<UserControl
+﻿<UserControl
     x:Class="IronVault.Views.MenuView"
     xmlns="https://github.com/avaloniaui"
-    xmlns:pipboy="clr-namespace:Pipboy.Avalonia;assembly=Pipboy.Avalonia"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:pipboy="clr-namespace:Pipboy.Avalonia;assembly=Pipboy.Avalonia">
 
     <Grid Background="{DynamicResource PipboyBackgroundBrush}">
         <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
             <StackPanel
-                HorizontalAlignment="Stretch"
                 Margin="16,14,16,14"
-                Spacing="10"
-                VerticalAlignment="Center">
+                HorizontalAlignment="Stretch"
+                VerticalAlignment="Center"
+                Spacing="10">
 
                 <!--  ══ HEADER ══════════════════════════════════════════════════════════  -->
                 <Border Classes="pipboy-panel">
@@ -19,47 +19,47 @@
                         <!--  Title row with bracket decorations  -->
                         <Grid ColumnDefinitions="Auto,*,Auto">
                             <TextBlock
-                                FontSize="26"
                                 Grid.Column="0"
                                 Margin="0,0,8,0"
+                                VerticalAlignment="Center"
+                                FontSize="26"
                                 Opacity="0.55"
-                                Text="▌"
-                                VerticalAlignment="Center" />
+                                Text="▌" />
                             <StackPanel
                                 Grid.Column="1"
                                 HorizontalAlignment="Center"
                                 Spacing="3">
                                 <TextBlock
+                                    x:Name="TitleText"
+                                    HorizontalAlignment="Center"
                                     Classes="h1"
                                     FontSize="30"
-                                    HorizontalAlignment="Center"
                                     LetterSpacing="4"
-                                    Text="IRON VAULT"
-                                    x:Name="TitleText" />
+                                    Text="IRON VAULT" />
                                 <TextBlock
-                                    FontSize="14"
+                                    x:Name="SubtitleText"
                                     HorizontalAlignment="Center"
+                                    FontSize="14"
                                     Opacity="0.65"
-                                    Text="铁  窖  计  划"
-                                    x:Name="SubtitleText" />
+                                    Text="铁  窖  计  划" />
                             </StackPanel>
                             <TextBlock
-                                FontSize="26"
                                 Grid.Column="2"
                                 Margin="8,0,0,0"
+                                VerticalAlignment="Center"
+                                FontSize="26"
                                 Opacity="0.55"
-                                Text="▌"
-                                VerticalAlignment="Center" />
+                                Text="▌" />
                         </Grid>
 
                         <Separator />
 
                         <TextBlock
+                            x:Name="TaglineText"
+                            HorizontalAlignment="Center"
                             Classes="dim"
                             FontSize="10"
-                            HorizontalAlignment="Center"
-                            LetterSpacing="1"
-                            x:Name="TaglineText" />
+                            LetterSpacing="1" />
 
                     </StackPanel>
                 </Border>
@@ -68,74 +68,74 @@
                 <Grid ColumnDefinitions="*,12,*">
 
                     <!--  LEFT: Operation Mode  -->
-                    <Border Classes="pipboy-panel" Grid.Column="0">
+                    <Border Grid.Column="0" Classes="pipboy-panel">
                         <StackPanel Spacing="8">
                             <TextBlock
-                                Classes="h2"
-                                FontSize="11"
+                                x:Name="ModeLabel"
                                 HorizontalAlignment="Center"
-                                x:Name="ModeLabel" />
+                                Classes="h2"
+                                FontSize="11" />
                             <StackPanel Spacing="5">
                                 <Button
-                                    FontSize="12"
+                                    x:Name="ClassicBtn"
                                     HorizontalAlignment="Stretch"
                                     HorizontalContentAlignment="Center"
-                                    x:Name="ClassicBtn" />
+                                    FontSize="12" />
                                 <Button
-                                    FontSize="12"
+                                    x:Name="DefenseBtn"
                                     HorizontalAlignment="Stretch"
                                     HorizontalContentAlignment="Center"
-                                    x:Name="DefenseBtn" />
+                                    FontSize="12" />
                             </StackPanel>
                             <TextBlock
+                                x:Name="ModeDesc"
+                                Height="32"
                                 Classes="dim"
                                 FontSize="10"
-                                Height="32"
                                 TextAlignment="Center"
-                                TextWrapping="Wrap"
-                                x:Name="ModeDesc" />
+                                TextWrapping="Wrap" />
                         </StackPanel>
                     </Border>
 
                     <!--  RIGHT: Tactical Rating  -->
-                    <Border Classes="pipboy-panel" Grid.Column="2">
+                    <Border Grid.Column="2" Classes="pipboy-panel">
                         <StackPanel Spacing="8">
                             <TextBlock
-                                Classes="h2"
-                                FontSize="11"
+                                x:Name="DifficultyLabel"
                                 HorizontalAlignment="Center"
-                                x:Name="DifficultyLabel" />
+                                Classes="h2"
+                                FontSize="11" />
                             <StackPanel Spacing="5">
                                 <Button
-                                    FontSize="12"
+                                    x:Name="EasyBtn"
                                     HorizontalAlignment="Stretch"
                                     HorizontalContentAlignment="Center"
-                                    x:Name="EasyBtn" />
+                                    FontSize="12" />
                                 <Button
-                                    FontSize="12"
+                                    x:Name="NormalBtn"
                                     HorizontalAlignment="Stretch"
                                     HorizontalContentAlignment="Center"
-                                    x:Name="NormalBtn" />
+                                    FontSize="12" />
                                 <Button
-                                    FontSize="12"
+                                    x:Name="HardBtn"
                                     HorizontalAlignment="Stretch"
                                     HorizontalContentAlignment="Center"
-                                    x:Name="HardBtn" />
+                                    FontSize="12" />
                             </StackPanel>
                             <TextBlock
+                                x:Name="DiffDesc"
+                                Height="32"
                                 Classes="dim"
                                 FontSize="10"
-                                Height="32"
                                 TextAlignment="Center"
-                                TextWrapping="Wrap"
-                                x:Name="DiffDesc" />
+                                TextWrapping="Wrap" />
                         </StackPanel>
                     </Border>
 
                 </Grid>
 
                 <!--  ══ SYSTEM STATUS STRIP ══════════════════════════════════════════════  -->
-                <Border Classes="pipboy-panel" Padding="12,7">
+                <Border Padding="12,7" Classes="pipboy-panel">
                     <Grid ColumnDefinitions="*,*">
                         <StackPanel Grid.Column="0" Spacing="3">
                             <TextBlock
@@ -165,62 +165,62 @@
 
                 <!--  ══ DEPLOY BUTTON ════════════════════════════════════════════════════  -->
                 <Button
-                    Classes="deploy"
-                    FontSize="16"
+                    x:Name="StartBtn"
+                    Padding="12,14"
                     HorizontalAlignment="Stretch"
                     HorizontalContentAlignment="Center"
-                    Padding="12,14"
-                    x:Name="StartBtn">
+                    Classes="deploy"
+                    FontSize="16">
                     <TextBlock
+                        x:Name="DeployText"
                         FontWeight="Bold"
-                        LetterSpacing="2"
-                        x:Name="DeployText" />
+                        LetterSpacing="2" />
                 </Button>
 
                 <!--  ══ ABORT  +  LANGUAGE ═══════════════════════════════════════════════  -->
                 <Grid ColumnDefinitions="*,Auto">
 
                     <Button
+                        x:Name="ExitBtn"
                         Grid.Column="0"
-                        HorizontalAlignment="Stretch"
-                        HorizontalContentAlignment="Center"
                         Margin="0,0,8,0"
                         Padding="10,8"
-                        x:Name="ExitBtn">
-                        <TextBlock Classes="dim" x:Name="AbortText" />
+                        HorizontalAlignment="Stretch"
+                        HorizontalContentAlignment="Center">
+                        <TextBlock x:Name="AbortText" Classes="dim" />
                     </Button>
 
                     <StackPanel
                         Grid.Column="1"
+                        VerticalAlignment="Center"
                         Orientation="Horizontal"
-                        Spacing="6"
-                        VerticalAlignment="Center">
+                        Spacing="6">
                         <TextBlock
-                            Classes="dim"
-                            FontSize="11"
+                            x:Name="LangLabel"
                             VerticalAlignment="Center"
-                            x:Name="LangLabel" />
+                            Classes="dim"
+                            FontSize="11" />
                         <Button
-                            HorizontalContentAlignment="Center"
+                            x:Name="LangEnBtn"
                             Width="80"
-                            x:Name="LangEnBtn" />
+                            HorizontalContentAlignment="Center" />
                         <Button
-                            HorizontalContentAlignment="Center"
+                            x:Name="LangZhBtn"
                             Width="80"
-                            x:Name="LangZhBtn" />
+                            HorizontalContentAlignment="Center" />
                     </StackPanel>
 
                 </Grid>
 
-                <!--  ══ FOOTER ═══════════════════════════════════════════════════════════  -->
-                <TextBlock
-                    Classes="dim"
-                    FontSize="8"
+                <SelectableTextBlock
+					Margin="0,3,0,0"
+                    x:Name="FooterText"
                     HorizontalAlignment="Center"
+                    Classes="dim"
+                    FontSize="9"
                     Opacity="0.55"
                     TextAlignment="Center"
-                    TextWrapping="Wrap"
-                    x:Name="FooterText" />
+                    TextWrapping="Wrap" />
 
             </StackPanel>
         </ScrollViewer>
