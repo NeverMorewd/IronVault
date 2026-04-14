@@ -1,9 +1,11 @@
+﻿using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using IronVault.Audio;
 using IronVault.Core.Engine;
 using IronVault.Core.Engine.Systems;
 using IronVault.Core.Localization;
+using System.Reflection;
 
 namespace IronVault.Views;
 
@@ -114,7 +116,7 @@ public partial class MenuView : UserControl
         TitleText.Text       = I18n.T("app.title");
         SubtitleText.Text    = I18n.T("app.subtitle");
         TaglineText.Text     = I18n.T("app.tagline");
-        FooterText.Text      = I18n.T("app.footer");
+        FooterText.Text      = I18n.T("app.footer") + typeof(Application).Assembly.GetName().Version;
         ModeLabel.Text       = I18n.T("menu.mode");
         DifficultyLabel.Text = I18n.T("menu.difficulty");
         DeployText.Text      = I18n.T("menu.deploy");

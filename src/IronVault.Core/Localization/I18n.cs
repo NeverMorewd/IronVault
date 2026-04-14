@@ -1,3 +1,5 @@
+﻿using System.Reflection;
+
 namespace IronVault.Core.Localization;
 
 /// <summary>
@@ -57,7 +59,7 @@ public static class I18n
         ["app.title"]         = ("IRON VAULT",                              "铁  窖  计  划"),
         ["app.subtitle"]      = ("铁  窖  计  划",                          "IRON VAULT"),
         ["app.tagline"]       = ("ARMOURED COMBAT SIMULATION · VECTOR ENGINE", "装甲战斗模拟 · 矢量渲染引擎"),
-        ["app.footer"]        = ("© IRON VAULT SIM  ·  PURE VECTOR  ·  AOT", "© 铁窖计划 · 矢量渲染 · AOT"),
+        ["app.footer"]        = ($"© https://github.com/NeverMorewd  Powered by .NET {Environment.Version} and Avalonia ", $"© https://github.com/NeverMorewd  Powered .NET {Environment.Version} and Avalonia "),
 
         // ── Menu ─────────────────────────────────────────────────────────────
         ["menu.mode"]         = ("GAME MODE",                               "游戏模式"),
