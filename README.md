@@ -8,7 +8,9 @@
 
 A retro armoured-combat game built with [Avalonia UI](https://avaloniaui.net/) and styled with the [**Pipboy.Avalonia**](https://github.com/NeverMorewd/Pipboy.Avalonia) CRT theme library. Every tank, bullet, and explosion is drawn from pure vector geometry — no sprites, no bitmaps. Play it directly in your browser via WebAssembly, or run it natively on the desktop.
 
-> **🎮 [Play now in your browser →](https://nevermorewd.github.io/IronVault/)**
+> **🎮 [Play now in your browser(Github Pages) →](https://nevermorewd.github.io/IronVault/)**
+
+> **🎮 [Play now in your browser(CloudFlare) →](https://ironvault.nevermore-easley.workers.dev/)**
 
 ---
 
