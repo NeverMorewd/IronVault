@@ -2,7 +2,7 @@ name: Deploy to Cloudflare Pages
 
 on:
   push:
-    workflow_dispatch:
+  workflow_dispatch:
 
 jobs:
   build-and-deploy:
@@ -33,12 +33,14 @@ jobs:
             -p:InvariantGlobalization=true \
             -p:DebuggerSupport=false
 
+      - name: Check publish output
+        run: ls -la publish/
+
       - name: Install Wrangler
         run: npm install -g wrangler
 
       - name: Deploy to Cloudflare Pages
-        uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy publish --project-name=ironvault
+        run: wrangler pages deploy ./publish --project-name=ironvault
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
