@@ -34,16 +34,13 @@ jobs:
             -p:DebuggerSupport=false
 
       - name: Check publish output
-        run: ls -la publish/
+        run: ls -la publish/wwwroot/
 
       - name: Install Wrangler
         run: npm install -g wrangler
 
-      - name: Check publish output
-        run: ls -la publish/wwwroot/ 
-
-      - name: Deploy to Cloudflare Pages
-        run: wrangler pages deploy ./publish/wwwroot --project-name=ironvault
+      - name: Deploy to Cloudflare Workers
+        run: wrangler deploy --commit-dirty=true
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

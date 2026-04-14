@@ -1,0 +1,6 @@
+name = "ironvault"
+main = ""
+compatibility_date = "2026-04-14"
+
+[assets]
+directory = "./publish/wwwroot"
