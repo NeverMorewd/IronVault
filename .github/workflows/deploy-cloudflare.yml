@@ -1,0 +1,44 @@
+name: Deploy to Cloudflare Pages
+
+on:
+  push:
+    workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Install wasm-tools
+        run: dotnet workload install wasm-tools
+
+      - name: Publish
+        run: |
+          dotnet publish src/IronVault.Browser/IronVault.Browser.csproj \
+            -c Release \
+            -f net10.0-browser \
+            -o publish \
+            -p:RunAOTCompilation=true \
+            -p:WasmBuildNative=true \
+            -p:PublishTrimmed=true \
+            -p:TrimMode=full \
+            -p:InvariantGlobalization=true \
+            -p:DebuggerSupport=false
+
+      - name: Install Wrangler
+        run: npm install -g wrangler
+
+      - name: Deploy to Cloudflare Pages
+        run: |
+          wrangler pages deploy publish \
+            --project-name=ironvault
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
