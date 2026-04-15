@@ -1,4 +1,4 @@
-using IronVault.Core.Engine.Components;
+﻿using IronVault.Core.Engine.Components;
 using IronVault.Core.Engine.Entities;
 using IronVault.Core.Map;
 
@@ -115,22 +115,33 @@ public static class AllyAISystem
             {
                 float tx = target.Position.X + TankEntity.Size * .5f;
                 float ty = target.Position.Y + TankEntity.Size * .5f;
-                bool aligned = ally.Position.Facing switch
+
+                bool alignedWithEnemy = ally.Position.Facing switch
                 {
-                    Direction.Up    => MathF.Abs(ax - tx) < TankEntity.Size * .6f && ty < ay,
-                    Direction.Down  => MathF.Abs(ax - tx) < TankEntity.Size * .6f && ty > ay,
-                    Direction.Left  => MathF.Abs(ay - ty) < TankEntity.Size * .6f && tx < ax,
+                    Direction.Up => MathF.Abs(ax - tx) < TankEntity.Size * .6f && ty < ay,
+                    Direction.Down => MathF.Abs(ax - tx) < TankEntity.Size * .6f && ty > ay,
+                    Direction.Left => MathF.Abs(ay - ty) < TankEntity.Size * .6f && tx < ax,
                     Direction.Right => MathF.Abs(ay - ty) < TankEntity.Size * .6f && tx > ax,
                     _ => false
                 };
-                if (aligned)
-                    ally.Input = ally.Input with { Fire = true };
+
+                if (alignedWithEnemy)
+                {
+                    bool baseInWay = ally.Position.Facing switch
+                    {
+                        Direction.Up => MathF.Abs(ax - baseX) < TileMap.TileSize * .5f && baseY < ay && baseY > ty,
+                        Direction.Down => MathF.Abs(ax - baseX) < TileMap.TileSize * .5f && baseY > ay && baseY < ty,
+                        Direction.Left => MathF.Abs(ay - baseY) < TileMap.TileSize * .5f && baseX < ax && baseX > tx,
+                        Direction.Right => MathF.Abs(ay - baseY) < TileMap.TileSize * .5f && baseX > ax && baseX < tx,
+                        _ => false
+                    };
+
+                    ally.Input = ally.Input with { Fire = !baseInWay };
+                }
                 else
+                {
                     ally.Input = ally.Input with { Fire = false };
-            }
-            else
-            {
-                ally.Input = ally.Input with { Fire = false };
+                }
             }
         }
     }
