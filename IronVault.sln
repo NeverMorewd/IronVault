@@ -21,6 +21,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IronVault.Android", "src\Ir
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IronVault.iOS", "src\IronVault.iOS\IronVault.iOS.csproj", "{3FFC6EA2-71A1-4613-8169-18E4C781AD60}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IronVault.Core.Test", "src\IronVault.Core.Test\IronVault.Core.Test.csproj", "{793C5D44-05A0-4899-9CFF-3D3683308214}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -127,6 +129,18 @@ Global
 		{3FFC6EA2-71A1-4613-8169-18E4C781AD60}.Release|x64.Build.0 = Release|Any CPU
 		{3FFC6EA2-71A1-4613-8169-18E4C781AD60}.Release|x86.ActiveCfg = Release|Any CPU
 		{3FFC6EA2-71A1-4613-8169-18E4C781AD60}.Release|x86.Build.0 = Release|Any CPU
+		{793C5D44-05A0-4899-9CFF-3D3683308214}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{793C5D44-05A0-4899-9CFF-3D3683308214}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{793C5D44-05A0-4899-9CFF-3D3683308214}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{793C5D44-05A0-4899-9CFF-3D3683308214}.Debug|x64.Build.0 = Debug|Any CPU
+		{793C5D44-05A0-4899-9CFF-3D3683308214}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{793C5D44-05A0-4899-9CFF-3D3683308214}.Debug|x86.Build.0 = Debug|Any CPU
+		{793C5D44-05A0-4899-9CFF-3D3683308214}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{793C5D44-05A0-4899-9CFF-3D3683308214}.Release|Any CPU.Build.0 = Release|Any CPU
+		{793C5D44-05A0-4899-9CFF-3D3683308214}.Release|x64.ActiveCfg = Release|Any CPU
+		{793C5D44-05A0-4899-9CFF-3D3683308214}.Release|x64.Build.0 = Release|Any CPU
+		{793C5D44-05A0-4899-9CFF-3D3683308214}.Release|x86.ActiveCfg = Release|Any CPU
+		{793C5D44-05A0-4899-9CFF-3D3683308214}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -140,5 +154,8 @@ Global
 		{F2B07359-A323-4DC2-90E3-B4EAEB94439F} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 		{80276477-75E8-4E34-83A6-3FC81A8A708B} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 		{3FFC6EA2-71A1-4613-8169-18E4C781AD60} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {DE74F6F3-8736-4C2B-8F6E-68C3606FC0FE}
 	EndGlobalSection
 EndGlobal
