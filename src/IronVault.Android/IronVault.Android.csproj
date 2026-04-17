@@ -5,14 +5,26 @@
     <OutputType>Exe</OutputType>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <SupportedOSPlatformVersion>21</SupportedOSPlatformVersion>
+    <SupportedOSPlatformVersion>23</SupportedOSPlatformVersion>
     <ApplicationId>com.ironvault.game</ApplicationId>
     <ApplicationVersion>1</ApplicationVersion>
     <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
   </PropertyGroup>
 
+	<ItemGroup>
+		<AndroidResource Include="..\..\assets\Icon.png">
+			<Link>Resources\drawable\Icon.png</Link>
+		</AndroidResource>
+	</ItemGroup>
+
+	<PropertyGroup Condition="'$(AndroidEnableProfiler)'=='True'">
+		<IsEmulator Condition="'$(IsEmulator)' == ''">True</IsEmulator>
+		<DebugSymbols>True</DebugSymbols>
+	</PropertyGroup>
+
   <ItemGroup>
-    <PackageReference Include="Avalonia.Android" Version="11.3.12" />
+    <PackageReference Include="Avalonia.Android" Version="12.0.1" />
+	<PackageReference Include="Xamarin.AndroidX.Core.SplashScreen" />
   </ItemGroup>
 
   <ItemGroup>

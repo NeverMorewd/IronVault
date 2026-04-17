@@ -2,6 +2,7 @@
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Threading;
+using Avalonia.VisualTree;
 using IronVault.Core.Engine;
 using IronVault.Core.Engine.Systems;
 using IronVault.Navigation;
@@ -118,7 +119,8 @@ public partial class MainView : UserControl
         {
             if (Application.Current!.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime)
             {
-                if (this.VisualRoot is Window window)
+                var topLevel = TopLevel.GetTopLevel(this);
+                if (topLevel is Window window)
                 {
                     var screen = window.Screens.Primary;
                     if (screen == null) return;
