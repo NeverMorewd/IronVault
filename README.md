@@ -6,7 +6,7 @@
 [![.NET 10](https://img.shields.io/badge/.NET-10.0-512BD4?logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-A retro armoured-combat game built with [Avalonia UI](https://avaloniaui.net/) and styled with the [**Pipboy.Avalonia**](https://github.com/NeverMorewd/Pipboy.Avalonia) CRT theme library. Every tank, bullet, and explosion is drawn from pure vector geometry — no sprites, no bitmaps. Play it directly in your browser via WebAssembly, or run it natively on the desktop.
+A retro armoured-combat game built with [Avalonia UI v12](https://avaloniaui.net/) and styled with the [**Pipboy.Avalonia**](https://github.com/NeverMorewd/Pipboy.Avalonia) CRT theme library. Every tank, bullet, and explosion is drawn from pure vector geometry — no sprites, no bitmaps. Play it directly in your browser via WebAssembly, or run it natively on the desktop.
 
 > **🎮 [Play now in your browser(Github Pages) →](https://nevermorewd.github.io/IronVault/)**
 
