@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/icon.png" alt="icon" width="100">
+</p>
+
 # Iron Vault
 
 [![Play Online](https://img.shields.io/badge/Play%20Online-WebAssembly-brightgreen?logo=googlechrome&logoColor=white)](https://nevermorewd.github.io/IronVault/)
