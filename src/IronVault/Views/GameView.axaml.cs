@@ -58,6 +58,30 @@ public partial class GameView : UserControl
         // Settings overlay
         StartButton.Click += (_, _) => StartOrRestart();
         ResumeBtn.Click   += (_, _) => HideSettingsOverlay();
+        CrtEffectToggle.IsCheckedChanged += (s, e) =>
+        {
+            if (s is ToggleSwitch toggle && toggle.IsChecked.GetValueOrDefault() == true)
+            {
+                CrtDisplay.EnableFlicker = true;
+                CrtDisplay.EnableScanlines = true;
+                CrtDisplay.EnableNoise = true;
+                CrtDisplay.EnableScanBeam = true;
+                CrtDisplay.EnableScanBeamGradient = true;
+                CrtDisplay.EnableScanlineAnimation = true;
+                CrtDisplay.EnableVignette = true;
+            }
+            else
+            {
+                CrtDisplay.EnableFlicker = false;
+                CrtDisplay.EnableScanlines = false;
+                CrtDisplay.EnableNoise = false;
+                CrtDisplay.EnableScanBeam = false;
+                CrtDisplay.EnableScanBeamGradient = false;
+                CrtDisplay.EnableScanlineAnimation = false;
+                CrtDisplay.EnableVignette = false;
+
+            }
+        };
 
         // Exit overlay
         ExitToMenuBtn.Click += (_, _) => RequestMenu();
