@@ -1,4 +1,4 @@
-# Iron Vault — 铁窖计划
+# Iron Vault
 
 [![Play Online](https://img.shields.io/badge/Play%20Online-WebAssembly-brightgreen?logo=googlechrome&logoColor=white)](https://nevermorewd.github.io/IronVault/)
 [![Built with Claude AI](https://img.shields.io/badge/Built%20with-Claude%20AI-blueviolet?logo=anthropic&logoColor=white)](https://www.anthropic.com/claude)
