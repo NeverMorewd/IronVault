@@ -10,7 +10,7 @@ A retro armoured-combat game built with [Avalonia UI](https://avaloniaui.net/) a
 
 > **🎮 [Play now in your browser(Github Pages) →](https://nevermorewd.github.io/IronVault/)**
 
-> **🎮 [Play now in your browser(CloudFlare) →](https://ironvault.nevermore-easley.workers.dev/)**
+> **🎮 [Play now in your browser(CloudFlare publish AOT) →](https://ironvault.nevermore-easley.workers.dev/)**
 
 ---
 
